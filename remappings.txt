@@ -3,3 +3,4 @@ ds-test/=lib/forge-std/lib/ds-test/src/
 pancake-v4-core/=lib/pancake-v4-core/
 @openzeppelin/=lib/openzeppelin-contracts/
 solmate/=lib/solmate/src/
+uniswap-v2-core/=lib/uniswap-v2-core/

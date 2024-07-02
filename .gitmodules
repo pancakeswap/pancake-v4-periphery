@@ -11,6 +11,9 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	branch = release-v4.9
+[submodule "lib/uniswap-v2-core"]
+	path = lib/uniswap-v2-core
+	url = https://github.com/Uniswap/v2-core
 
 [submodule "lib/forge-gas-snapshot"]
 	path = lib/forge-gas-snapshot
