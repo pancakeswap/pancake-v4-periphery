@@ -65,7 +65,6 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
 
     /// @notice Perform a swap that ensure at least `amountOut` tokens with `amountInMaximum` tokens
     function _swapExactOutputSingle(BinSwapExactOutputSingleParams calldata params) internal {
-        //todo: verify if we should do a negation when we add test cases
         uint128 amountIn = (
             -_swapExactPrivate(params.poolKey, params.swapForY, params.amountOut.safeInt128(), params.hookData)
         ).toUint128();
@@ -89,7 +88,6 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
                 // find out poolKey and how much amountIn required to get amountOut
                 (PoolKey memory poolKey, bool swapForY) = pathKey.getPoolAndSwapDirection(currencyOut);
 
-                //todo: verify if we should do a negation when we add test cases
                 amountIn =
                     (-_swapExactPrivate(poolKey, !swapForY, amountOut.safeInt128(), pathKey.hookData)).toUint128();
 
