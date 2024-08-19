@@ -36,10 +36,10 @@ export ETHERSCAN_API_KEY=xx
 
 Refer to the script source code for the exact command
 
-Example. within `script/01_DeployNftDescriptorOffChain.s.sol`
+Example. within `script/01_DeployCLPositionManager.s.sol`
 ```
 // remove --verify flag if etherscan_api_key is not set
-forge script script/01_DeployNftDescriptorOffChain.s.sol:DeployNftDescriptorOffChainScript -vvv \
+forge script script/01_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript -vvv \
     --rpc-url $RPC_URL \
     --broadcast \
     --slow \
