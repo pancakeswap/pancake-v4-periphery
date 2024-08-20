@@ -197,7 +197,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     ) external override returns (uint256 amountOut) {
         uint256 numActions = actions.length;
         if (numActions == 0) revert NoActions();
-        if (numActions != params.length || numActions != paths.length + 1) revert InputLengthMismatch();
+        if (numActions != params.length || numActions != paths.length - 1) revert InputLengthMismatch();
 
         for (uint256 actionIndex = 0; actionIndex < numActions; actionIndex++) {
             address tokenIn = paths[actionIndex];
