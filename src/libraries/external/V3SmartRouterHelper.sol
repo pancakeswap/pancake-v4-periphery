@@ -15,7 +15,7 @@ library V3SmartRouterHelper {
 
     // get the pool info in stable swap
     function getStableInfo(address stableSwapFactory, address input, address output, uint256 flag)
-        public
+        internal
         view
         returns (uint256 i, uint256 j, address swapContract)
     {
@@ -48,7 +48,7 @@ library V3SmartRouterHelper {
      */
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
-    function sortTokens(address tokenA, address tokenB) public pure returns (address token0, address token1) {
+    function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
         require(tokenA != tokenB);
         (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         require(token0 != address(0));
@@ -57,14 +57,14 @@ library V3SmartRouterHelper {
     /// @dev PancakeSwap is a multichain DEX, we have different factories on different chains.
     /// If we use the CREATE2 rule to calculate the pool address, we need to update the INIT_CODE_HASH for each chain.
     /// And quoter functions are not gas efficient and should _not_ be called on chain.
-    function pairFor(address factory, address tokenA, address tokenB) public view returns (address pair) {
+    function pairFor(address factory, address tokenA, address tokenB) internal view returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         return IPancakeFactory(factory).getPair(token0, token1);
     }
 
     // fetches and sorts the reserves for a pair
     function getReserves(address factory, address tokenA, address tokenB)
-        public
+        internal
         view
         returns (uint256 reserveA, uint256 reserveB)
     {
@@ -75,7 +75,7 @@ library V3SmartRouterHelper {
 
     // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut)
-        public
+        internal
         pure
         returns (uint256 amountOut)
     {
@@ -89,7 +89,7 @@ library V3SmartRouterHelper {
 
     // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
     function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut)
-        public
+        internal
         pure
         returns (uint256 amountIn)
     {
@@ -102,7 +102,7 @@ library V3SmartRouterHelper {
 
     // performs chained getAmountIn calculations on any number of pairs
     function getAmountsIn(address factory, uint256 amountOut, address[] memory path)
-        public
+        internal
         view
         returns (uint256[] memory amounts)
     {
@@ -124,7 +124,7 @@ library V3SmartRouterHelper {
     /// If we use the CREATE2 rule to calculate the pool address, we need to update the INIT_CODE_HASH for each chain.
     /// And quoter functions are not gas efficient and should _not_ be called on chain.
     function getPool(address factory, address tokenA, address tokenB, uint24 fee)
-        public
+        internal
         view
         returns (IPancakeV3Pool)
     {
@@ -139,7 +139,7 @@ library V3SmartRouterHelper {
     /// @param fee The fee collected upon every swap in the pool, denominated in hundredths of a bip
     /// @return pool The V3 pool contract address
     function verifyCallback(address factory, address tokenA, address tokenB, uint24 fee)
-        public
+        internal
         view
         returns (IPancakeV3Pool pool)
     {
