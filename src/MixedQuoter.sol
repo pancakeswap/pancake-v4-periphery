@@ -27,12 +27,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
 
     address constant ZERO_ADDRESS = address(0);
 
-    // pancake v3 deployer
-    address public immutable deployer;
-    // pancake v3 factory
-    address public immutable factory;
     address public immutable WETH9;
-
+    address public immutable factoryV3;
     address public immutable factoryV2;
     address public immutable factoryStable;
 
@@ -40,8 +36,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     IBinQuoter public immutable binQuoter;
 
     constructor(
-        address _deployer,
-        address _factory,
+        address _factoryV3,
         address _factoryV2,
         address _factoryStable,
         address _WETH9,
@@ -49,14 +44,12 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         IBinQuoter _binQuoter
     ) {
         if (
-            _deployer == ZERO_ADDRESS || _factory == ZERO_ADDRESS || _factoryV2 == ZERO_ADDRESS
-                || _factoryStable == ZERO_ADDRESS || _WETH9 == ZERO_ADDRESS || address(_clQuoter) == ZERO_ADDRESS
-                || address(_binQuoter) == ZERO_ADDRESS
+            _factoryV3 == ZERO_ADDRESS || _factoryV2 == ZERO_ADDRESS || _factoryStable == ZERO_ADDRESS
+                || _WETH9 == ZERO_ADDRESS || address(_clQuoter) == ZERO_ADDRESS || address(_binQuoter) == ZERO_ADDRESS
         ) {
             revert INVALID_ADDRESS();
         }
-        deployer = _deployer;
-        factory = _factory;
+        factoryV3 = _factoryV3;
         WETH9 = _WETH9;
         factoryV2 = _factoryV2;
         factoryStable = _factoryStable;
@@ -76,13 +69,13 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut, uint24 fee) = abi.decode(data, (address, address, uint24));
-        V3SmartRouterHelper.verifyCallback(deployer, tokenIn, tokenOut, fee);
+        V3SmartRouterHelper.verifyCallback(factoryV3, tokenIn, tokenOut, fee);
 
         (bool isExactInput, uint256 amountReceived) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(-amount1Delta))
             : (tokenOut < tokenIn, uint256(-amount0Delta));
 
-        IPancakeV3Pool pool = V3SmartRouterHelper.getPool(deployer, tokenIn, tokenOut, fee);
+        IPancakeV3Pool pool = V3SmartRouterHelper.getPool(factoryV3, tokenIn, tokenOut, fee);
         (uint160 v3SqrtPriceX96After, int24 tickAfter,,,,,) = pool.slot0();
 
         if (isExactInput) {
@@ -137,7 +130,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
     {
         bool zeroForOne = params.tokenIn < params.tokenOut;
-        IPancakeV3Pool pool = V3SmartRouterHelper.getPool(deployer, params.tokenIn, params.tokenOut, params.fee);
+        IPancakeV3Pool pool = V3SmartRouterHelper.getPool(factoryV3, params.tokenIn, params.tokenOut, params.fee);
 
         uint256 gasBefore = gasleft();
         try pool.swap(
