@@ -200,7 +200,6 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         if (numActions != params.length || numActions != paths.length + 1) revert InputLengthMismatch();
 
         for (uint256 actionIndex = 0; actionIndex < numActions; actionIndex++) {
-            // TODO: Convert WETH to address(0) in v4
             address tokenIn = paths[actionIndex];
             address tokenOut = paths[actionIndex + 1];
             if (tokenIn == tokenOut) revert InvalidPath();
@@ -224,26 +223,6 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                     })
                 );
                 amountIn = _amountOut;
-            } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
-                // params[actionIndex] is zero bytes
-                amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 2
-                    })
-                );
-            } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
-                // params[actionIndex] is zero bytes
-                amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 3
-                    })
-                );
             } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
                 QuoterMixedV4ExactInputSingleParams memory clParams =
                     abi.decode(params[actionIndex], (QuoterMixedV4ExactInputSingleParams));
@@ -275,6 +254,26 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                     })
                 );
                 amountIn = deltaAmounts[1].toUint256();
+            } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
+                // params[actionIndex] is zero bytes
+                amountIn = quoteExactInputSingleStable(
+                    QuoteExactInputSingleStableParams({
+                        tokenIn: tokenIn,
+                        tokenOut: tokenOut,
+                        amountIn: amountIn,
+                        flag: 2
+                    })
+                );
+            } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
+                // params[actionIndex] is zero bytes
+                amountIn = quoteExactInputSingleStable(
+                    QuoteExactInputSingleStableParams({
+                        tokenIn: tokenIn,
+                        tokenOut: tokenOut,
+                        amountIn: amountIn,
+                        flag: 3
+                    })
+                );
             } else {
                 revert UnsupportedAction(action);
             }
