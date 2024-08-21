@@ -26,4 +26,6 @@ interface IStableSwapFactory {
         external
         view
         returns (StableSwapThreePoolPairInfo memory info);
+
+    function createSwapPair(address _tokenA, address _tokenB, uint256 _A, uint256 _fee, uint256 _admin_fee) external;
 }

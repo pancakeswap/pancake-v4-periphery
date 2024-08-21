@@ -44,6 +44,9 @@ import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/Bi
 import {BinLiquidityHelper} from "./pool-bin/helper/BinLiquidityHelper.sol";
 import {Plan, Planner} from "../src/libraries/Planner.sol";
 import {Actions} from "../src/libraries/Actions.sol";
+import {DeployStableSwapHelper} from "./helpers/DeployStableSwapHelper.sol";
+import {IStableSwapFactory} from "../src/interfaces/external/IStableSwapFactory.sol";
+import {IStableSwap} from "../src/interfaces/external/IStableSwap.sol";
 
 contract MixedQuoterTest is
     Test,
@@ -51,6 +54,7 @@ contract MixedQuoterTest is
     PosmTestSetup,
     Permit2ApproveHelper,
     BinLiquidityHelper,
+    DeployStableSwapHelper,
     GasSnapshot
 {
     using SafeCast for *;
@@ -66,6 +70,8 @@ contract MixedQuoterTest is
     WETH weth;
     MockERC20 token0;
     MockERC20 token1;
+    MockERC20 token2;
+    MockERC20 token3;
 
     IVault vault;
     ICLPoolManager clPoolManager;
@@ -77,6 +83,9 @@ contract MixedQuoterTest is
     address v3Deployer;
     IPancakeV3Factory v3Factory;
     IV3NonfungiblePositionManager v3Nfpm;
+
+    IStableSwapFactory stableSwapFactory;
+    IStableSwap stableSwapPair;
 
     IBinPoolManager binPoolManager;
     BinPositionManager binPm;
@@ -98,6 +107,8 @@ contract MixedQuoterTest is
         weth = new WETH();
         token0 = new MockERC20("Token0", "TKN0", 18);
         token1 = new MockERC20("Token1", "TKN1", 18);
+        token2 = new MockERC20("Token2", "TKN2", 18);
+        token3 = new MockERC20("Token3", "TKN3", 18);
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
         deployPosmHookSavesDelta();
         (vault, clPoolManager, poolKey, poolId) =
@@ -136,6 +147,8 @@ contract MixedQuoterTest is
         weth.deposit{value: 100 ether}();
         token0.mint(address(this), 100 ether);
         token1.mint(address(this), 100 ether);
+        token2.mint(address(this), 100 ether);
+        token3.mint(address(this), 100 ether);
 
         v2Factory = IPancakeFactory(createContractThroughBytecode(_getBytecodePath()));
         v2Pair = IPancakePair(v2Factory.createPair(address(weth), address(token0)));
@@ -179,15 +192,27 @@ contract MixedQuoterTest is
         // 1. mint some liquidity to the v2 pair
         _mintV2Liquidity(v2Pair);
 
+        // set stable swap
+        stableSwapFactory = IStableSwapFactory(deployStableSwap(address(this)));
+        stableSwapFactory.createSwapPair(address(token1), address(token2), 1000, 4000000, 5000000000);
+        IStableSwapFactory.StableSwapPairInfo memory ssPairInfo =
+            stableSwapFactory.getPairInfo(address(token1), address(token2));
+        stableSwapPair = IStableSwap(ssPairInfo.swapContract);
+        token1.approve(address(stableSwapPair), type(uint256).max);
+        token2.approve(address(stableSwapPair), type(uint256).max);
+        uint256[2] memory liquidityAmounts;
+        liquidityAmounts[0] = 10 ether;
+        liquidityAmounts[1] = 10 ether;
+        stableSwapPair.add_liquidity(liquidityAmounts, 0);
+
         positionConfig = PositionConfig({poolKey: poolKey, tickLower: -300, tickUpper: 300});
 
         // deploy mixed quoter
-        address Mock_ADDRESS = address(1);
         mixedQuoter = new MixedQuoter(
             // v3Deployer,
             address(v3Factory),
             address(v2Factory),
-            Mock_ADDRESS,
+            address(stableSwapFactory),
             address(weth),
             clQuoter,
             binQuoter
@@ -208,6 +233,21 @@ contract MixedQuoterTest is
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(addParams));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(binPoolKey);
         binPm.modifyLiquidities(payload, block.timestamp + 1);
+    }
+
+    function testQuoteExactInputSingleStable() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token1);
+        paths[1] = address(token2);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 999499143496490285);
     }
 
     function testQuoteExactInputSingleV2() public {

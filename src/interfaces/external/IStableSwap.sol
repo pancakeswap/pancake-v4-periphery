@@ -19,4 +19,6 @@ interface IStableSwap {
 
     // solium-disable-next-line mixedcase
     function fee() external view returns (uint256);
+
+    function add_liquidity(uint256[2] calldata amounts, uint256 min_mint_amount) external;
 }
