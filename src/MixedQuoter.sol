@@ -199,11 +199,13 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
 
             uint256 action = uint256(uint8(actions[actionIndex]));
             if (action == MixedQuoterActions.V2_EXACT_INPUT_SINGLE) {
+                (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleV2(
                     QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
                 );
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
+                (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex]: abi.encode(fee)
                 uint24 fee = abi.decode(params[actionIndex], (uint24));
                 (uint256 _amountOut,,,) = quoteExactInputSingleV3(
@@ -248,6 +250,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 );
                 amountIn = deltaAmounts[zeroForOne ? 1 : 0].toUint256();
             } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
+                (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
                     QuoteExactInputSingleStableParams({
@@ -258,6 +261,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                     })
                 );
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
+                (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
                     QuoteExactInputSingleStableParams({
@@ -305,6 +309,16 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
             if (tokenOut == WETH9) {
                 tokenOut = ZERO_ADDRESS;
             }
+        }
+        return (tokenIn, tokenOut);
+    }
+
+    function convertNativeToWETH(address tokenIn, address tokenOut) private view returns (address, address) {
+        if (tokenIn == ZERO_ADDRESS) {
+            tokenIn = WETH9;
+        }
+        if (tokenOut == ZERO_ADDRESS) {
+            tokenOut = WETH9;
         }
         return (tokenIn, tokenOut);
     }

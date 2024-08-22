@@ -487,7 +487,7 @@ contract MixedQuoterTest is
 
     // token2 -> WETH -> token1
     // V3 WETH Pool -> V4 Native Pool
-    function testQuoterMixed_WETHToNative_V3WETHPair_V4CLNativePair() public {
+    function testQuoteMixed_ConvertWETHToNative_V3WETHPair_V4CLNativePair() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token2);
         paths[1] = address(weth);
@@ -507,6 +507,30 @@ contract MixedQuoterTest is
         uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 995013974661415835);
+    }
+
+    // token1 -> address(0) -> token2
+    // V4 CL Native Pool -> V3 WETH Pool
+    function testQuoteMixed_ConvertNativeToWETH_V4CLNativePair_V3WETHPair() public {
+        address[] memory paths = new address[](3);
+        paths[0] = address(token1);
+        paths[1] = address(0);
+        paths[2] = address(token2);
+
+        bytes memory actions = new bytes(2);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](2);
+        params[0] = abi.encode(
+            IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
+        );
+        uint24 fee = 500;
+        params[1] = abi.encode(fee);
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 995014965144446181);
     }
 
     function _mintV3Liquidity(address _token0, address _token1) internal {
