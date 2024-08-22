@@ -268,7 +268,7 @@ contract MixedQuoterTest is
         assertEq(amountOut, 907024323709934075);
     }
 
-    function testQuoterExactInputSingleV3() public {
+    function testQuoteExactInputSingleV3() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
         paths[1] = address(token2);
@@ -340,6 +340,54 @@ contract MixedQuoterTest is
         );
         assertEq(-deltaAmounts[0], 1 ether);
         assertEq(uint128(deltaAmounts[1]), amountOut);
+    }
+
+    // token0 -> token1 -> token2
+    // V4 CL Pool -> SS Pool
+    function testQuoteMixedTwoHops_V4Cl_SS() public {
+        address[] memory paths = new address[](3);
+        paths[0] = address(token0);
+        paths[1] = address(token1);
+        paths[2] = address(token2);
+
+        bytes memory actions = new bytes(2);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](2);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        params[1] = new bytes(0);
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 996169927245114903);
+    }
+
+    // token0 -> token1 -> token2 -> WETH
+    // V4 CL Pool -> SS Pool -> V3 Pool
+    function testQuoteMixedThreeHops_V4Cl_SS_V3() public {
+        address[] memory paths = new address[](4);
+        paths[0] = address(token0);
+        paths[1] = address(token1);
+        paths[2] = address(token2);
+        paths[3] = address(weth);
+
+        bytes memory actions = new bytes(3);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+        actions[2] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](3);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        params[1] = new bytes(0);
+        uint24 fee = 500;
+        params[2] = abi.encode(fee);
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 995177668263126217);
     }
 
     function _mintV3Liquidity(address _token0, address _token1) internal {
