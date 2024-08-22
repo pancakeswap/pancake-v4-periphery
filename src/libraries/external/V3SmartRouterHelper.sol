@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import {IStableSwapFactory} from "../../interfaces/external/IStableSwapFactory.sol";
-import {IStableSwapInfo} from "../../interfaces/external/IStableSwapInfo.sol";
 import {IPancakePair} from "../../interfaces/external/IPancakePair.sol";
 import {IPancakeV3Pool} from "../../interfaces/external/IPancakeV3Pool.sol";
 import {IPancakeFactory} from "../../interfaces/external/IPancakeFactory.sol";
