@@ -287,7 +287,7 @@ contract MixedQuoterTest is
         assertEq(amountOut, 999002019627632472);
     }
 
-    function testV4CLquoteExactInputSingle() public {
+    function testV4CLquoteExactInputSingle_ZeroForOne() public {
         address[] memory paths = new address[](2);
         paths[0] = address(Currency.unwrap(poolKey.currency0));
         paths[1] = address(Currency.unwrap(poolKey.currency1));
@@ -316,7 +316,36 @@ contract MixedQuoterTest is
         assertEq(uint128(deltaAmounts[1]), amountOut);
     }
 
-    function testBinQuoteExactInputSingle() public {
+    function testV4CLquoteExactInputSingle_OneForZero() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(Currency.unwrap(poolKey.currency1));
+        paths[1] = address(Currency.unwrap(poolKey.currency0));
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 996668773744192346);
+
+        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactInputSingle(
+            ICLQuoter.QuoteExactSingleParams({
+                poolKey: poolKey,
+                zeroForOne: false,
+                exactAmount: 1 ether,
+                sqrtPriceLimitX96: 0,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(-deltaAmounts[1], 1 ether);
+        assertEq(uint128(deltaAmounts[0]), amountOut);
+    }
+
+    function testBinQuoteExactInputSingle_ZeroForOne() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token3);
         paths[1] = address(token4);
@@ -342,6 +371,34 @@ contract MixedQuoterTest is
         );
         assertEq(-deltaAmounts[0], 1 ether);
         assertEq(uint128(deltaAmounts[1]), amountOut);
+    }
+
+    function testBinQuoteExactInputSingle_OneForZero() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token4);
+        paths[1] = address(token3);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 997000000000000000);
+
+        (int128[] memory deltaAmounts,) = binQuoter.quoteExactInputSingle(
+            IBinQuoter.QuoteExactSingleParams({
+                poolKey: binPoolKey,
+                zeroForOne: false,
+                exactAmount: 1 ether,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(-deltaAmounts[1], 1 ether);
+        assertEq(uint128(deltaAmounts[0]), amountOut);
     }
 
     // token0 -> token1 -> token2

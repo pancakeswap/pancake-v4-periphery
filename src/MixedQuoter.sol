@@ -231,7 +231,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                         hookData: clParams.hookData
                     })
                 );
-                amountIn = deltaAmounts[1].toUint256();
+                amountIn = deltaAmounts[zeroForOne ? 1 : 0].toUint256();
             } else if (action == MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE) {
                 QuoterMixedV4ExactInputSingleParams memory clParams =
                     abi.decode(params[actionIndex], (QuoterMixedV4ExactInputSingleParams));
@@ -246,7 +246,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                         hookData: clParams.hookData
                     })
                 );
-                amountIn = deltaAmounts[1].toUint256();
+                amountIn = deltaAmounts[zeroForOne ? 1 : 0].toUint256();
             } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
