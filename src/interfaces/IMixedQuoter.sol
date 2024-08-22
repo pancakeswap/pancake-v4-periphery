@@ -14,27 +14,7 @@ interface IMixedQuoter {
     error InvalidPath();
     error InvalidPoolKeyCurrency();
     error NoActions();
-    /// @notice emitted when an inheriting contract does not support an action
     error UnsupportedAction(uint256 action);
-
-    /// @notice Returns the amount out received for a given exact input swap without executing the swap
-    /// @param paths The path of the swap, i.e. each token pair in the path
-    /// @param actions The actions to take for each pair in the path
-    /// @param params The params for each action in the path
-    /// SS_2_EXACT_INPUT_SINGLE params are zero bytes
-    /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
-    /// V2_EXACT_INPUT_SINGLE params are zero bytes
-    /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoterMixedV4ExactInputSingleParams`
-    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoterMixedV4ExactInputSingleParams`
-    /// @param amountIn The amount of the first token to swap
-    /// @return amountOut The amount of the last token that would be received
-    function quoteMixedExactInput(
-        address[] calldata paths,
-        bytes calldata actions,
-        bytes[] calldata params,
-        uint256 amountIn
-    ) external returns (uint256 amountOut);
 
     struct QuoterMixedV4ExactInputSingleParams {
         PoolKey poolKey;
@@ -61,6 +41,25 @@ interface IMixedQuoter {
         uint256 amountIn;
         uint256 flag;
     }
+
+    /// @notice Returns the amount out received for a given exact input swap without executing the swap
+    /// @param paths The path of the swap, i.e. each token pair in the path
+    /// @param actions The actions to take for each pair in the path
+    /// @param params The params for each action in the path
+    /// SS_2_EXACT_INPUT_SINGLE params are zero bytes
+    /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
+    /// V2_EXACT_INPUT_SINGLE params are zero bytes
+    /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
+    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoterMixedV4ExactInputSingleParams`
+    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoterMixedV4ExactInputSingleParams`
+    /// @param amountIn The amount of the first token to swap
+    /// @return amountOut The amount of the last token that would be received
+    function quoteMixedExactInput(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountIn
+    ) external returns (uint256 amountOut);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleParams`
