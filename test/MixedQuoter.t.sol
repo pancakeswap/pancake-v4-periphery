@@ -107,11 +107,12 @@ contract MixedQuoterTest is
 
     function setUp() public {
         weth = new WETH();
-        token2 = new MockERC20("Token0", "TKN0", 18);
-        token3 = new MockERC20("Token1", "TKN1", 18);
-        token4 = new MockERC20("Token2", "TKN2", 18);
-        token5 = new MockERC20("Token3", "TKN3", 18);
+        token2 = new MockERC20("Token0", "TKN2", 18);
+        token3 = new MockERC20("Token1", "TKN3", 18);
+        token4 = new MockERC20("Token2", "TKN4", 18);
+        token5 = new MockERC20("Token3", "TKN5", 18);
         (token2, token3) = token2 < token3 ? (token2, token3) : (token3, token2);
+        (token3, token4) = token3 < token4 ? (token3, token4) : (token4, token3);
         deployPosmHookSavesDelta();
         (vault, clPoolManager, poolKey, poolId) =
             createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
@@ -131,8 +132,8 @@ contract MixedQuoterTest is
         binQuoter = new BinQuoter(address(binPoolManager));
 
         binPoolKey = PoolKey({
-            currency0: Currency.wrap(address(token2)),
-            currency1: Currency.wrap(address(token3)),
+            currency0: Currency.wrap(address(token3)),
+            currency1: Currency.wrap(address(token4)),
             hooks: IHooks(address(0)),
             poolManager: binPoolManager,
             fee: uint24(3000), // 3000 = 0.3%
@@ -228,8 +229,8 @@ contract MixedQuoterTest is
 
         // mint some liquidity to the bin pool
         binPoolManager.initialize(binPoolKey, activeId, ZERO_BYTES);
-        permit2Approve(address(this), permit2, address(token2), address(binPm));
         permit2Approve(address(this), permit2, address(token3), address(binPm));
+        permit2Approve(address(this), permit2, address(token4), address(binPm));
 
         uint24[] memory binIds = getBinIds(activeId, 3);
         IBinPositionManager.BinAddLiquidityParams memory addParams;
@@ -316,8 +317,8 @@ contract MixedQuoterTest is
 
     function testBinQuoteExactInputSingle() public {
         address[] memory paths = new address[](2);
-        paths[0] = address(token2);
-        paths[1] = address(token3);
+        paths[0] = address(token3);
+        paths[1] = address(token4);
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
