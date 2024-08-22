@@ -196,6 +196,7 @@ contract MixedQuoterTest is
 
         // 1. mint some liquidity to the v2 pair
         _mintV2Liquidity(v2Pair);
+        _mintV2Liquidity(v2PairWithoutNativeToken);
 
         // set stable swap
         stableSwapFactory = IStableSwapFactory(deployStableSwap(address(this)));
@@ -389,6 +390,35 @@ contract MixedQuoterTest is
         uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 995177668263126217);
+    }
+
+    // token0 -> token1 -> token2 -> token3 -> token4
+    // V4 CL Pool -> SS Pool -> V2 Pool -> V4 Bin Pool
+    function testQuoteMixedFourHops_V4Cl_SS_V2_V4Bin() public {
+        address[] memory paths = new address[](5);
+        paths[0] = address(token0);
+        paths[1] = address(token1);
+        paths[2] = address(token2);
+        paths[3] = address(token3);
+        paths[4] = address(token4);
+
+        bytes memory actions = new bytes(4);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+        actions[2] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
+        actions[3] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](4);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        params[1] = new bytes(0);
+        params[2] = new bytes(0);
+        params[3] =
+            abi.encode(IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 901152761185198407);
     }
 
     function _mintV3Liquidity(address _token0, address _token1) internal {
