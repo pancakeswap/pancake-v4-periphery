@@ -198,12 +198,12 @@ contract MixedQuoterTest is
 
         // set stable swap
         stableSwapFactory = IStableSwapFactory(deployStableSwap(address(this)));
-        stableSwapFactory.createSwapPair(address(token3), address(token4), 1000, 4000000, 5000000000);
+        stableSwapFactory.createSwapPair(address(token1), address(token2), 1000, 4000000, 5000000000);
         IStableSwapFactory.StableSwapPairInfo memory ssPairInfo =
-            stableSwapFactory.getPairInfo(address(token3), address(token4));
+            stableSwapFactory.getPairInfo(address(token1), address(token2));
         stableSwapPair = IStableSwap(ssPairInfo.swapContract);
-        token3.approve(address(stableSwapPair), type(uint256).max);
-        token4.approve(address(stableSwapPair), type(uint256).max);
+        token1.approve(address(stableSwapPair), type(uint256).max);
+        token2.approve(address(stableSwapPair), type(uint256).max);
         uint256[2] memory liquidityAmounts;
         liquidityAmounts[0] = 10 ether;
         liquidityAmounts[1] = 10 ether;
@@ -241,8 +241,8 @@ contract MixedQuoterTest is
 
     function testQuoteExactInputSingleStable() public {
         address[] memory paths = new address[](2);
-        paths[0] = address(token3);
-        paths[1] = address(token4);
+        paths[0] = address(token1);
+        paths[1] = address(token2);
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
