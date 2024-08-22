@@ -72,6 +72,8 @@ contract MixedQuoterTest is
     MockERC20 token1;
     MockERC20 token2;
     MockERC20 token3;
+    MockERC20 token4;
+    MockERC20 token5;
 
     IVault vault;
     ICLPoolManager clPoolManager;
@@ -105,11 +107,11 @@ contract MixedQuoterTest is
 
     function setUp() public {
         weth = new WETH();
-        token0 = new MockERC20("Token0", "TKN0", 18);
-        token1 = new MockERC20("Token1", "TKN1", 18);
-        token2 = new MockERC20("Token2", "TKN2", 18);
-        token3 = new MockERC20("Token3", "TKN3", 18);
-        (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
+        token2 = new MockERC20("Token0", "TKN0", 18);
+        token3 = new MockERC20("Token1", "TKN1", 18);
+        token4 = new MockERC20("Token2", "TKN2", 18);
+        token5 = new MockERC20("Token3", "TKN3", 18);
+        (token2, token3) = token2 < token3 ? (token2, token3) : (token3, token2);
         deployPosmHookSavesDelta();
         (vault, clPoolManager, poolKey, poolId) =
             createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
@@ -119,6 +121,8 @@ contract MixedQuoterTest is
 
         currency0 = poolKey.currency0;
         currency1 = poolKey.currency1;
+        token0 = MockERC20(Currency.unwrap(currency0));
+        token1 = MockERC20(Currency.unwrap(currency1));
         deployAndApprovePosm(vault, clPoolManager);
 
         binPm = new BinPositionManager(vault, binPoolManager, permit2);
@@ -127,8 +131,8 @@ contract MixedQuoterTest is
         binQuoter = new BinQuoter(address(binPoolManager));
 
         binPoolKey = PoolKey({
-            currency0: Currency.wrap(address(token0)),
-            currency1: Currency.wrap(address(token1)),
+            currency0: Currency.wrap(address(token2)),
+            currency1: Currency.wrap(address(token3)),
             hooks: IHooks(address(0)),
             poolManager: binPoolManager,
             fee: uint24(3000), // 3000 = 0.3%
@@ -136,8 +140,8 @@ contract MixedQuoterTest is
         });
 
         poolKeyWithoutNativeToken = poolKey;
-        poolKeyWithoutNativeToken.currency0 = Currency.wrap(address(token0));
-        poolKeyWithoutNativeToken.currency1 = Currency.wrap(address(token1));
+        poolKeyWithoutNativeToken.currency0 = Currency.wrap(address(token2));
+        poolKeyWithoutNativeToken.currency1 = Currency.wrap(address(token3));
 
         // make sure the contract has enough balance
         // WETH: 100 ether
@@ -145,14 +149,14 @@ contract MixedQuoterTest is
         // ETH: 90 ether
         deal(address(this), 1000 ether);
         weth.deposit{value: 100 ether}();
-        token0.mint(address(this), 100 ether);
-        token1.mint(address(this), 100 ether);
         token2.mint(address(this), 100 ether);
         token3.mint(address(this), 100 ether);
+        token4.mint(address(this), 100 ether);
+        token5.mint(address(this), 100 ether);
 
         v2Factory = IPancakeFactory(createContractThroughBytecode(_getBytecodePath()));
-        v2Pair = IPancakePair(v2Factory.createPair(address(weth), address(token0)));
-        v2PairWithoutNativeToken = IPancakePair(v2Factory.createPair(address(token0), address(token1)));
+        v2Pair = IPancakePair(v2Factory.createPair(address(weth), address(token2)));
+        v2PairWithoutNativeToken = IPancakePair(v2Factory.createPair(address(token2), address(token3)));
 
         // pcs v3
         if (bytes(_getDeployerBytecodePath()).length != 0) {
@@ -183,23 +187,23 @@ contract MixedQuoterTest is
 
         // make sure v3Nfpm has allowance
         weth.approve(address(v3Nfpm), type(uint256).max);
-        token0.approve(address(v3Nfpm), type(uint256).max);
-        token1.approve(address(v3Nfpm), type(uint256).max);
+        token2.approve(address(v3Nfpm), type(uint256).max);
+        token3.approve(address(v3Nfpm), type(uint256).max);
 
         // 1. mint some liquidity to the v3 pool
-        _mintV3Liquidity(address(weth), address(token0));
+        _mintV3Liquidity(address(weth), address(token2));
 
         // 1. mint some liquidity to the v2 pair
         _mintV2Liquidity(v2Pair);
 
         // set stable swap
         stableSwapFactory = IStableSwapFactory(deployStableSwap(address(this)));
-        stableSwapFactory.createSwapPair(address(token1), address(token2), 1000, 4000000, 5000000000);
+        stableSwapFactory.createSwapPair(address(token3), address(token4), 1000, 4000000, 5000000000);
         IStableSwapFactory.StableSwapPairInfo memory ssPairInfo =
-            stableSwapFactory.getPairInfo(address(token1), address(token2));
+            stableSwapFactory.getPairInfo(address(token3), address(token4));
         stableSwapPair = IStableSwap(ssPairInfo.swapContract);
-        token1.approve(address(stableSwapPair), type(uint256).max);
-        token2.approve(address(stableSwapPair), type(uint256).max);
+        token3.approve(address(stableSwapPair), type(uint256).max);
+        token4.approve(address(stableSwapPair), type(uint256).max);
         uint256[2] memory liquidityAmounts;
         liquidityAmounts[0] = 10 ether;
         liquidityAmounts[1] = 10 ether;
@@ -224,8 +228,8 @@ contract MixedQuoterTest is
 
         // mint some liquidity to the bin pool
         binPoolManager.initialize(binPoolKey, activeId, ZERO_BYTES);
-        permit2Approve(address(this), permit2, address(token0), address(binPm));
-        permit2Approve(address(this), permit2, address(token1), address(binPm));
+        permit2Approve(address(this), permit2, address(token2), address(binPm));
+        permit2Approve(address(this), permit2, address(token3), address(binPm));
 
         uint24[] memory binIds = getBinIds(activeId, 3);
         IBinPositionManager.BinAddLiquidityParams memory addParams;
@@ -237,8 +241,8 @@ contract MixedQuoterTest is
 
     function testQuoteExactInputSingleStable() public {
         address[] memory paths = new address[](2);
-        paths[0] = address(token1);
-        paths[1] = address(token2);
+        paths[0] = address(token3);
+        paths[1] = address(token4);
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
@@ -253,7 +257,7 @@ contract MixedQuoterTest is
     function testQuoteExactInputSingleV2() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
-        paths[1] = address(token0);
+        paths[1] = address(token2);
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
@@ -267,7 +271,7 @@ contract MixedQuoterTest is
     function testQuoterExactInputSingleV3() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
-        paths[1] = address(token0);
+        paths[1] = address(token2);
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
@@ -312,8 +316,8 @@ contract MixedQuoterTest is
 
     function testBinQuoteExactInputSingle() public {
         address[] memory paths = new address[](2);
-        paths[0] = address(token0);
-        paths[1] = address(token1);
+        paths[0] = address(token2);
+        paths[1] = address(token3);
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
