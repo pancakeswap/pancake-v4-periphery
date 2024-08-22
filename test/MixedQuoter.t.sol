@@ -97,7 +97,7 @@ contract MixedQuoterTest is
 
     PoolId poolId;
     PoolKey poolKey;
-    PoolKey poolKeyWithoutNativeToken;
+    PoolKey poolKeyWithNativeToken;
 
     bytes32 binPoolParam;
 
@@ -140,9 +140,10 @@ contract MixedQuoterTest is
             parameters: binPoolParam.setBinStep(10) // binStep
         });
 
-        poolKeyWithoutNativeToken = poolKey;
-        poolKeyWithoutNativeToken.currency0 = Currency.wrap(address(token2));
-        poolKeyWithoutNativeToken.currency1 = Currency.wrap(address(token3));
+        poolKeyWithNativeToken = poolKey;
+        poolKeyWithNativeToken.currency0 = Currency.wrap(address(0));
+        poolKeyWithNativeToken.currency1 = Currency.wrap(address(token1));
+        clPoolManager.initialize(poolKeyWithNativeToken, SQRT_RATIO_1_1, ZERO_BYTES);
 
         // make sure the contract has enough balance
         // WETH: 100 ether
@@ -227,6 +228,12 @@ contract MixedQuoterTest is
         seedBalance(address(this));
         approvePosmFor(address(this));
         mint(positionConfig, 3000 ether, address(this), ZERO_BYTES);
+
+        permit2Approve(address(this), permit2, address(token1), address(lpm));
+
+        PositionConfig memory nativePairConfig =
+            PositionConfig({poolKey: poolKeyWithNativeToken, tickLower: -300, tickUpper: 300});
+        mintWithNative(0, nativePairConfig, 1000 ether, address(this), ZERO_BYTES);
 
         // mint some liquidity to the bin pool
         binPoolManager.initialize(binPoolKey, activeId, ZERO_BYTES);
@@ -476,6 +483,30 @@ contract MixedQuoterTest is
         uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 901152761185198407);
+    }
+
+    // token2 -> WETH -> token1
+    // V3 WETH Pool -> V4 Native Pool
+    function testQuoterMixed_WETHToNative_V3WETHPair_V4CLNativePair() public {
+        address[] memory paths = new address[](3);
+        paths[0] = address(token2);
+        paths[1] = address(weth);
+        paths[2] = address(token1);
+
+        bytes memory actions = new bytes(2);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](2);
+        uint24 fee = 500;
+        params[0] = abi.encode(fee);
+        params[1] = abi.encode(
+            IMixedQuoter.QuoterMixedV4ExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
+        );
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 995013974661415835);
     }
 
     function _mintV3Liquidity(address _token0, address _token1) internal {
