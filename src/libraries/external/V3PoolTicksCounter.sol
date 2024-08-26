@@ -3,6 +3,7 @@ pragma solidity >=0.6.0;
 
 import {IPancakeV3Pool} from "../../interfaces/external/IPancakeV3Pool.sol";
 
+/// @dev Copy from https://github.com/pancakeswap/pancake-v3-contracts/blob/main/projects/router/contracts/libraries/PoolTicksCounter.sol
 library V3PoolTicksCounter {
     /// @dev This function counts the number of initialized ticks that would incur a gas cost between tickBefore and tickAfter.
     /// When tickBefore and/or tickAfter themselves are initialized, the logic over whether we should count them depends on the

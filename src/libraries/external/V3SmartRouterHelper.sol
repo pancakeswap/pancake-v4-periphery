@@ -7,6 +7,7 @@ import {IPancakeV3Pool} from "../../interfaces/external/IPancakeV3Pool.sol";
 import {IPancakeFactory} from "../../interfaces/external/IPancakeFactory.sol";
 import {IPancakeV3Factory} from "../../interfaces/external/IPancakeV3Factory.sol";
 
+/// @dev Copy from https://github.com/pancakeswap/pancake-v3-contracts/blob/main/projects/router/contracts/libraries/SmartRouterHelper.sol
 library V3SmartRouterHelper {
     /**
      * Stable *************************************************
