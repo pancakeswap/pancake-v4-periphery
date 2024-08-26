@@ -98,6 +98,7 @@ contract MixedQuoterTest is
     PoolId poolId;
     PoolKey poolKey;
     PoolKey poolKeyWithNativeToken;
+    PoolKey poolKeyWithWETH;
 
     bytes32 binPoolParam;
 
@@ -145,16 +146,24 @@ contract MixedQuoterTest is
         poolKeyWithNativeToken.currency1 = Currency.wrap(address(token1));
         clPoolManager.initialize(poolKeyWithNativeToken, SQRT_RATIO_1_1, ZERO_BYTES);
 
+        //set pool with WETH
+        poolKeyWithWETH = poolKey;
+        if (address(weth) < address(token2)) {
+            poolKeyWithWETH.currency0 = Currency.wrap(address(weth));
+            poolKeyWithWETH.currency1 = Currency.wrap(address(token2));
+        } else {
+            poolKeyWithWETH.currency0 = Currency.wrap(address(token2));
+            poolKeyWithWETH.currency1 = Currency.wrap(address(weth));
+        }
+        clPoolManager.initialize(poolKeyWithWETH, SQRT_RATIO_1_1, ZERO_BYTES);
+
         // make sure the contract has enough balance
-        // WETH: 100 ether
-        // Token: 100 ether
-        // ETH: 90 ether
-        deal(address(this), 1000 ether);
-        weth.deposit{value: 100 ether}();
-        token2.mint(address(this), 100 ether);
-        token3.mint(address(this), 100 ether);
-        token4.mint(address(this), 100 ether);
-        token5.mint(address(this), 100 ether);
+        deal(address(this), 100000 ether);
+        weth.deposit{value: 10000 ether}();
+        token2.mint(address(this), 10000 ether);
+        token3.mint(address(this), 10000 ether);
+        token4.mint(address(this), 10000 ether);
+        token5.mint(address(this), 10000 ether);
 
         v2Factory = IPancakeFactory(createContractThroughBytecode(_getBytecodePath()));
         v2Pair = IPancakePair(v2Factory.createPair(address(weth), address(token2)));
@@ -229,11 +238,17 @@ contract MixedQuoterTest is
         approvePosmFor(address(this));
         mint(positionConfig, 3000 ether, address(this), ZERO_BYTES);
 
+        permit2Approve(address(this), permit2, address(weth), address(lpm));
         permit2Approve(address(this), permit2, address(token1), address(lpm));
+        permit2Approve(address(this), permit2, address(token2), address(lpm));
 
         PositionConfig memory nativePairConfig =
             PositionConfig({poolKey: poolKeyWithNativeToken, tickLower: -300, tickUpper: 300});
         mintWithNative(0, nativePairConfig, 1000 ether, address(this), ZERO_BYTES);
+
+        PositionConfig memory wethPairConfig =
+            PositionConfig({poolKey: poolKeyWithWETH, tickLower: -300, tickUpper: 300});
+        mint(wethPairConfig, 1000 ether, address(this), ZERO_BYTES);
 
         // mint some liquidity to the bin pool
         binPoolManager.initialize(binPoolKey, activeId, ZERO_BYTES);
@@ -352,6 +367,45 @@ contract MixedQuoterTest is
         );
         assertEq(-deltaAmounts[1], 1 ether);
         assertEq(uint128(deltaAmounts[0]), amountOut);
+    }
+
+    function testV4CLquoteExactInputSingle_ZeroForOne_WETHPair() public {
+        address[] memory paths = new address[](2);
+        if (address(weth) < address(token2)) {
+            paths[0] = address(weth);
+            paths[1] = address(token2);
+        } else {
+            paths[0] = address(token2);
+            paths[1] = address(weth);
+        }
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] = abi.encode(
+            IMixedQuoter.QuoteMixedV4ExactInputSingleParams({
+                poolKey: poolKeyWithWETH,
+                hookData: ZERO_BYTES,
+                isWETHPool: true
+            })
+        );
+
+        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 996006981039903216);
+
+        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactInputSingle(
+            ICLQuoter.QuoteExactSingleParams({
+                poolKey: poolKeyWithWETH,
+                zeroForOne: true,
+                exactAmount: 1 ether,
+                sqrtPriceLimitX96: 0,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(-deltaAmounts[0], 1 ether);
+        assertEq(uint128(deltaAmounts[1]), amountOut);
     }
 
     function testBinQuoteExactInputSingle_ZeroForOne() public {
