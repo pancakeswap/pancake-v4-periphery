@@ -21,7 +21,6 @@ import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
 contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
-    // using Path for bytes;
     using SafeCast for *;
     using V3PoolTicksCounter for IPancakeV3Pool;
     using CurrencyLibrary for Currency;
