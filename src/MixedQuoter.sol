@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, equals} from "pancake-v4-core/src/types/Currency.sol";
+import {CurrencyLibrary, Currency, equals} from "pancake-v4-core/src/types/Currency.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {ICLQuoter} from "./pool-cl/interfaces/ICLQuoter.sol";
@@ -24,6 +24,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     // using Path for bytes;
     using SafeCast for *;
     using V3PoolTicksCounter for IPancakeV3Pool;
+    using CurrencyLibrary for Currency;
 
     address constant ZERO_ADDRESS = address(0);
 
@@ -306,20 +307,20 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         if (!isWETHPool && poolKey.currency0.isNative()) {
             if (tokenIn == WETH9) {
-                tokenIn = ZERO_ADDRESS;
+                tokenIn = Currency.unwrap(CurrencyLibrary.NATIVE);
             }
             if (tokenOut == WETH9) {
-                tokenOut = ZERO_ADDRESS;
+                tokenOut = Currency.unwrap(CurrencyLibrary.NATIVE);
             }
         }
         return (tokenIn, tokenOut);
     }
 
     function convertNativeToWETH(address tokenIn, address tokenOut) private view returns (address, address) {
-        if (tokenIn == ZERO_ADDRESS) {
+        if (Currency.wrap(tokenIn).isNative()) {
             tokenIn = WETH9;
         }
-        if (tokenOut == ZERO_ADDRESS) {
+        if (Currency.wrap(tokenOut).isNative()) {
             tokenOut = WETH9;
         }
         return (tokenIn, tokenOut);
