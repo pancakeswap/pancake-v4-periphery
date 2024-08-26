@@ -16,9 +16,10 @@ interface IMixedQuoter {
     error NoActions();
     error UnsupportedAction(uint256 action);
 
-    struct QuoterMixedV4ExactInputSingleParams {
+    struct QuoteMixedV4ExactInputSingleParams {
         PoolKey poolKey;
         bytes hookData;
+        bool isWETHPool; // If not set to true, WETH in paths is converted to the native address by default
     }
 
     struct QuoteExactInputSingleV3Params {
@@ -50,8 +51,8 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoterMixedV4ExactInputSingleParams`
-    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoterMixedV4ExactInputSingleParams`
+    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     function quoteMixedExactInput(
