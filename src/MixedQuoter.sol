@@ -280,6 +280,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         return amountIn;
     }
 
+    /// @dev Check if the poolKey currency matches the tokenIn and tokenOut
     function checkV4PoolKeyCurrency(PoolKey memory poolKey, bool isZeroForOne, address tokenIn, address tokenOut)
         private
         pure
@@ -298,6 +299,9 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         }
     }
 
+    /// @notice Convert WETH to native currency for V4 pools
+    /// @dev for example, quote route are v3 WETH pool[token0, WETH] and v4 native pool[NATIVE,token1]
+    /// paths is [token0, WETH, token1], we need to convert WETH to NATIVE when quote v4 pool
     function convertWETHToV4NativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)
         private
         view
@@ -314,6 +318,9 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         return (tokenIn, tokenOut);
     }
 
+    /// @dev Convert native currency to WETH for Non-V4 pools.
+    /// For example, quote route are v4 native pool[NATIVE, token0] and v3 WETH pool[WETH, token1].
+    //// paths is [token0, NATIVE, token1], we need to convert NATIVE to WETH when quote v3 pool
     function convertNativeToWETH(address tokenIn, address tokenOut) private view returns (address, address) {
         if (Currency.wrap(tokenIn).isNative()) {
             tokenIn = WETH9;
