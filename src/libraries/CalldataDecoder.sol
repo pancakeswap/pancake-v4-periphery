@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 

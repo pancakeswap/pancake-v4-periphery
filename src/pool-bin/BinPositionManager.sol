@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2024 PancakeSwap
-pragma solidity ^0.8.20;
+pragma solidity 0.8.26;
 
 import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";

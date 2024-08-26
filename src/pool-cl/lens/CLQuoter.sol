@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.24;
+pragma solidity 0.8.26;
 
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
