@@ -19,7 +19,6 @@ interface IMixedQuoter {
     struct QuoteMixedV4ExactInputSingleParams {
         PoolKey poolKey;
         bytes hookData;
-        bool isWETHPool; // If not set to true, WETH in paths is converted to the native address by default
     }
 
     struct QuoteExactInputSingleV3Params {
