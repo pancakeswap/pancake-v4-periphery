@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.0;
 
 interface IPancakeV3Pool {
     /// @notice The 0th storage slot in the pool stores many values, and is exposed as a single method to save gas

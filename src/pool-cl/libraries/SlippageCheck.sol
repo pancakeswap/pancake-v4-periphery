@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {SafeCastTemp} from "../../libraries/SafeCast.sol";

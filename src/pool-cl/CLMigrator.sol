@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2024 PancakeSwap
-pragma solidity ^0.8.24;
+pragma solidity 0.8.26;
 
 import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";

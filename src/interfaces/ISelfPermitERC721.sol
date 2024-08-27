@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.0;
 
 /// @title Self Permit For ERC721
 /// @notice Functionality to call permit on any EIP-2612-compliant token

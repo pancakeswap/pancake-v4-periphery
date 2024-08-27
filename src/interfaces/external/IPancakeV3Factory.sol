@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.5.0;
+pragma solidity ^0.8.0;
 
 interface IPancakeV3Factory {
     /// @notice Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.24;
+pragma solidity ^0.8.24;
 
-//import {PoolGetters} from "./PoolGetters.sol";
 import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
