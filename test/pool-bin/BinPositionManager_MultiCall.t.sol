@@ -132,7 +132,7 @@ contract BinPositionManager_MultiCallTest is
         binPm.multicall{value: 1 ether}(calls);
 
         // verify pool
-        (uint128 binReserveX, uint128 binReserveY,) = poolManager.getBin(key.toId(), activeId);
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(key.toId(), activeId);
         assertGt(binReserveX, 0);
         assertGt(binReserveY, 0);
     }
@@ -211,7 +211,7 @@ contract BinPositionManager_MultiCallTest is
         binPm.multicall(calls);
 
         // verify pool
-        (uint128 binReserveX, uint128 binReserveY,) = poolManager.getBin(key1.toId(), activeId);
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(key1.toId(), activeId);
         assertGt(binReserveX, 0);
         assertGt(binReserveY, 0);
     }

@@ -109,7 +109,7 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
         binPm.modifyLiquidities(payload, _deadline);
 
         // before: verify pool
-        (uint128 binReserveX, uint128 binReserveY,) = poolManager.getBin(key1.toId(), activeId);
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(key1.toId(), activeId);
         assertEq(binReserveX, 1 ether);
         assertEq(binReserveY, 1 ether);
 
@@ -120,7 +120,7 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
         _swapExactIn(key1, 0.1 ether, payload);
 
         // after: verify pool reserve increase due to hook minting
-        (binReserveX, binReserveY,) = poolManager.getBin(key1.toId(), activeId);
+        (binReserveX, binReserveY,,) = poolManager.getBin(key1.toId(), activeId);
         assertEq(binReserveX, 2100000000000000000); // +2eth from liquidity, +0.1eth from swap
         assertEq(binReserveY, 1900300000000000000); // +2eth from liquidity, -0.1eth from swap
     }
@@ -132,7 +132,7 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
             _addLiquidity(binPm, key1, binIds, activeId, address(hookModifyLiquidities));
 
         // before: verify pool
-        (uint128 binReserveX, uint128 binReserveY,) = poolManager.getBin(key1.toId(), activeId);
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(key1.toId(), activeId);
         assertEq(binReserveX, 1 ether);
         assertEq(binReserveY, 1 ether);
 
@@ -147,7 +147,7 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
         _swapExactIn(key1, 0.1 ether, payload);
 
         // after: verify pool reserve decrease due to hook decreasing liquidity too
-        (binReserveX, binReserveY,) = poolManager.getBin(key1.toId(), activeId);
+        (binReserveX, binReserveY,,) = poolManager.getBin(key1.toId(), activeId);
         assertEq(binReserveX, 600000000000000000); // +1eth from add, -0.5eth from remove, +0.1 eth from swapIn
         assertEq(binReserveY, 400300000000000000); // +1eth from add, -0.5eth from remove, -0.1 eth from swapOut
     }
