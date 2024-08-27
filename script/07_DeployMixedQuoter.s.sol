@@ -15,7 +15,6 @@ import {MixedQuoter} from "../src/MixedQuoter.sol";
  *     --verify
  */
 contract DeployMixedQuoterScript is BaseScript {
-
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
@@ -38,7 +37,8 @@ contract DeployMixedQuoterScript is BaseScript {
         address binQuoter = getAddressFromConfig("binQuoter");
         emit log_named_address("binQuoter", binQuoter);
 
-        MixedQuoter mixedQuoter = new MixedQuoter(factoryV3, factoryV2, factoryStable, weth, ICLQuoter(clQuoter), IBinQuoter(binQuoter));
+        MixedQuoter mixedQuoter =
+            new MixedQuoter(factoryV3, factoryV2, factoryStable, weth, ICLQuoter(clQuoter), IBinQuoter(binQuoter));
         emit log_named_address("mixedQuoter", address(mixedQuoter));
 
         vm.stopBroadcast();
