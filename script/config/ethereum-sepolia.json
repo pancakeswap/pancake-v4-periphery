@@ -1,13 +1,17 @@
 {
   "permit2": "0x31c2F6fcFf4F8759b3Bd5Bf0e1084A055615c768",
-  "weth": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-  "vault": "0x9ddc29733279C31cAb29616Ebf3EB37E63Cc9157",
-  "clPoolManager": "0x97e09cD0E079CeeECBb799834959e3dC8e4ec31A",
-  "binPoolManager": "0x85cD8228f397a6a52402776A8A8B720e85622C18",
-  "clPositionManager": "0x",
-  "binPositionManager": "0x",
-  "clQuoter:": "0x",
-  "binQuoter": "0x",
-  "clMigrator": "0x",
-  "binMigrator": "0x"
+  "weth": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+  "vault": "0xA9B361Df352a80BA3213c656b4EfA5436EC80362",
+  "clPoolManager": "0x6F9302eE8760c764d775B1550C65468Ec4C25Dfc",
+  "binPoolManager": "0xc0270E12dd2bCF9A22A928af6047e247508E5615",
+  "clPositionManager": "0x969D90aC74A1a5228b66440f8C8326a8dA47A5F9",
+  "binPositionManager": "0xda00d92f2977B806E51f221132c722d4b0D53514",
+  "clQuoter": "0x437ef7C8C00d20a8535ae1786c5800c88413e7Af",
+  "binQuoter": "0x1541841e05371968CB67038d8b7D4B64605614a4",
+  "clMigrator": "0x2BafB051b2cD5a20F6579aeC3F0CF4958CE986a3",
+  "binMigrator": "0xbE4CEFaA182a41Afd2D0e1f183EB368B3489cc36.",
+  "factoryV3": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+  "factoryV2": "0x1bdc540dEB9Ed1fA29964DeEcCc524A8f5e2198e",
+  "factoryStable": "0x000000000000000000000000000000000000dEaD",
+  "mixedQuoter": "0xc872e4425d83141dc517418fd32e9550f42ffe34"
 }
