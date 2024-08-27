@@ -4,8 +4,8 @@ pragma solidity ^0.8.24;
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 
 /// @title MixedQuoter Interface
-/// @notice Supports quoting the calculated amounts for exact input swaps. Is specialized for routes containing a mix of Stable, V2, V3 liquidity, v4 liquidity.
-/// @notice For each pool also tells you the number of initialized ticks crossed and the sqrt price of the pool after the swap.
+/// @notice Supports quoting the calculated amounts for exact input swaps. Is specialized for routes containing a mix of Stable, V2, V3 , v4 liquidity.
+/// @notice Supports quoting the calculated amounts for exact output swaps. It is specialized for routes containing a mix of v4 cl and v4 bin liquidity.
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
 interface IMixedQuoter {
@@ -51,7 +51,7 @@ interface IMixedQuoter {
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
     /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_BIN_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     function quoteMixedExactInput(
@@ -60,6 +60,21 @@ interface IMixedQuoter {
         bytes[] calldata params,
         uint256 amountIn
     ) external returns (uint256 amountOut);
+
+    /// @notice Returns the amount in required for a given exact output swap without executing the swap
+    /// @param paths The path of the swap, i.e. each token pair in the path
+    /// @param actions The actions to take for each pair in the path
+    /// @param params The params for each action in the path
+    /// V4_CL_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_BIN_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// @param amountOut The amount of the last token to receive
+    /// @return amountIn The amount of first token required to be paid
+    function quoteMixedExactOutput(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountOut
+    ) external returns (uint256 amountIn);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleParams`

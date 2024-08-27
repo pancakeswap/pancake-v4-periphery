@@ -97,6 +97,7 @@ contract MixedQuoterTest is
 
     PoolId poolId;
     PoolKey poolKey;
+    PoolKey poolKey2;
     PoolKey poolKeyWithNativeToken;
     PoolKey poolKeyWithWETH;
 
@@ -140,6 +141,12 @@ contract MixedQuoterTest is
             fee: uint24(3000), // 3000 = 0.3%
             parameters: binPoolParam.setBinStep(10) // binStep
         });
+
+        // set cl pool with toke2 and token3
+        poolKey2 = poolKey;
+        poolKey2.currency0 = Currency.wrap(address(token2));
+        poolKey2.currency1 = Currency.wrap(address(token3));
+        clPoolManager.initialize(poolKey2, SQRT_RATIO_1_1, ZERO_BYTES);
 
         poolKeyWithNativeToken = poolKey;
         poolKeyWithNativeToken.currency0 = Currency.wrap(address(0));
@@ -241,6 +248,10 @@ contract MixedQuoterTest is
         permit2Approve(address(this), permit2, address(weth), address(lpm));
         permit2Approve(address(this), permit2, address(token1), address(lpm));
         permit2Approve(address(this), permit2, address(token2), address(lpm));
+        permit2Approve(address(this), permit2, address(token3), address(lpm));
+
+        PositionConfig memory poolKey2Config = PositionConfig({poolKey: poolKey2, tickLower: -300, tickUpper: 300});
+        mint(poolKey2Config, 1000 ether, address(this), ZERO_BYTES);
 
         PositionConfig memory nativePairConfig =
             PositionConfig({poolKey: poolKeyWithNativeToken, tickLower: -300, tickUpper: 300});
@@ -367,6 +378,64 @@ contract MixedQuoterTest is
         assertEq(uint128(deltaAmounts[0]), amountOut);
     }
 
+    function testV4CLquoteExactOutputSingle_ZeroForOne() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(Currency.unwrap(poolKey.currency0));
+        paths[1] = address(Currency.unwrap(poolKey.currency1));
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_OUTPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountIn = mixedQuoter.quoteMixedExactOutput(paths, actions, params, 1 ether);
+
+        assertEq(amountIn, 1003343474906212470);
+
+        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactOutputSingle(
+            ICLQuoter.QuoteExactSingleParams({
+                poolKey: poolKey,
+                zeroForOne: true,
+                exactAmount: 1 ether,
+                sqrtPriceLimitX96: 0,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(uint128(-deltaAmounts[0]), amountIn);
+        assertEq(deltaAmounts[1], 1 ether);
+    }
+
+    function testV4CLquoteExactOutputSingle_OneForZero() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(Currency.unwrap(poolKey.currency1));
+        paths[1] = address(Currency.unwrap(poolKey.currency0));
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_OUTPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountIn = mixedQuoter.quoteMixedExactOutput(paths, actions, params, 1 ether);
+
+        assertEq(amountIn, 1003343474906212470);
+
+        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactOutputSingle(
+            ICLQuoter.QuoteExactSingleParams({
+                poolKey: poolKey,
+                zeroForOne: false,
+                exactAmount: 1 ether,
+                sqrtPriceLimitX96: 0,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(uint128(-deltaAmounts[1]), amountIn);
+        assertEq(deltaAmounts[0], 1 ether);
+    }
+
     function testV4CLquoteExactInputSingle_ZeroForOne_WETHPair() public {
         address[] memory paths = new address[](2);
         if (address(weth) < address(token2)) {
@@ -456,6 +525,62 @@ contract MixedQuoterTest is
         );
         assertEq(-deltaAmounts[1], 1 ether);
         assertEq(uint128(deltaAmounts[0]), amountOut);
+    }
+
+    function testBinQuoteExactOutputSingle_ZeroForOne() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token3);
+        paths[1] = address(token4);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_OUTPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountIn = mixedQuoter.quoteMixedExactOutput(paths, actions, params, 1 ether);
+
+        assertEq(amountIn, 1003009027081243732);
+
+        (int128[] memory deltaAmounts,) = binQuoter.quoteExactOutputSingle(
+            IBinQuoter.QuoteExactSingleParams({
+                poolKey: binPoolKey,
+                zeroForOne: true,
+                exactAmount: 1 ether,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(uint128(-deltaAmounts[0]), amountIn);
+        assertEq(deltaAmounts[1], 1 ether);
+    }
+
+    function testBinQuoteExactOutputSingle_OneForZero() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token4);
+        paths[1] = address(token3);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_OUTPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountIn = mixedQuoter.quoteMixedExactOutput(paths, actions, params, 1 ether);
+
+        assertEq(amountIn, 1003009027081243732);
+
+        (int128[] memory deltaAmounts,) = binQuoter.quoteExactOutputSingle(
+            IBinQuoter.QuoteExactSingleParams({
+                poolKey: binPoolKey,
+                zeroForOne: false,
+                exactAmount: 1 ether,
+                hookData: ZERO_BYTES
+            })
+        );
+        assertEq(uint128(-deltaAmounts[1]), amountIn);
+        assertEq(deltaAmounts[0], 1 ether);
     }
 
     // token0 -> token1 -> token2
@@ -581,6 +706,51 @@ contract MixedQuoterTest is
         uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 995014965144446181);
+    }
+
+    // token2 -> token3 -> token4
+    // V4 CL Pool -> v4 Bin Pool
+    function testQuoteMixedExactOutput_TwoHops_V4Cl_V4Bin() public {
+        address[] memory paths = new address[](3);
+        paths[0] = address(token2);
+        paths[1] = address(token3);
+        paths[2] = address(token4);
+
+        bytes memory actions = new bytes(2);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_OUTPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_OUTPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](2);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey2, hookData: ZERO_BYTES}));
+        params[1] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+
+        uint256 amountIn = mixedQuoter.quoteMixedExactOutput(paths, actions, params, 1 ether);
+
+        assertEq(amountIn, 1007037175784381258);
+
+        (int128[] memory deltaAmounts,) = binQuoter.quoteExactOutputSingle(
+            IBinQuoter.QuoteExactSingleParams({
+                poolKey: binPoolKey,
+                zeroForOne: true,
+                exactAmount: 1 ether,
+                hookData: ZERO_BYTES
+            })
+        );
+
+        (int128[] memory deltaAmounts2,,) = clQuoter.quoteExactOutputSingle(
+            ICLQuoter.QuoteExactSingleParams({
+                poolKey: poolKey2,
+                zeroForOne: true,
+                exactAmount: uint128(-deltaAmounts[0]),
+                sqrtPriceLimitX96: 0,
+                hookData: ZERO_BYTES
+            })
+        );
+
+        assertEq(uint128(-deltaAmounts2[0]), amountIn);
+        assertEq(deltaAmounts2[1], -deltaAmounts[0]);
     }
 
     function _mintV3Liquidity(address _token0, address _token1) internal {

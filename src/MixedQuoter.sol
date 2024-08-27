@@ -15,9 +15,8 @@ import {V3SmartRouterHelper} from "./libraries/external/V3SmartRouterHelper.sol"
 import {IMixedQuoter} from "./interfaces/IMixedQuoter.sol";
 import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
 
-/// @title Provides on chain quotes for v4, V3, V2, Stable and MixedRoute exact input swaps
-/// @notice Allows getting the expected amount out for a given swap without executing the swap
-/// @notice Does not support exact output swaps since using the contract balance between exactOut swaps is not supported
+/// @title Provides on chain quotes for v4, V3, V2, Stable, MixedRoute exact input swaps, and MixedRoute exact output swaps for v4 cl and v4 bin pools
+/// @notice Does not support exact output swaps except v4 pools since using the contract balance between exactOut swaps is not supported
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
 contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
@@ -277,6 +276,58 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         }
 
         return amountIn;
+    }
+
+    function quoteMixedExactOutput(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountOut
+    ) external override returns (uint256 amountIn) {
+        uint256 numActions = actions.length;
+        if (numActions == 0) revert NoActions();
+        if (numActions != params.length || numActions != paths.length - 1) revert InputLengthMismatch();
+        for (uint256 actionIndex = numActions; actionIndex > 0; actionIndex--) {
+            address tokenIn = paths[actionIndex - 1];
+            address tokenOut = paths[actionIndex];
+            if (tokenIn == tokenOut) revert InvalidPath();
+
+            uint256 action = uint256(uint8(actions[actionIndex - 1]));
+            if (action == MixedQuoterActions.V4_CL_EXACT_OUTPUT_SINGLE) {
+                QuoteMixedV4ExactInputSingleParams memory clParams =
+                    abi.decode(params[actionIndex - 1], (QuoteMixedV4ExactInputSingleParams));
+                bool zeroForOne = tokenIn < tokenOut;
+                checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
+                (int128[] memory deltaAmounts,,) = clQuoter.quoteExactOutputSingle(
+                    ICLQuoter.QuoteExactSingleParams({
+                        poolKey: clParams.poolKey,
+                        zeroForOne: zeroForOne,
+                        exactAmount: amountOut.toUint128(),
+                        sqrtPriceLimitX96: 0,
+                        hookData: clParams.hookData
+                    })
+                );
+                amountOut = uint256(int256(-deltaAmounts[zeroForOne ? 0 : 1]));
+            } else if (action == MixedQuoterActions.V4_BIN_EXACT_OUTPUT_SINGLE) {
+                QuoteMixedV4ExactInputSingleParams memory binParams =
+                    abi.decode(params[actionIndex - 1], (QuoteMixedV4ExactInputSingleParams));
+                bool zeroForOne = tokenIn < tokenOut;
+                checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
+                (int128[] memory deltaAmounts,) = binQuoter.quoteExactOutputSingle(
+                    IBinQuoter.QuoteExactSingleParams({
+                        poolKey: binParams.poolKey,
+                        zeroForOne: zeroForOne,
+                        exactAmount: amountOut.toUint128(),
+                        hookData: binParams.hookData
+                    })
+                );
+                amountOut = uint256(int256(-deltaAmounts[zeroForOne ? 0 : 1]));
+            } else {
+                revert UnsupportedAction(action);
+            }
+        }
+
+        return amountOut;
     }
 
     /// @dev Check if the poolKey currency matches the tokenIn and tokenOut
