@@ -460,7 +460,7 @@ contract MixedQuoterTest is
 
     // token0 -> token1 -> token2
     // V4 CL Pool -> SS Pool
-    function testQuoteMixedTwoHops_V4Cl_SS() public {
+    function testQuoteMixedExactInput_TwoHops_V4Cl_SS() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -482,7 +482,7 @@ contract MixedQuoterTest is
 
     // token0 -> token1 -> token2 -> WETH
     // V4 CL Pool -> SS Pool -> V3 Pool
-    function testQuoteMixedThreeHops_V4Cl_SS_V3() public {
+    function testQuoteMixedExactInput_ThreeHops_V4Cl_SS_V3() public {
         address[] memory paths = new address[](4);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -508,7 +508,7 @@ contract MixedQuoterTest is
 
     // token0 -> token1 -> token2 -> token3 -> token4
     // V4 CL Pool -> SS Pool -> V2 Pool -> V4 Bin Pool
-    function testQuoteMixedFourHops_V4Cl_SS_V2_V4Bin() public {
+    function testQuoteMixedExactInput_FourHops_V4Cl_SS_V2_V4Bin() public {
         address[] memory paths = new address[](5);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -537,7 +537,7 @@ contract MixedQuoterTest is
 
     // token2 -> WETH -> token1
     // V3 WETH Pool -> V4 Native Pool
-    function testQuoteMixed_ConvertWETHToNative_V3WETHPair_V4CLNativePair() public {
+    function testQuoteMixedExactInput_ConvertWETHToNative_V3WETHPair_V4CLNativePair() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token2);
         paths[1] = address(weth);
@@ -561,7 +561,7 @@ contract MixedQuoterTest is
 
     // token1 -> address(0) -> token2
     // V4 CL Native Pool -> V3 WETH Pool
-    function testQuoteMixed_ConvertNativeToWETH_V4CLNativePair_V3WETHPair() public {
+    function testQuoteMixedExactInput_ConvertNativeToWETH_V4CLNativePair_V3WETHPair() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token1);
         paths[1] = address(0);
