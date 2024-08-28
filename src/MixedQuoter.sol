@@ -123,7 +123,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     }
 
     /// @dev Fetch an exactIn quote for a V3 Pool on chain
-    function quoteExactInputSingleV3(QuoteExactInputSingleV3Params memory params)
+    function quoteExactInputSingleV3(QuoteExactSingleV3Params memory params)
         public
         override
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
@@ -135,7 +135,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         try pool.swap(
             address(this), // address(0) might cause issues with some tokens
             zeroForOne,
-            params.amountIn.toInt256(),
+            params.exactAmount.toInt256(),
             params.sqrtPriceLimitX96 == 0
                 ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                 : params.sqrtPriceLimitX96,
@@ -151,7 +151,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
      */
 
     /// @dev Fetch an exactIn quote for a V2 pair on chain
-    function quoteExactInputSingleV2(QuoteExactInputSingleV2Params memory params)
+    function quoteExactInputSingleV2(QuoteExactSingleV2Params memory params)
         public
         view
         override
@@ -159,7 +159,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         (uint256 reserveIn, uint256 reserveOut) =
             V3SmartRouterHelper.getReserves(factoryV2, params.tokenIn, params.tokenOut);
-        amountOut = V3SmartRouterHelper.getAmountOut(params.amountIn, reserveIn, reserveOut);
+        amountOut = V3SmartRouterHelper.getAmountOut(params.exactAmount, reserveIn, reserveOut);
     }
 
     /**
@@ -167,7 +167,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
      */
 
     /// @dev Fetch an exactIn quote for a Stable pair on chain
-    function quoteExactInputSingleStable(QuoteExactInputSingleStableParams memory params)
+    function quoteExactInputSingleStable(QuoteExactInputStableParams memory params)
         public
         view
         override
@@ -175,7 +175,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         (uint256 i, uint256 j, address swapContract) =
             V3SmartRouterHelper.getStableInfo(factoryStable, params.tokenIn, params.tokenOut, params.flag);
-        amountOut = IStableSwap(swapContract).get_dy(i, j, params.amountIn);
+        amountOut = IStableSwap(swapContract).get_dy(i, j, params.exactAmount);
     }
 
     /**
@@ -201,25 +201,25 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleV2(
-                    QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
+                    QuoteExactSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, exactAmount: amountIn})
                 );
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex]: abi.encode(fee)
                 uint24 fee = abi.decode(params[actionIndex], (uint24));
                 (uint256 _amountOut,,,) = quoteExactInputSingleV3(
-                    QuoteExactInputSingleV3Params({
+                    QuoteExactSingleV3Params({
                         tokenIn: tokenIn,
                         tokenOut: tokenOut,
-                        amountIn: amountIn,
+                        exactAmount: amountIn,
                         fee: fee,
                         sqrtPriceLimitX96: 0
                     })
                 );
                 amountIn = _amountOut;
             } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory clParams =
-                    abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
+                QuoteMixedV4ExactSingleParams memory clParams =
+                    abi.decode(params[actionIndex], (QuoteMixedV4ExactSingleParams));
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(clParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
@@ -234,8 +234,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 );
                 amountIn = deltaAmounts[zeroForOne ? 1 : 0].toUint256();
             } else if (action == MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory binParams =
-                    abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
+                QuoteMixedV4ExactSingleParams memory binParams =
+                    abi.decode(params[actionIndex], (QuoteMixedV4ExactSingleParams));
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(binParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
@@ -252,23 +252,13 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 2
-                    })
+                    QuoteExactInputStableParams({tokenIn: tokenIn, tokenOut: tokenOut, exactAmount: amountIn, flag: 2})
                 );
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 3
-                    })
+                    QuoteExactInputStableParams({tokenIn: tokenIn, tokenOut: tokenOut, exactAmount: amountIn, flag: 3})
                 );
             } else {
                 revert UnsupportedAction(action);
@@ -294,8 +284,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
 
             uint256 action = uint256(uint8(actions[actionIndex - 1]));
             if (action == MixedQuoterActions.V4_CL_EXACT_OUTPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory clParams =
-                    abi.decode(params[actionIndex - 1], (QuoteMixedV4ExactInputSingleParams));
+                QuoteMixedV4ExactSingleParams memory clParams =
+                    abi.decode(params[actionIndex - 1], (QuoteMixedV4ExactSingleParams));
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
                 (int128[] memory deltaAmounts,,) = clQuoter.quoteExactOutputSingle(
@@ -309,8 +299,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 );
                 amountOut = uint256(int256(-deltaAmounts[zeroForOne ? 0 : 1]));
             } else if (action == MixedQuoterActions.V4_BIN_EXACT_OUTPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory binParams =
-                    abi.decode(params[actionIndex - 1], (QuoteMixedV4ExactInputSingleParams));
+                QuoteMixedV4ExactSingleParams memory binParams =
+                    abi.decode(params[actionIndex - 1], (QuoteMixedV4ExactSingleParams));
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
                 (int128[] memory deltaAmounts,) = binQuoter.quoteExactOutputSingle(

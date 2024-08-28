@@ -16,29 +16,29 @@ interface IMixedQuoter {
     error NoActions();
     error UnsupportedAction(uint256 action);
 
-    struct QuoteMixedV4ExactInputSingleParams {
+    struct QuoteMixedV4ExactSingleParams {
         PoolKey poolKey;
         bytes hookData;
     }
 
-    struct QuoteExactInputSingleV3Params {
+    struct QuoteExactSingleV3Params {
         address tokenIn;
         address tokenOut;
-        uint256 amountIn;
+        uint256 exactAmount;
         uint24 fee;
         uint160 sqrtPriceLimitX96;
     }
 
-    struct QuoteExactInputSingleV2Params {
+    struct QuoteExactSingleV2Params {
         address tokenIn;
         address tokenOut;
-        uint256 amountIn;
+        uint256 exactAmount;
     }
 
-    struct QuoteExactInputSingleStableParams {
+    struct QuoteExactInputStableParams {
         address tokenIn;
         address tokenOut;
-        uint256 amountIn;
+        uint256 exactAmount;
         uint256 flag;
     }
 
@@ -50,8 +50,8 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_BIN_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
+    /// V4_BIN_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     function quoteMixedExactInput(
@@ -65,8 +65,8 @@ interface IMixedQuoter {
     /// @param paths The path of the swap, i.e. each token pair in the path
     /// @param actions The actions to take for each pair in the path
     /// @param params The params for each action in the path
-    /// V4_CL_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_BIN_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_CL_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
+    /// V4_BIN_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
     /// @param amountOut The amount of the last token to receive
     /// @return amountIn The amount of first token required to be paid
     function quoteMixedExactOutput(
@@ -81,34 +81,32 @@ interface IMixedQuoter {
     /// tokenIn The token being swapped in
     /// tokenOut The token being swapped out
     /// fee The fee of the token pool to consider for the pair
-    /// amountIn The desired input amount
+    /// exactAmount The desired input amount
     /// sqrtPriceLimitX96 The price limit of the pool that cannot be exceeded by the swap
     /// @return amountOut The amount of `tokenOut` that would be received
     /// @return sqrtPriceX96After The sqrt price of the pool after the swap
     /// @return initializedTicksCrossed The number of initialized ticks that the swap crossed
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    function quoteExactInputSingleV3(QuoteExactInputSingleV3Params memory params)
+    function quoteExactInputSingleV3(QuoteExactSingleV3Params memory params)
         external
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single V2 pool
-    /// @param params The params for the quote, encoded as `QuoteExactInputSingleV2Params`
+    /// @param params The params for the quote, encoded as `QuoteExactSingleV2Params`
     /// tokenIn The token being swapped in
     /// tokenOut The token being swapped out
-    /// amountIn The desired input amount
+    /// exactAmount The desired input amount
     /// @return amountOut The amount of `tokenOut` that would be received
-    function quoteExactInputSingleV2(QuoteExactInputSingleV2Params memory params)
-        external
-        returns (uint256 amountOut);
+    function quoteExactInputSingleV2(QuoteExactSingleV2Params memory params) external returns (uint256 amountOut);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single Stable pool
-    /// @param params The params for the quote, encoded as `QuoteExactInputSingleStableParams`
+    /// @param params The params for the quote, encoded as `QuoteExactInputStableParams`
     /// tokenIn The token being swapped in
     /// tokenOut The token being swapped out
-    /// amountIn The desired input amount
+    /// exactAmount The desired input amount
     /// flag The token amount in a single Stable pool. 2 for 2pool, 3 for 3pool
     /// @return amountOut The amount of `tokenOut` that would be received
-    function quoteExactInputSingleStable(QuoteExactInputSingleStableParams memory params)
+    function quoteExactInputSingleStable(QuoteExactInputStableParams memory params)
         external
         returns (uint256 amountOut);
 
