@@ -16,7 +16,7 @@ interface IMixedQuoter {
     error NoActions();
     error UnsupportedAction(uint256 action);
 
-    struct QuoteMixedV4ExactInputSingleParams {
+    struct QuoteMixedV4ExactSingleParams {
         PoolKey poolKey;
         bytes hookData;
     }
@@ -50,8 +50,8 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_BIN_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
+    /// V4_BIN_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     function quoteMixedExactInput(
@@ -65,8 +65,8 @@ interface IMixedQuoter {
     /// @param paths The path of the swap, i.e. each token pair in the path
     /// @param actions The actions to take for each pair in the path
     /// @param params The params for each action in the path
-    /// V4_CL_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_BIN_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// V4_CL_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
+    /// V4_BIN_EXACT_OUTPUT_SINGLE params are encoded as `QuoteMixedV4ExactSingleParams`
     /// @param amountOut The amount of the last token to receive
     /// @return amountIn The amount of first token required to be paid
     function quoteMixedExactOutput(
