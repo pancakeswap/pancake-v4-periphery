@@ -167,7 +167,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
      */
 
     /// @dev Fetch an exactIn quote for a Stable pair on chain
-    function quoteExactInputSingleStable(QuoteExactInputSingleStableParams memory params)
+    function quoteExactInputSingleStable(QuoteExactInputStableParams memory params)
         public
         view
         override
@@ -175,7 +175,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         (uint256 i, uint256 j, address swapContract) =
             V3SmartRouterHelper.getStableInfo(factoryStable, params.tokenIn, params.tokenOut, params.flag);
-        amountOut = IStableSwap(swapContract).get_dy(i, j, params.amountIn);
+        amountOut = IStableSwap(swapContract).get_dy(i, j, params.exactAmount);
     }
 
     /**
@@ -252,23 +252,13 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 2
-                    })
+                    QuoteExactInputStableParams({tokenIn: tokenIn, tokenOut: tokenOut, exactAmount: amountIn, flag: 2})
                 );
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 3
-                    })
+                    QuoteExactInputStableParams({tokenIn: tokenIn, tokenOut: tokenOut, exactAmount: amountIn, flag: 3})
                 );
             } else {
                 revert UnsupportedAction(action);
