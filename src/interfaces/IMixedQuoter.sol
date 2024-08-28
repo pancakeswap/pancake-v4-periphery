@@ -29,10 +29,10 @@ interface IMixedQuoter {
         uint160 sqrtPriceLimitX96;
     }
 
-    struct QuoteExactInputSingleV2Params {
+    struct QuoteExactSingleV2Params {
         address tokenIn;
         address tokenOut;
-        uint256 amountIn;
+        uint256 exactAmount;
     }
 
     struct QuoteExactInputSingleStableParams {
@@ -92,14 +92,12 @@ interface IMixedQuoter {
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single V2 pool
-    /// @param params The params for the quote, encoded as `QuoteExactInputSingleV2Params`
+    /// @param params The params for the quote, encoded as `QuoteExactSingleV2Params`
     /// tokenIn The token being swapped in
     /// tokenOut The token being swapped out
-    /// amountIn The desired input amount
+    /// exactAmount The desired input amount
     /// @return amountOut The amount of `tokenOut` that would be received
-    function quoteExactInputSingleV2(QuoteExactInputSingleV2Params memory params)
-        external
-        returns (uint256 amountOut);
+    function quoteExactInputSingleV2(QuoteExactSingleV2Params memory params) external returns (uint256 amountOut);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single Stable pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleStableParams`

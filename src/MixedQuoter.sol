@@ -151,7 +151,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
      */
 
     /// @dev Fetch an exactIn quote for a V2 pair on chain
-    function quoteExactInputSingleV2(QuoteExactInputSingleV2Params memory params)
+    function quoteExactInputSingleV2(QuoteExactSingleV2Params memory params)
         public
         view
         override
@@ -159,7 +159,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         (uint256 reserveIn, uint256 reserveOut) =
             V3SmartRouterHelper.getReserves(factoryV2, params.tokenIn, params.tokenOut);
-        amountOut = V3SmartRouterHelper.getAmountOut(params.amountIn, reserveIn, reserveOut);
+        amountOut = V3SmartRouterHelper.getAmountOut(params.exactAmount, reserveIn, reserveOut);
     }
 
     /**
@@ -201,7 +201,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 amountIn = quoteExactInputSingleV2(
-                    QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
+                    QuoteExactSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, exactAmount: amountIn})
                 );
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
