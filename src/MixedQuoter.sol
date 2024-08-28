@@ -123,7 +123,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     }
 
     /// @dev Fetch an exactIn quote for a V3 Pool on chain
-    function quoteExactInputSingleV3(QuoteExactInputSingleV3Params memory params)
+    function quoteExactInputSingleV3(QuoteExactSingleV3Params memory params)
         public
         override
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
@@ -135,7 +135,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         try pool.swap(
             address(this), // address(0) might cause issues with some tokens
             zeroForOne,
-            params.amountIn.toInt256(),
+            params.exactAmount.toInt256(),
             params.sqrtPriceLimitX96 == 0
                 ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                 : params.sqrtPriceLimitX96,
@@ -208,10 +208,10 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 // params[actionIndex]: abi.encode(fee)
                 uint24 fee = abi.decode(params[actionIndex], (uint24));
                 (uint256 _amountOut,,,) = quoteExactInputSingleV3(
-                    QuoteExactInputSingleV3Params({
+                    QuoteExactSingleV3Params({
                         tokenIn: tokenIn,
                         tokenOut: tokenOut,
-                        amountIn: amountIn,
+                        exactAmount: amountIn,
                         fee: fee,
                         sqrtPriceLimitX96: 0
                     })

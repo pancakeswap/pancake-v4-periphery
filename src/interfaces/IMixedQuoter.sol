@@ -21,10 +21,10 @@ interface IMixedQuoter {
         bytes hookData;
     }
 
-    struct QuoteExactInputSingleV3Params {
+    struct QuoteExactSingleV3Params {
         address tokenIn;
         address tokenOut;
-        uint256 amountIn;
+        uint256 exactAmount;
         uint24 fee;
         uint160 sqrtPriceLimitX96;
     }
@@ -81,13 +81,13 @@ interface IMixedQuoter {
     /// tokenIn The token being swapped in
     /// tokenOut The token being swapped out
     /// fee The fee of the token pool to consider for the pair
-    /// amountIn The desired input amount
+    /// exactAmount The desired input amount
     /// sqrtPriceLimitX96 The price limit of the pool that cannot be exceeded by the swap
     /// @return amountOut The amount of `tokenOut` that would be received
     /// @return sqrtPriceX96After The sqrt price of the pool after the swap
     /// @return initializedTicksCrossed The number of initialized ticks that the swap crossed
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    function quoteExactInputSingleV3(QuoteExactInputSingleV3Params memory params)
+    function quoteExactInputSingleV3(QuoteExactSingleV3Params memory params)
         external
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate);
 
