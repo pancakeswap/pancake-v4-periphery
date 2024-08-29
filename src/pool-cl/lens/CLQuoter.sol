@@ -18,10 +18,11 @@ contract CLQuoter is Quoter, ICLQuoter {
 
     ICLPoolManager public immutable poolManager;
 
-    /// @dev min valid reason is 3-words long
-    /// @dev int128[2] + sqrtPriceX96After padded to 32bytes + intializeTicksLoaded padded to 32bytes
-    /// MINIMUM_VALID_RESPONSE_LENGTH = 96;
-    constructor(address _poolManager) Quoter(_poolManager, 96) {
+    /// @dev min valid reason is 6-words long (192 bytes)
+    /// @dev int128[2] includes 32 bytes for offset, 32 bytes for length, and 32 bytes for each element
+    /// @dev Plus sqrtPriceX96After padded to 32 bytes and initializedTicksLoaded padded to 32 bytes
+    /// MINIMUM_VALID_RESPONSE_LENGTH = 192;
+    constructor(address _poolManager) Quoter(_poolManager, 192) {
         poolManager = ICLPoolManager(_poolManager);
     }
 
