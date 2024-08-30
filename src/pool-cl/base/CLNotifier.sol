@@ -27,6 +27,7 @@ abstract contract CLNotifier is ICLNotifier {
     // at 30M gas, the limit is 300K
     uint256 private constant BLOCK_LIMIT_BPS = 100;
 
+    /// @inheritdoc ICLNotifier
     mapping(uint256 tokenId => ICLSubscriber subscriber) public subscriber;
 
     modifier onlyIfApproved(address caller, uint256 tokenId) virtual;

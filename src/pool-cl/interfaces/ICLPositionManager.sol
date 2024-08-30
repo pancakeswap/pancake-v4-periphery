@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 
@@ -47,9 +46,9 @@ interface ICLPositionManager is IPositionManager {
     function nextTokenId() external view returns (uint256);
 
     /// @param tokenId the ERC721 tokenId
-    /// @return configId a truncated hash of the position's poolkey, tickLower, and tickUpper
+    /// @return bytes32 a truncated hash of the position's poolkey, tickLower, and tickUpper
     /// @dev truncates the least significant bit of the hash
-    function getPositionConfigId(uint256 tokenId) external view returns (bytes32 configId);
+    function getPositionConfigId(uint256 tokenId) external view returns (bytes32);
 
     /// @param tokenId the ERC721 tokenId
     /// @param config the corresponding PositionConfig for the tokenId

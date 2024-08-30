@@ -2,7 +2,6 @@
 pragma solidity 0.8.26;
 
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
@@ -233,7 +232,7 @@ contract CLQuoter is Quoter, ICLQuoter {
         selfOnly
         returns (bytes memory)
     {
-        // if no price limit has been specified, cache the output amount for comparison in the swap callback
+        // if no price limit has been specified, cache the output amount for comparison inside the _swap function
         if (params.sqrtPriceLimitX96 == 0) amountOutCached = params.exactAmount;
 
         (, int24 tickBefore,,) = poolManager.getSlot0(params.poolKey.toId());

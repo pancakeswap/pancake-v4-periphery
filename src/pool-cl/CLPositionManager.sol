@@ -51,6 +51,7 @@ contract CLPositionManager is
 
     ICLPoolManager public immutable override clPoolManager;
 
+    /// @inheritdoc ICLPositionManager
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 public nextTokenId = 1;
 
@@ -165,6 +166,7 @@ contract CLPositionManager is
         _executeActionsWithoutLock(actions, params);
     }
 
+    /// @inheritdoc BaseActionsRouter
     function msgSender() public view override returns (address) {
         return _getLocker();
     }
