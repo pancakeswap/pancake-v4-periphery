@@ -42,7 +42,7 @@ interface IBinQuoter is IQuoter {
     /// hookData arbitrary hookData to pass into the associated hooks
     /// @return deltaAmounts Delta amounts resulted from the swap
     /// @return activeIdAfter The activeId of the pool after the swap
-    function quoteExactInputSingle(QuoteExactSingleParams calldata params)
+    function quoteExactInputSingle(QuoteExactSingleParams memory params)
         external
         returns (int128[] memory deltaAmounts, uint24 activeIdAfter);
 
@@ -65,7 +65,7 @@ interface IBinQuoter is IQuoter {
     /// hookData arbitrary hookData to pass into the associated hooks
     /// @return deltaAmounts Delta amounts resulted from the swap
     /// @return activeIdAfter The activeId of the pool after the swap
-    function quoteExactOutputSingle(QuoteExactSingleParams calldata params)
+    function quoteExactOutputSingle(QuoteExactSingleParams memory params)
         external
         returns (int128[] memory deltaAmounts, uint24 activeIdAfter);
 
