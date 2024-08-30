@@ -17,12 +17,12 @@ contract CLQuoter is Quoter, ICLQuoter {
     using PathKeyLib for PathKey;
 
     ICLPoolManager public immutable poolManager;
+    uint256 private constant CL_MINIMUM_VALID_RESPONSE_LENGTH = 192;
 
     /// @dev min valid reason is 6-words long (192 bytes)
     /// @dev int128[2] includes 32 bytes for offset, 32 bytes for length, and 32 bytes for each element
     /// @dev Plus sqrtPriceX96After padded to 32 bytes and initializedTicksLoaded padded to 32 bytes
-    /// MINIMUM_VALID_RESPONSE_LENGTH = 192;
-    constructor(address _poolManager) Quoter(_poolManager, 192) {
+    constructor(address _poolManager) Quoter(_poolManager, CL_MINIMUM_VALID_RESPONSE_LENGTH) {
         poolManager = ICLPoolManager(_poolManager);
     }
 
