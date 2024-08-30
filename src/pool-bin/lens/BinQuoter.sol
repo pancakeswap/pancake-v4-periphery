@@ -34,7 +34,7 @@ contract BinQuoter is Quoter, IBinQuoter {
         override
         returns (int128[] memory deltaAmounts, uint24 activeIdAfter)
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactInputSingle.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactInputSingle, (params))) {}
         catch (bytes memory reason) {
             return _handleRevertSingle(reason);
         }
@@ -46,7 +46,7 @@ contract BinQuoter is Quoter, IBinQuoter {
         override
         returns (int128[] memory deltaAmounts, uint24[] memory activeIdAfterList)
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactInput.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactInput, (params))) {}
         catch (bytes memory reason) {
             return _handleRevert(reason);
         }
@@ -58,7 +58,7 @@ contract BinQuoter is Quoter, IBinQuoter {
         override
         returns (int128[] memory deltaAmounts, uint24 activeIdAfter)
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactOutputSingle.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactOutputSingle, (params))) {}
         catch (bytes memory reason) {
             delete amountOutCached;
             return _handleRevertSingle(reason);
@@ -71,7 +71,7 @@ contract BinQuoter is Quoter, IBinQuoter {
         override
         returns (int128[] memory deltaAmounts, uint24[] memory activeIdAfterList)
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactOutput.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactOutput, (params))) {}
         catch (bytes memory reason) {
             return _handleRevert(reason);
         }

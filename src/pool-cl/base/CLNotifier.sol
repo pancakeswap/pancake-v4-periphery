@@ -48,10 +48,8 @@ abstract contract CLNotifier is ICLNotifier {
         if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(address(_subscriber));
         subscriber[tokenId] = ICLSubscriber(newSubscriber);
 
-        bool success = _call(
-            address(newSubscriber),
-            abi.encodeWithSelector(ICLSubscriber.notifySubscribe.selector, tokenId, config, data)
-        );
+        bool success =
+            _call(address(newSubscriber), abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, config, data)));
 
         if (!success) {
             Wrap__SubsciptionReverted.selector.bubbleUpAndRevertWith(address(newSubscriber));
@@ -87,9 +85,7 @@ abstract contract CLNotifier is ICLNotifier {
 
         bool success = _call(
             address(_subscriber),
-            abi.encodeWithSelector(
-                ICLSubscriber.notifyModifyLiquidity.selector, tokenId, config, liquidityChange, feesAccrued
-            )
+            abi.encodeCall(ICLSubscriber.notifyModifyLiquidity, (tokenId, config, liquidityChange, feesAccrued))
         );
 
         if (!success) {
@@ -101,8 +97,7 @@ abstract contract CLNotifier is ICLNotifier {
         ICLSubscriber _subscriber = subscriber[tokenId];
 
         bool success = _call(
-            address(_subscriber),
-            abi.encodeWithSelector(ICLSubscriber.notifyTransfer.selector, tokenId, previousOwner, newOwner)
+            address(_subscriber), abi.encodeCall(ICLSubscriber.notifyTransfer, (tokenId, previousOwner, newOwner))
         );
 
         if (!success) {
