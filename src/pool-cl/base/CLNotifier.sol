@@ -69,12 +69,11 @@ abstract contract CLNotifier is ICLNotifier {
     {
         _positionConfigs(tokenId).setUnsubscribe();
         ICLSubscriber _subscriber = subscriber[tokenId];
+        delete subscriber[tokenId];
 
         uint256 subscriberGasLimit = block.gaslimit.calculatePortion(BLOCK_LIMIT_BPS);
-
         try _subscriber.notifyUnsubscribe{gas: subscriberGasLimit}(tokenId, config, data) {} catch {}
 
-        delete subscriber[tokenId];
         emit Unsubscribed(tokenId, address(_subscriber));
     }
 
