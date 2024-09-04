@@ -13,7 +13,7 @@ library BinCalldataDecoder {
         pure
         returns (IBinPositionManager.BinAddLiquidityParams calldata addLiquidityParams)
     {
-        assembly {
+        assembly ("memory-safe") {
             addLiquidityParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -25,7 +25,7 @@ library BinCalldataDecoder {
         pure
         returns (IBinPositionManager.BinRemoveLiquidityParams calldata removeLiquidityParams)
     {
-        assembly {
+        assembly ("memory-safe") {
             removeLiquidityParams := add(params.offset, calldataload(params.offset))
         }
     }

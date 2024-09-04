@@ -183,6 +183,7 @@ contract CLPositionManager is
                     bytes calldata hookData
                 ) = params.decodeCLModifyLiquidityParams();
                 _increase(tokenId, config, liquidity, amount0Max, amount1Max, hookData);
+                return;
             } else if (action == Actions.CL_DECREASE_LIQUIDITY) {
                 (
                     uint256 tokenId,
@@ -193,6 +194,7 @@ contract CLPositionManager is
                     bytes calldata hookData
                 ) = params.decodeCLModifyLiquidityParams();
                 _decrease(tokenId, config, liquidity, amount0Min, amount1Min, hookData);
+                return;
             } else if (action == Actions.CL_MINT_POSITION) {
                 (
                     PositionConfig calldata config,
@@ -203,6 +205,7 @@ contract CLPositionManager is
                     bytes calldata hookData
                 ) = params.decodeCLMintParams();
                 _mint(config, liquidity, amount0Max, amount1Max, _mapRecipient(owner), hookData);
+                return;
             } else if (action == Actions.CL_BURN_POSITION) {
                 // Will automatically decrease liquidity to 0 if the position is not already empty.
                 (
@@ -213,35 +216,40 @@ contract CLPositionManager is
                     bytes calldata hookData
                 ) = params.decodeCLBurnParams();
                 _burn(tokenId, config, amount0Min, amount1Min, hookData);
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         } else {
             if (action == Actions.SETTLE_PAIR) {
                 (Currency currency0, Currency currency1) = params.decodeCurrencyPair();
                 _settlePair(currency0, currency1);
+                return;
             } else if (action == Actions.TAKE_PAIR) {
                 (Currency currency0, Currency currency1, address to) = params.decodeCurrencyPairAndAddress();
                 _takePair(currency0, currency1, to);
+                return;
             } else if (action == Actions.SETTLE) {
                 (Currency currency, uint256 amount, bool payerIsUser) = params.decodeCurrencyUint256AndBool();
                 _settle(currency, _mapPayer(payerIsUser), _mapSettleAmount(amount, currency));
+                return;
             } else if (action == Actions.TAKE) {
                 (Currency currency, address recipient, uint256 amount) = params.decodeCurrencyAddressAndUint256();
                 _take(currency, _mapRecipient(recipient), _mapTakeAmount(amount, currency));
+                return;
             } else if (action == Actions.CLOSE_CURRENCY) {
                 Currency currency = params.decodeCurrency();
                 _close(currency);
+                return;
             } else if (action == Actions.CLEAR_OR_TAKE) {
                 (Currency currency, uint256 amountMax) = params.decodeCurrencyAndUint256();
                 _clearOrTake(currency, amountMax);
+                return;
             } else if (action == Actions.SWEEP) {
                 (Currency currency, address to) = params.decodeCurrencyAndAddress();
                 _sweep(currency, _mapRecipient(to));
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         }
+        revert UnsupportedAction(action);
     }
 
     /// @dev Calling increase with 0 liquidity will credit the caller with any underlying fees of the position
@@ -292,10 +300,9 @@ contract CLPositionManager is
         }
         _mint(owner, tokenId);
 
-        (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) =
-            _modifyLiquidity(config, liquidity.toInt256(), bytes32(tokenId), hookData);
-        // Slippage checks should be done on the principal liquidityDelta which is the liquidityDelta - feesAccrued
-        (liquidityDelta - feesAccrued).validateMaxIn(amount0Max, amount1Max);
+        // fee delta can be ignored as this is a new position
+        (BalanceDelta liquidityDelta,) = _modifyLiquidity(config, liquidity.toInt256(), bytes32(tokenId), hookData);
+        liquidityDelta.validateMaxIn(amount0Max, amount1Max);
         positionConfigs[tokenId].setConfigId(config.toId());
 
         // cache the poolKey in _poolIdToPoolKey
@@ -321,7 +328,7 @@ contract CLPositionManager is
         uint128 amount1Min,
         bytes calldata hookData
     ) internal onlyIfApproved(msgSender(), tokenId) onlyValidConfig(tokenId, config) {
-        uint256 liquidity = uint256(getPositionLiquidity(tokenId, config));
+        uint256 liquidity = getPositionLiquidity(tokenId, config);
 
         // Can only call modify if there is non zero liquidity.
         if (liquidity > 0) {

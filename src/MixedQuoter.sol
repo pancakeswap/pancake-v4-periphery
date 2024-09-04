@@ -79,7 +79,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         (uint160 v3SqrtPriceX96After, int24 tickAfter,,,,,) = pool.slot0();
 
         if (isExactInput) {
-            assembly {
+            assembly ("memory-safe") {
                 let ptr := mload(0x40)
                 mstore(ptr, amountReceived)
                 mstore(add(ptr, 0x20), v3SqrtPriceX96After)
@@ -100,7 +100,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     {
         if (reason.length != 0x60) {
             if (reason.length < 0x44) revert("Unexpected error");
-            assembly {
+            assembly ("memory-safe") {
                 reason := add(reason, 0x04)
             }
             revert(abi.decode(reason, (string)));

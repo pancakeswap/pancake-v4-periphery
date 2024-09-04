@@ -28,7 +28,7 @@ contract DeployStableSwapHelper is Script {
 
         address factory;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.timestamp));
-        assembly {
+        assembly ("memory-safe") {
             factory := create2(0, add(bytecodeWithArgs, 32), mload(bytecodeWithArgs), salt)
         }
         IOwnable(factory).transferOwnership(owner);
@@ -40,7 +40,7 @@ contract DeployStableSwapHelper is Script {
             vm.readFileBinary("./test/bin/pancakeStableSwapLPFactory.bytecode");
         address pancakeStableSwapLPFactory;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.timestamp));
-        assembly {
+        assembly ("memory-safe") {
             pancakeStableSwapLPFactory :=
                 create2(0, add(pancakeStableSwapLPFactoryBytecode, 32), mload(pancakeStableSwapLPFactoryBytecode), salt)
         }
@@ -54,7 +54,7 @@ contract DeployStableSwapHelper is Script {
 
         address pancakeStableSwapTwoPoolDeployer;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.timestamp));
-        assembly {
+        assembly ("memory-safe") {
             pancakeStableSwapTwoPoolDeployer :=
                 create2(
                     0,
@@ -73,7 +73,7 @@ contract DeployStableSwapHelper is Script {
 
         address pancakeStableSwapThreePoolDeployer;
         bytes32 salt = keccak256(abi.encodePacked(msg.sender, block.timestamp));
-        assembly {
+        assembly ("memory-safe") {
             pancakeStableSwapThreePoolDeployer :=
                 create2(
                     0,
