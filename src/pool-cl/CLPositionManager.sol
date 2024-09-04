@@ -331,13 +331,16 @@ contract CLPositionManager is
             (liquidityDelta - feesAccrued).validateMinOut(amount0Min, amount1Min);
         }
 
-        delete positionConfigs[tokenId];
+        bool hasSubscriber = positionConfigs[tokenId].hasSubscriber();
 
         /// @notice not gonna delete _poolIdToPoolKey[poolId] because it might be shared by other positions
-
+        delete positionConfigs[tokenId];
         delete _tokenIdToPosition[tokenId];
+
         // Burn the token.
         _burn(tokenId);
+
+        if (hasSubscriber) _unsubscribe(tokenId, config);
     }
 
     function _settlePair(Currency currency0, Currency currency1) internal {

@@ -34,7 +34,7 @@ contract MockCLReturnDataSubscriber is ICLSubscriber {
         notifySubscribeCount++;
     }
 
-    function notifyUnsubscribe(uint256, PositionConfig memory, bytes memory) external onlyByPosm {
+    function notifyUnsubscribe(uint256, PositionConfig memory) external onlyByPosm {
         notifyUnsubscribeCount++;
         uint256 _memPtr = memPtr;
         assembly {
@@ -83,7 +83,7 @@ contract MockCLRevertSubscriber is ICLSubscriber {
         }
     }
 
-    function notifyUnsubscribe(uint256, PositionConfig memory, bytes memory) external view onlyByPosm {
+    function notifyUnsubscribe(uint256, PositionConfig memory) external view onlyByPosm {
         revert TestRevert("notifyUnsubscribe");
     }
 
