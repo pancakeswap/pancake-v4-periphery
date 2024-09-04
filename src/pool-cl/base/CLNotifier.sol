@@ -42,21 +42,20 @@ abstract contract CLNotifier is ICLNotifier {
         onlyIfApproved(msg.sender, tokenId)
         onlyValidConfig(tokenId, config)
     {
-        // will revert below if the user already has a subcriber
+        // will revert below if the user already has a subscriber
         _positionConfigs(tokenId).setSubscribe();
         ICLSubscriber _subscriber = subscriber[tokenId];
 
         if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(address(_subscriber));
         subscriber[tokenId] = ICLSubscriber(newSubscriber);
 
-        bool success =
-            _call(address(newSubscriber), abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, config, data)));
+        bool success = _call(newSubscriber, abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, config, data)));
 
         if (!success) {
-            Wrap__SubsciptionReverted.selector.bubbleUpAndRevertWith(address(newSubscriber));
+            Wrap__SubscriptionReverted.selector.bubbleUpAndRevertWith(newSubscriber);
         }
 
-        emit Subscribed(tokenId, address(newSubscriber));
+        emit Subscribed(tokenId, newSubscriber);
     }
 
     /// @inheritdoc ICLNotifier

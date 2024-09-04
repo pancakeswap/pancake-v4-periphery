@@ -389,7 +389,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICLNotifier.Wrap__SubsciptionReverted.selector,
+                ICLNotifier.Wrap__SubscriptionReverted.selector,
                 address(revertSubscriber),
                 abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifySubscribe")
             )
