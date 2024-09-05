@@ -25,7 +25,7 @@ import {CalldataDecoder} from "../libraries/CalldataDecoder.sol";
 import {CLCalldataDecoder} from "./libraries/CLCalldataDecoder.sol";
 import {Actions} from "../libraries/Actions.sol";
 import {ERC721Permit_v4} from "./base/ERC721Permit_v4.sol";
-import {SlippageCheckLibrary} from "./libraries/SlippageCheck.sol";
+import {SlippageCheck} from "./libraries/SlippageCheck.sol";
 import {Multicall_v4} from "../base/Multicall_v4.sol";
 import {CLNotifier} from "./base/CLNotifier.sol";
 
@@ -47,7 +47,7 @@ contract CLPositionManager is
     using PositionConfigLibrary for PositionConfig;
     using PositionConfigIdLibrary for PositionConfigId;
     using SafeCast for uint256;
-    using SlippageCheckLibrary for BalanceDelta;
+    using SlippageCheck for BalanceDelta;
 
     ICLPoolManager public immutable override clPoolManager;
 
