@@ -9,9 +9,13 @@ import {PositionConfig} from "../libraries/PositionConfig.sol";
 import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 
 interface ICLPositionManager is IPositionManager {
+    /// @notice Thrown when the caller is not approved to modify a position
     error NotApproved(address caller);
+
+    /// @notice Thrown when the caller provides the incorrect PositionConfig for a corresponding tokenId when modifying liquidity
     error IncorrectPositionConfigForTokenId(uint256 tokenId);
 
+    /// @notice Emitted when a new liquidity position is minted
     event MintPosition(uint256 indexed tokenId, PositionConfig config);
 
     /// @notice Emitted when liquidity is modified
@@ -36,6 +40,9 @@ interface ICLPositionManager is IPositionManager {
         );
 
     /// @notice Initialize a v4 PCS cl pool
+    /// @param key the PoolKey of the pool to initialize
+    /// @param sqrtPriceX96 the initial sqrtPriceX96 of the pool
+    /// @param hookData the optional data passed to the hook's initialize functions
     function initializePool(PoolKey calldata key, uint160 sqrtPriceX96, bytes calldata hookData)
         external
         payable

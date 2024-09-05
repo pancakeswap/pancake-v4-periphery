@@ -9,14 +9,14 @@ import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolMana
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {ICLRouterBase} from "./interfaces/ICLRouterBase.sol";
 import {IV4Router} from "../interfaces/IV4Router.sol";
-import {PathKeyLib, PathKey} from "../libraries/PathKey.sol";
+import {PathKeyLibrary, PathKey} from "../libraries/PathKey.sol";
 import {SafeCastTemp} from "../libraries/SafeCast.sol";
 import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
     using CurrencyLibrary for Currency;
-    using PathKeyLib for PathKey;
+    using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
 
     ICLPoolManager public immutable clPoolManager;

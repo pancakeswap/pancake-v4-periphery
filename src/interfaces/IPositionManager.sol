@@ -2,7 +2,10 @@
 pragma solidity ^0.8.24;
 
 interface IPositionManager {
+    /// @notice Thrown when the block.timestamp exceeds the user-provided deadline
     error DeadlinePassed(uint256 deadline);
+
+    /// @notice Thrown when the token ID is bind to an unexisting pool
     error InvalidTokenID();
 
     /// @notice Unlocks Vault and batches actions for modifying liquidity

@@ -24,7 +24,16 @@ abstract contract CLNotifier is ICLNotifier {
     /// @inheritdoc ICLNotifier
     mapping(uint256 tokenId => ICLSubscriber subscriber) public subscriber;
 
+    /// @notice Only allow callers that are approved as spenders or operators of the tokenId
+    /// @dev to be implemented by the parent contract (CLPositionManager)
+    /// @param caller the address of the caller
+    /// @param tokenId the tokenId of the position
     modifier onlyIfApproved(address caller, uint256 tokenId) virtual;
+
+    /// @notice Only allow callers that provide the correct config for the tokenId
+    /// @dev to be implemented by the parent contract (PositionManager)
+    /// @param tokenId the tokenId of the position
+    /// @param config the config of the tokenId
     modifier onlyValidConfig(uint256 tokenId, PositionConfig calldata config) virtual;
 
     function _positionConfigs(uint256 tokenId) internal view virtual returns (PositionConfigId storage);

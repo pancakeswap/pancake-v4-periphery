@@ -11,13 +11,13 @@ import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
 import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {IBinQuoter} from "../interfaces/IBinQuoter.sol";
-import {PathKey, PathKeyLib} from "../../libraries/PathKey.sol";
+import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
 import {Quoter} from "../../base/Quoter.sol";
 
 contract BinQuoter is Quoter, IBinQuoter {
     using PoolIdLibrary for PoolKey;
     using SafeCast for uint128;
-    using PathKeyLib for PathKey;
+    using PathKeyLibrary for PathKey;
 
     IBinPoolManager public immutable poolManager;
 
@@ -164,7 +164,7 @@ contract BinQuoter is Quoter, IBinQuoter {
             curAmountOut = i == pathLength ? params.exactAmount : cache.prevAmount;
             amountOutCached = curAmountOut;
 
-            (PoolKey memory poolKey, bool oneForZero) = PathKeyLib.getPoolAndSwapDirection(
+            (PoolKey memory poolKey, bool oneForZero) = PathKeyLibrary.getPoolAndSwapDirection(
                 params.path[i - 1], i == pathLength ? params.exactCurrency : cache.prevCurrency
             );
 

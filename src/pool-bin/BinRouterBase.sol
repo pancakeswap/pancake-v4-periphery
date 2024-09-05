@@ -8,7 +8,7 @@ import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {IBinRouterBase} from "./interfaces/IBinRouterBase.sol";
 import {IV4Router} from "../interfaces/IV4Router.sol";
-import {PathKeyLib, PathKey} from "../libraries/PathKey.sol";
+import {PathKeyLibrary, PathKey} from "../libraries/PathKey.sol";
 import {SafeCastTemp} from "../libraries/SafeCast.sol";
 import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
 import {DeltaResolver} from "../base/DeltaResolver.sol";
@@ -16,7 +16,7 @@ import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
     using CurrencyLibrary for Currency;
-    using PathKeyLib for PathKey;
+    using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
     using SafeCast for *;
 

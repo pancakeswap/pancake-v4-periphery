@@ -15,7 +15,12 @@ struct PathKey {
     bytes32 parameters;
 }
 
-library PathKeyLib {
+library PathKeyLibrary {
+    /// @notice Get the pool and swap direction for a given PathKey
+    /// @param params the given PathKey
+    /// @param currencyIn the input currency
+    /// @return poolKey the pool key of the swap
+    /// @return zeroForOne the direction of the swap, true if currency0 is being swapped for currency1
     function getPoolAndSwapDirection(PathKey memory params, Currency currencyIn)
         internal
         pure

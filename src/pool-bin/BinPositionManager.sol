@@ -111,8 +111,8 @@ contract BinPositionManager is
     }
 
     /// @inheritdoc IBinPositionManager
-    function initializePool(PoolKey memory poolKey, uint24 activeId, bytes calldata hookData) external payable {
-        binPoolManager.initialize(poolKey, activeId, hookData);
+    function initializePool(PoolKey memory key, uint24 activeId, bytes calldata hookData) external payable {
+        binPoolManager.initialize(key, activeId, hookData);
     }
 
     function msgSender() public view override returns (address) {
