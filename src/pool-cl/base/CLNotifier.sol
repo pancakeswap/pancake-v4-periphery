@@ -15,16 +15,10 @@ abstract contract CLNotifier is ICLNotifier {
     using CustomRevert for bytes4;
     using PositionConfigIdLibrary for PositionConfigId;
 
-    error AlreadySubscribed(address subscriber);
-
-    event Subscribed(uint256 tokenId, address subscriber);
-    event Unsubscribed(uint256 tokenId, address subscriber);
-
     ICLSubscriber private constant NO_SUBSCRIBER = ICLSubscriber(address(0));
 
     // a percentage of the block.gaslimit denoted in BPS, used as the gas limit for subscriber calls
-    // 100 bps is 1%
-    // at 30M gas, the limit is 300K
+    // 100 bps is 1%, at 30M gas, the limit is 300K
     uint256 private constant BLOCK_LIMIT_BPS = 100;
 
     /// @inheritdoc ICLNotifier
@@ -46,7 +40,8 @@ abstract contract CLNotifier is ICLNotifier {
         _positionConfigs(tokenId).setSubscribe();
         ICLSubscriber _subscriber = subscriber[tokenId];
 
-        if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(address(_subscriber));
+        if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(tokenId, address(_subscriber));
+
         subscriber[tokenId] = ICLSubscriber(newSubscriber);
 
         bool success = _call(newSubscriber, abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, config, data)));
@@ -55,7 +50,7 @@ abstract contract CLNotifier is ICLNotifier {
             Wrap__SubscriptionReverted.selector.bubbleUpAndRevertWith(newSubscriber);
         }
 
-        emit Subscribed(tokenId, newSubscriber);
+        emit Subscription(tokenId, newSubscriber);
     }
 
     /// @inheritdoc ICLNotifier
@@ -73,10 +68,12 @@ abstract contract CLNotifier is ICLNotifier {
         ICLSubscriber _subscriber = subscriber[tokenId];
         delete subscriber[tokenId];
 
+        // A gas limit and a try-catch block are used to protect users from a malicious subscriber.
+        // Users should always be able to unsubscribe, not matter how the subscriber behaves.
         uint256 subscriberGasLimit = block.gaslimit.calculatePortion(BLOCK_LIMIT_BPS);
         try _subscriber.notifyUnsubscribe{gas: subscriberGasLimit}(tokenId, config) {} catch {}
 
-        emit Unsubscribed(tokenId, address(_subscriber));
+        emit Unsubscription(tokenId, address(_subscriber));
     }
 
     function _notifyModifyLiquidity(

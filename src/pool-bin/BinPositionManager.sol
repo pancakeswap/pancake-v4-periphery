@@ -72,7 +72,7 @@ contract BinPositionManager is
     /// @notice Reverts if the deadline has passed
     /// @param deadline The timestamp at which the call is no longer valid, passed in by the caller
     modifier checkDeadline(uint256 deadline) {
-        if (block.timestamp > deadline) revert DeadlinePassed();
+        if (block.timestamp > deadline) revert DeadlinePassed(deadline);
         _;
     }
 
@@ -305,7 +305,6 @@ contract BinPositionManager is
 
     function _pay(Currency currency, address payer, uint256 amount) internal override(DeltaResolver) {
         if (payer == address(this)) {
-            // TODO: currency is guaranteed to not be eth so the native check in transfer is not optimal.
             currency.transfer(address(vault), amount);
         } else {
             permit2.transferFrom(payer, address(vault), uint160(amount), Currency.unwrap(currency));

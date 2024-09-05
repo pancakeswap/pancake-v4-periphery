@@ -266,7 +266,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
 
         token0.mint(alice, 1 ether);
 
-        vm.expectRevert(IV4Router.V4TooLittleReceived.selector);
+        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooLittleReceived.selector, 1 ether, 0.997 ether));
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(key, true, 1 ether, 1 ether, bytes(""));
 
@@ -368,7 +368,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
             parameters: key.parameters
         });
 
-        vm.expectRevert(IV4Router.V4TooLittleReceived.selector);
+        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooLittleReceived.selector, 1 ether, 0.997 ether));
         IBinRouterBase.BinSwapExactInputParams memory params =
             IBinRouterBase.BinSwapExactInputParams(Currency.wrap(address(token0)), path, 1 ether, 1 ether);
 
@@ -443,7 +443,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         // Give alice > amountInMax so TooMuchRequestedError instead of TransferFromFailed
         token0.mint(alice, 2 ether);
 
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector));
+        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector, 1 ether, 1003009027081243732));
         IBinRouterBase.BinSwapExactOutputSingleParams memory params =
             IBinRouterBase.BinSwapExactOutputSingleParams(key, true, 1 ether, 1 ether, bytes(""));
 
@@ -543,7 +543,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
             parameters: key.parameters
         });
 
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector));
+        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector, 1 ether, 1003009027081243732));
         IBinRouterBase.BinSwapExactOutputParams memory params =
             IBinRouterBase.BinSwapExactOutputParams(Currency.wrap(address(token1)), path, 1 ether, 1 ether);
 

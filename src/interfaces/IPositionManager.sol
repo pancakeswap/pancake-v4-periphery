@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 interface IPositionManager {
-    error DeadlinePassed();
+    error DeadlinePassed(uint256 deadline);
     error InvalidTokenID();
 
     /// @notice Unlocks Vault and batches actions for modifying liquidity

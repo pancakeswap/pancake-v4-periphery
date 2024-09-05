@@ -35,7 +35,9 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
         uint128 amountOut =
             _swapExactPrivate(params.poolKey, params.swapForY, -(amountIn.safeInt128()), params.hookData).toUint128();
 
-        if (amountOut < params.amountOutMinimum) revert IV4Router.V4TooLittleReceived();
+        if (amountOut < params.amountOutMinimum) {
+            revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+        }
     }
 
     /// @notice Perform a swap with `amountIn` in and ensure at least `amountOutMinimum` out
@@ -59,7 +61,9 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
                 currencyIn = pathKey.intermediateCurrency;
             }
 
-            if (amountOut < params.amountOutMinimum) revert IV4Router.V4TooLittleReceived();
+            if (amountOut < params.amountOutMinimum) {
+                revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+            }
         }
     }
 
@@ -69,7 +73,9 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             -_swapExactPrivate(params.poolKey, params.swapForY, params.amountOut.safeInt128(), params.hookData)
         ).toUint128();
 
-        if (amountIn > params.amountInMaximum) revert IV4Router.V4TooMuchRequested();
+        if (amountIn > params.amountInMaximum) {
+            revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
+        }
     }
 
     /// @notice Perform a swap that ensure at least `amountOut` tokens with `amountInMaximum` tokens
@@ -95,7 +101,9 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
                 currencyOut = pathKey.intermediateCurrency;
             }
 
-            if (amountIn > params.amountInMaximum) revert IV4Router.V4TooMuchRequested();
+            if (amountIn > params.amountInMaximum) {
+                revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
+            }
         }
     }
 

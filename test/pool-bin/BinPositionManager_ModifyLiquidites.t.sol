@@ -81,7 +81,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
 
         bytes memory payload = Planner.init().finalizeModifyLiquidityWithClose(key1);
 
-        vm.expectRevert(abi.encodeWithSelector(IPositionManager.DeadlinePassed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IPositionManager.DeadlinePassed.selector, 900));
         binPm.modifyLiquidities(payload, 900);
     }
 
