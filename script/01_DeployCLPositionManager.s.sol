@@ -16,7 +16,7 @@ import {CLPositionManager} from "../src/pool-cl/CLPositionManager.sol";
  *     --verify
  */
 contract DeployCLPositionManagerScript is BaseScript {
-    function run() public {
+    function run(uint256 unsubscribeGasLimit) public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
@@ -29,8 +29,9 @@ contract DeployCLPositionManagerScript is BaseScript {
         address permit2 = getAddressFromConfig("permit2");
         emit log_named_address("Permit2", permit2);
 
-        CLPositionManager clPositionManager =
-            new CLPositionManager(IVault(vault), ICLPoolManager(clPoolManager), IAllowanceTransfer(permit2));
+        CLPositionManager clPositionManager = new CLPositionManager(
+            IVault(vault), ICLPoolManager(clPoolManager), IAllowanceTransfer(permit2), unsubscribeGasLimit
+        );
         emit log_named_address("CLPositionManager", address(clPositionManager));
 
         vm.stopBroadcast();

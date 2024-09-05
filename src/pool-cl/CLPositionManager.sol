@@ -73,10 +73,11 @@ contract CLPositionManager is
         return positionConfigs[tokenId];
     }
 
-    constructor(IVault _vault, ICLPoolManager _clPoolManager, IAllowanceTransfer _permit2)
+    constructor(IVault _vault, ICLPoolManager _clPoolManager, IAllowanceTransfer _permit2, uint256 _unsubscribeGasLimit)
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
         ERC721Permit_v4("Pancakeswap V4 Positions NFT", "PCS-V4-POSM")
+        CLNotifier(_unsubscribeGasLimit)
     {
         clPoolManager = _clPoolManager;
     }
