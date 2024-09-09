@@ -20,11 +20,12 @@ contract BinQuoter is Quoter, IBinQuoter {
     using PathKeyLibrary for PathKey;
 
     IBinPoolManager public immutable poolManager;
+    uint256 private constant BIN_MINIMUM_VALID_RESPONSE_LENGTH = 160;
 
-    /// @dev min valid reason is 2-words long
-    /// @dev int128[2] + activeIdAfter padded to 32bytes
-    /// MINIMUM_VALID_RESPONSE_LENGTH = 64;
-    constructor(address _poolManager) Quoter(_poolManager, 64) {
+    /// @dev min valid reason is 5-words long (160 bytes)
+    /// @dev int128[2] includes 32 bytes for offset, 32 bytes for length, and 32 bytes for each element
+    /// @dev Plus activeIdAfter padded to 32 bytes
+    constructor(address _poolManager) Quoter(_poolManager, BIN_MINIMUM_VALID_RESPONSE_LENGTH) {
         poolManager = IBinPoolManager(_poolManager);
     }
 
