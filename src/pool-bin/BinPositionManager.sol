@@ -72,7 +72,7 @@ contract BinPositionManager is
     /// @notice Reverts if the deadline has passed
     /// @param deadline The timestamp at which the call is no longer valid, passed in by the caller
     modifier checkDeadline(uint256 deadline) {
-        if (block.timestamp > deadline) revert DeadlinePassed();
+        if (block.timestamp > deadline) revert DeadlinePassed(deadline);
         _;
     }
 
@@ -111,8 +111,8 @@ contract BinPositionManager is
     }
 
     /// @inheritdoc IBinPositionManager
-    function initializePool(PoolKey memory poolKey, uint24 activeId, bytes calldata hookData) external payable {
-        binPoolManager.initialize(poolKey, activeId, hookData);
+    function initializePool(PoolKey memory key, uint24 activeId, bytes calldata hookData) external payable {
+        binPoolManager.initialize(key, activeId, hookData);
     }
 
     function msgSender() public view override returns (address) {
@@ -138,8 +138,8 @@ contract BinPositionManager is
                 _settlePair(currency0, currency1);
                 return;
             } else if (action == Actions.TAKE_PAIR) {
-                (Currency currency0, Currency currency1, address to) = params.decodeCurrencyPairAndAddress();
-                _takePair(currency0, currency1, to);
+                (Currency currency0, Currency currency1, address recipient) = params.decodeCurrencyPairAndAddress();
+                _takePair(currency0, currency1, _mapRecipient(recipient));
                 return;
             } else if (action == Actions.SETTLE) {
                 (Currency currency, uint256 amount, bool payerIsUser) = params.decodeCurrencyUint256AndBool();
@@ -265,8 +265,7 @@ contract BinPositionManager is
         _settle(currency1, caller, _getFullDebt(currency1));
     }
 
-    function _takePair(Currency currency0, Currency currency1, address to) internal {
-        address recipient = _mapRecipient(to);
+    function _takePair(Currency currency0, Currency currency1, address recipient) internal {
         _take(currency0, recipient, _getFullCredit(currency0));
         _take(currency1, recipient, _getFullCredit(currency1));
     }
@@ -306,7 +305,6 @@ contract BinPositionManager is
 
     function _pay(Currency currency, address payer, uint256 amount) internal override(DeltaResolver) {
         if (payer == address(this)) {
-            // TODO: currency is guaranteed to not be eth so the native check in transfer is not optimal.
             currency.transfer(address(vault), amount);
         } else {
             permit2.transferFrom(payer, address(vault), uint160(amount), Currency.unwrap(currency));

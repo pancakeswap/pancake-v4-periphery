@@ -4,33 +4,37 @@ pragma solidity ^0.8.0;
 import {ICLSubscriber} from "../interfaces/ICLSubscriber.sol";
 import {PositionConfig} from "../libraries/PositionConfig.sol";
 import {PositionConfigId, PositionConfigIdLibrary} from "../libraries/PositionConfigId.sol";
-import {BipsLibrary} from "../../libraries/BipsLibrary.sol";
 import {ICLNotifier} from "../interfaces/ICLNotifier.sol";
 import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 
 /// @notice Notifier is used to opt in to sending updates to external contracts about position modifications or transfers
 abstract contract CLNotifier is ICLNotifier {
-    using BipsLibrary for uint256;
     using CustomRevert for bytes4;
     using PositionConfigIdLibrary for PositionConfigId;
 
-    error AlreadySubscribed(address subscriber);
-
-    event Subscribed(uint256 tokenId, address subscriber);
-    event Unsubscribed(uint256 tokenId, address subscriber);
-
     ICLSubscriber private constant NO_SUBSCRIBER = ICLSubscriber(address(0));
 
-    // a percentage of the block.gaslimit denoted in BPS, used as the gas limit for subscriber calls
-    // 100 bps is 1%
-    // at 30M gas, the limit is 300K
-    uint256 private constant BLOCK_LIMIT_BPS = 100;
+    /// @inheritdoc ICLNotifier
+    uint256 public immutable unsubscribeGasLimit;
 
     /// @inheritdoc ICLNotifier
     mapping(uint256 tokenId => ICLSubscriber subscriber) public subscriber;
 
+    constructor(uint256 _unsubscribeGasLimit) {
+        unsubscribeGasLimit = _unsubscribeGasLimit;
+    }
+
+    /// @notice Only allow callers that are approved as spenders or operators of the tokenId
+    /// @dev to be implemented by the parent contract (CLPositionManager)
+    /// @param caller the address of the caller
+    /// @param tokenId the tokenId of the position
     modifier onlyIfApproved(address caller, uint256 tokenId) virtual;
+
+    /// @notice Only allow callers that provide the correct config for the tokenId
+    /// @dev to be implemented by the parent contract (PositionManager)
+    /// @param tokenId the tokenId of the position
+    /// @param config the config of the tokenId
     modifier onlyValidConfig(uint256 tokenId, PositionConfig calldata config) virtual;
 
     function _positionConfigs(uint256 tokenId) internal view virtual returns (PositionConfigId storage);
@@ -46,7 +50,8 @@ abstract contract CLNotifier is ICLNotifier {
         _positionConfigs(tokenId).setSubscribe();
         ICLSubscriber _subscriber = subscriber[tokenId];
 
-        if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(address(_subscriber));
+        if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(tokenId, address(_subscriber));
+
         subscriber[tokenId] = ICLSubscriber(newSubscriber);
 
         bool success = _call(newSubscriber, abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, config, data)));
@@ -55,7 +60,7 @@ abstract contract CLNotifier is ICLNotifier {
             Wrap__SubscriptionReverted.selector.bubbleUpAndRevertWith(newSubscriber);
         }
 
-        emit Subscribed(tokenId, newSubscriber);
+        emit Subscription(tokenId, newSubscriber);
     }
 
     /// @inheritdoc ICLNotifier
@@ -65,6 +70,7 @@ abstract contract CLNotifier is ICLNotifier {
         onlyIfApproved(msg.sender, tokenId)
         onlyValidConfig(tokenId, config)
     {
+        if (!_positionConfigs(tokenId).hasSubscriber()) revert NotSubscribed();
         _unsubscribe(tokenId, config);
     }
 
@@ -73,10 +79,15 @@ abstract contract CLNotifier is ICLNotifier {
         ICLSubscriber _subscriber = subscriber[tokenId];
         delete subscriber[tokenId];
 
-        uint256 subscriberGasLimit = block.gaslimit.calculatePortion(BLOCK_LIMIT_BPS);
-        try _subscriber.notifyUnsubscribe{gas: subscriberGasLimit}(tokenId, config) {} catch {}
+        if (address(_subscriber).code.length > 0) {
+            // require that the remaining gas is sufficient to notify the subscriber
+            // otherwise, users can select a gas limit where .notifyUnsubscribe hits OutOfGas yet the
+            // transaction/unsubscription can still succeed
+            if (gasleft() < unsubscribeGasLimit) revert GasLimitTooLow();
+            try _subscriber.notifyUnsubscribe{gas: unsubscribeGasLimit}(tokenId, config) {} catch {}
+        }
 
-        emit Unsubscribed(tokenId, address(_subscriber));
+        emit Unsubscription(tokenId, address(_subscriber));
     }
 
     function _notifyModifyLiquidity(
@@ -110,6 +121,7 @@ abstract contract CLNotifier is ICLNotifier {
     }
 
     function _call(address target, bytes memory encodedCall) internal returns (bool success) {
+        if (target.code.length == 0) revert NoCodeSubscriber();
         assembly ("memory-safe") {
             success := call(gas(), target, 0, add(encodedCall, 0x20), mload(encodedCall), 0, 0)
         }

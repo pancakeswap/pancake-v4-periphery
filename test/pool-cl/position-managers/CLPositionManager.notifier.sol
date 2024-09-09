@@ -109,6 +109,63 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         assertEq(sub.notifySubscribeCount(), 1);
     }
 
+    /// @notice Revert when subscribing to an address without code
+    function test_subscribe_revert_empty(address _subscriber) public {
+        vm.assume(_subscriber.code.length == 0);
+
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.NoCodeSubscriber.selector));
+        lpm.subscribe(tokenId, config, _subscriber, ZERO_BYTES);
+    }
+
+    function test_subscribe_revertsWithAlreadySubscribed() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        // successfully subscribe
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+        assertEq(lpm.hasSubscriber(tokenId), true);
+        assertEq(address(lpm.subscriber(tokenId)), address(sub));
+        assertEq(sub.notifySubscribeCount(), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.AlreadySubscribed.selector, tokenId, sub));
+        lpm.subscribe(tokenId, config, address(2), ZERO_BYTES);
+    }
+
+    function test_notifyModifyLiquidity_selfDestruct_revert() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+
+        assertEq(lpm.hasSubscriber(tokenId), true);
+        assertEq(address(lpm.subscriber(tokenId)), address(sub));
+
+        // simulate selfdestruct by etching the bytecode to 0
+        vm.etch(address(sub), ZERO_BYTES);
+
+        uint256 liquidityToAdd = 10e18;
+        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.NoCodeSubscriber.selector));
+        increaseLiquidity(tokenId, config, liquidityToAdd, ZERO_BYTES);
+    }
+
     function test_notifyModifyLiquidity_succeeds() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(config, 100e18, alice, ZERO_BYTES);
@@ -136,6 +193,26 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         assertEq(sub.notifySubscribeCount(), 1);
         assertEq(sub.notifyModifyLiquidityCount(), 10);
+    }
+
+    function test_notifyTransfer_withTransferFrom_selfDestruct_revert() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+        assertEq(lpm.hasSubscriber(tokenId), true);
+        assertEq(address(lpm.subscriber(tokenId)), address(sub));
+
+        // simulate selfdestruct by etching the bytecode to 0
+        vm.etch(address(sub), ZERO_BYTES);
+
+        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.NoCodeSubscriber.selector));
+        lpm.transferFrom(alice, bob, tokenId);
     }
 
     function test_notifyModifyLiquidity_args() public {
@@ -166,6 +243,26 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         assertEq(int256(sub.feesAccrued().amount1()), int256(feeRevenue1) - 1 wei);
     }
 
+    function test_notifyTransfer_withSafeTransferFrom_selfDestruct_revert() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+        assertEq(lpm.hasSubscriber(tokenId), true);
+        assertEq(address(lpm.subscriber(tokenId)), address(sub));
+
+        // simulate selfdestruct by etching the bytecode to 0
+        vm.etch(address(sub), ZERO_BYTES);
+
+        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.NoCodeSubscriber.selector));
+        lpm.safeTransferFrom(alice, bob, tokenId);
+    }
+
     function test_notifyTransfer_withTransferFrom_succeeds() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(config, 100e18, alice, ZERO_BYTES);
@@ -183,6 +280,26 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         lpm.transferFrom(alice, bob, tokenId);
 
         assertEq(sub.notifyTransferCount(), 1);
+    }
+
+    function test_unsubscribe_selfDestructed() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+
+        // simulate selfdestruct by etching the bytecode to 0
+        vm.etch(address(sub), ZERO_BYTES);
+
+        lpm.unsubscribe(tokenId, config);
+
+        assertEq(lpm.hasSubscriber(tokenId), false);
+        assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
     function test_notifyTransfer_withSafeTransferFrom_succeeds() public {
@@ -333,6 +450,24 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         vm.stopPrank();
 
         vm.expectRevert();
+        vm.expectRevert(ICLNotifier.NotSubscribed.selector);
+        lpm.unsubscribe(tokenId, config);
+    }
+
+    function test_unsubscribe_twice_reverts() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+
+        lpm.unsubscribe(tokenId, config);
+
+        vm.expectRevert(ICLNotifier.NotSubscribed.selector);
         lpm.unsubscribe(tokenId, config);
     }
 
@@ -492,5 +627,32 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         // position is now unsubscribed
         assertEq(lpm.hasSubscriber(tokenId), false);
         assertEq(sub.notifyUnsubscribeCount(), 1);
+    }
+
+    /// @notice Test that users cannot forcibly avoid unsubscribe logic via gas limits
+    function test_fuzz_unsubscribe_with_gas_limit(uint64 gasLimit) public {
+        // enforce a minimum amount of gas to avoid OutOfGas reverts
+        gasLimit = uint64(bound(gasLimit, 125_000, block.gaslimit));
+
+        uint256 tokenId = lpm.nextTokenId();
+        mint(config, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, config, address(sub), ZERO_BYTES);
+        uint256 beforeUnsubCount = sub.notifyUnsubscribeCount();
+
+        if (gasLimit < lpm.unsubscribeGasLimit()) {
+            // gas too low to call a valid unsubscribe
+            vm.expectRevert(ICLNotifier.GasLimitTooLow.selector);
+            lpm.unsubscribe{gas: gasLimit}(tokenId, config);
+        } else {
+            // increasing gas limit succeeds and unsubscribe was called
+            lpm.unsubscribe{gas: gasLimit}(tokenId, config);
+            assertEq(sub.notifyUnsubscribeCount(), beforeUnsubCount + 1);
+        }
     }
 }

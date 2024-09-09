@@ -21,7 +21,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
 import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
-import {SlippageCheckLibrary} from "../../../src/pool-cl/libraries/SlippageCheck.sol";
+import {SlippageCheck} from "../../../src/pool-cl/libraries/SlippageCheck.sol";
 import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Actions} from "../../../src/libraries/Actions.sol";
 import {Planner, Plan} from "../../../src/libraries/Planner.sol";
@@ -549,9 +549,17 @@ contract CLPositionManagerIncreaseLiquidityTest is Test, PosmTestSetup, Fuzzers 
         uint256 tokenId = lpm.nextTokenId();
         mint(config, 100e18, ActionConstants.MSG_SENDER, ZERO_BYTES);
 
+        uint128 newLiquidity = 100e18;
+        (uint256 amount0,) = LiquidityAmounts.getAmountsForLiquidity(
+            SQRT_RATIO_1_1,
+            TickMath.getSqrtRatioAtTick(config.tickLower),
+            TickMath.getSqrtRatioAtTick(config.tickUpper),
+            newLiquidity
+        );
+
         // revert since amount0Max is too low
-        bytes memory calls = getIncreaseEncoded(tokenId, config, 100e18, 1 wei, type(uint128).max, ZERO_BYTES);
-        vm.expectRevert(SlippageCheckLibrary.MaximumAmountExceeded.selector);
+        bytes memory calls = getIncreaseEncoded(tokenId, config, newLiquidity, 1 wei, type(uint128).max, ZERO_BYTES);
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 1 wei, amount0 + 1));
         lpm.modifyLiquidities(calls, _deadline);
     }
 
@@ -560,9 +568,17 @@ contract CLPositionManagerIncreaseLiquidityTest is Test, PosmTestSetup, Fuzzers 
         uint256 tokenId = lpm.nextTokenId();
         mint(config, 100e18, ActionConstants.MSG_SENDER, ZERO_BYTES);
 
+        uint128 newLiquidity = 100e18;
+        (, uint256 amount1) = LiquidityAmounts.getAmountsForLiquidity(
+            SQRT_RATIO_1_1,
+            TickMath.getSqrtRatioAtTick(config.tickLower),
+            TickMath.getSqrtRatioAtTick(config.tickUpper),
+            newLiquidity
+        );
+
         // revert since amount1Max is too low
-        bytes memory calls = getIncreaseEncoded(tokenId, config, 100e18, type(uint128).max, 1 wei, ZERO_BYTES);
-        vm.expectRevert(SlippageCheckLibrary.MaximumAmountExceeded.selector);
+        bytes memory calls = getIncreaseEncoded(tokenId, config, newLiquidity, type(uint128).max, 1 wei, ZERO_BYTES);
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 1 wei, amount1 + 1));
         lpm.modifyLiquidities(calls, _deadline);
     }
 
@@ -610,7 +626,9 @@ contract CLPositionManagerIncreaseLiquidityTest is Test, PosmTestSetup, Fuzzers 
         swap(key, true, -10e18, ZERO_BYTES);
 
         bytes memory calls = getIncreaseEncoded(tokenId, config, newLiquidity, slippage, slippage, ZERO_BYTES);
-        vm.expectRevert(SlippageCheckLibrary.MaximumAmountExceeded.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, slippage, 299996249439153403)
+        );
         lpm.modifyLiquidities(calls, _deadline);
     }
 

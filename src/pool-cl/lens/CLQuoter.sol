@@ -8,12 +8,12 @@ import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {ICLQuoter} from "../interfaces/ICLQuoter.sol";
 import {PoolTicksCounter} from "../libraries/PoolTicksCounter.sol";
-import {PathKey, PathKeyLib} from "../../libraries/PathKey.sol";
+import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
 import {Quoter} from "../../base/Quoter.sol";
 
 contract CLQuoter is Quoter, ICLQuoter {
     using PoolIdLibrary for PoolKey;
-    using PathKeyLib for PathKey;
+    using PathKeyLibrary for PathKey;
 
     ICLPoolManager public immutable poolManager;
     uint256 private constant CL_MINIMUM_VALID_RESPONSE_LENGTH = 192;
@@ -196,7 +196,7 @@ contract CLQuoter is Quoter, ICLQuoter {
             curAmountOut = i == pathLength ? params.exactAmount : cache.prevAmount;
             amountOutCached = curAmountOut;
 
-            (PoolKey memory poolKey, bool oneForZero) = PathKeyLib.getPoolAndSwapDirection(
+            (PoolKey memory poolKey, bool oneForZero) = PathKeyLibrary.getPoolAndSwapDirection(
                 params.path[i - 1], i == pathLength ? params.exactCurrency : cache.prevCurrency
             );
 

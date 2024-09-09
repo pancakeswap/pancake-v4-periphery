@@ -9,14 +9,14 @@ import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolMana
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {ICLRouterBase} from "./interfaces/ICLRouterBase.sol";
 import {IV4Router} from "../interfaces/IV4Router.sol";
-import {PathKeyLib, PathKey} from "../libraries/PathKey.sol";
+import {PathKeyLibrary, PathKey} from "../libraries/PathKey.sol";
 import {SafeCastTemp} from "../libraries/SafeCast.sol";
 import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
     using CurrencyLibrary for Currency;
-    using PathKeyLib for PathKey;
+    using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
 
     ICLPoolManager public immutable clPoolManager;
@@ -34,7 +34,9 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
         uint128 amountOut = _swapExactPrivate(
             params.poolKey, params.zeroForOne, int256(-int128(amountIn)), params.sqrtPriceLimitX96, params.hookData
         ).toUint128();
-        if (amountOut < params.amountOutMinimum) revert IV4Router.V4TooLittleReceived();
+        if (amountOut < params.amountOutMinimum) {
+            revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+        }
     }
 
     function _swapExactInput(CLSwapExactInputParams calldata params) internal {
@@ -58,7 +60,9 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 currencyIn = pathKey.intermediateCurrency;
             }
 
-            if (amountOut < params.amountOutMinimum) revert IV4Router.V4TooLittleReceived();
+            if (amountOut < params.amountOutMinimum) {
+                revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+            }
         }
     }
 
@@ -72,7 +76,9 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 params.hookData
             )
         ).toUint128();
-        if (amountIn > params.amountInMaximum) revert IV4Router.V4TooMuchRequested();
+        if (amountIn > params.amountInMaximum) {
+            revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
+        }
     }
 
     function _swapExactOutput(CLSwapExactOutputParams calldata params) internal {
@@ -94,7 +100,9 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 amountOut = amountIn;
                 currencyOut = pathKey.intermediateCurrency;
             }
-            if (amountIn > params.amountInMaximum) revert IV4Router.V4TooMuchRequested();
+            if (amountIn > params.amountInMaximum) {
+                revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
+            }
         }
     }
 

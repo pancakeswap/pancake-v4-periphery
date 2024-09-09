@@ -11,7 +11,7 @@ import {IBinRouterBase} from "../pool-bin/interfaces/IBinRouterBase.sol";
 /// @notice Interface containing all the structs and errors for different v4 swap types
 interface IV4Router is ICLRouterBase, IBinRouterBase {
     /// @notice Emitted when an exactInput swap does not receive its minAmountOut
-    error V4TooLittleReceived();
+    error V4TooLittleReceived(uint256 minAmountOutReceived, uint256 amountReceived);
     /// @notice Emitted when an exactOutput is asked for more than its maxAmountIn
-    error V4TooMuchRequested();
+    error V4TooMuchRequested(uint256 maxAmountInRequested, uint256 amountRequested);
 }
