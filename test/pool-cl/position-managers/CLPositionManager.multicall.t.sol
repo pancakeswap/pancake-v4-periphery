@@ -139,8 +139,8 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         assertGt(result.amount1(), 0);
     }
 
-    // charlie will attempt to decrease liquidity without approval
-    // posm's NotApproved(charlie) should bubble up through Multicall
+    // Ted will attempt to decrease liquidity without approval
+    // posm's NotApproved(Ted) should bubble up through Multicall
     function test_multicall_bubbleRevert() public {
         config = PositionConfig({
             poolKey: key,
@@ -161,9 +161,9 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         bytes[] memory calls = new bytes[](1);
         calls[0] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
-        address charlie = makeAddr("CHARLIE");
-        vm.startPrank(charlie);
-        vm.expectRevert(abi.encodeWithSelector(ICLPositionManager.NotApproved.selector, charlie));
+        address ted = makeAddr("Ted");
+        vm.startPrank(ted);
+        vm.expectRevert(abi.encodeWithSelector(ICLPositionManager.NotApproved.selector, ted));
         lpm.multicall(calls);
         vm.stopPrank();
     }
