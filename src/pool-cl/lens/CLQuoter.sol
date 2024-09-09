@@ -2,7 +2,6 @@
 pragma solidity 0.8.26;
 
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
@@ -32,7 +31,7 @@ contract CLQuoter is Quoter, ICLQuoter {
         override
         returns (int128[] memory deltaAmounts, uint160 sqrtPriceX96After, uint32 initializedTicksLoaded)
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactInputSingle.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactInputSingle, (params))) {}
         catch (bytes memory reason) {
             return _handleRevertSingle(reason);
         }
@@ -48,7 +47,7 @@ contract CLQuoter is Quoter, ICLQuoter {
             uint32[] memory initializedTicksLoadedList
         )
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactInput.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactInput, (params))) {}
         catch (bytes memory reason) {
             return _handleRevert(reason);
         }
@@ -60,7 +59,7 @@ contract CLQuoter is Quoter, ICLQuoter {
         override
         returns (int128[] memory deltaAmounts, uint160 sqrtPriceX96After, uint32 initializedTicksLoaded)
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactOutputSingle.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactOutputSingle, (params))) {}
         catch (bytes memory reason) {
             if (params.sqrtPriceLimitX96 == 0) delete amountOutCached;
             return _handleRevertSingle(reason);
@@ -77,7 +76,7 @@ contract CLQuoter is Quoter, ICLQuoter {
             uint32[] memory initializedTicksLoadedList
         )
     {
-        try vault.lock(abi.encodeWithSelector(this._quoteExactOutput.selector, params)) {}
+        try vault.lock(abi.encodeCall(this._quoteExactOutput, (params))) {}
         catch (bytes memory reason) {
             return _handleRevert(reason);
         }
@@ -234,7 +233,7 @@ contract CLQuoter is Quoter, ICLQuoter {
         selfOnly
         returns (bytes memory)
     {
-        // if no price limit has been specified, cache the output amount for comparison in the swap callback
+        // if no price limit has been specified, cache the output amount for comparison inside the _swap function
         if (params.sqrtPriceLimitX96 == 0) amountOutCached = params.exactAmount;
 
         (, int24 tickBefore,,) = poolManager.getSlot0(params.poolKey.toId());

@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 
 library PoolTicksCounter {
     using PoolIdLibrary for PoolKey;

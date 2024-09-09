@@ -6,7 +6,7 @@ import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolMana
 import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {BipsLibrary} from "./libraries/BipsLibrary.sol";
 import {CalldataDecoder} from "./libraries/CalldataDecoder.sol";
 import {IV4Router} from "./interfaces/IV4Router.sol";

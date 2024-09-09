@@ -27,6 +27,7 @@ abstract contract CLNotifier is ICLNotifier {
     // at 30M gas, the limit is 300K
     uint256 private constant BLOCK_LIMIT_BPS = 100;
 
+    /// @inheritdoc ICLNotifier
     mapping(uint256 tokenId => ICLSubscriber subscriber) public subscriber;
 
     modifier onlyIfApproved(address caller, uint256 tokenId) virtual;
@@ -48,10 +49,8 @@ abstract contract CLNotifier is ICLNotifier {
         if (_subscriber != NO_SUBSCRIBER) revert AlreadySubscribed(address(_subscriber));
         subscriber[tokenId] = ICLSubscriber(newSubscriber);
 
-        bool success = _call(
-            address(newSubscriber),
-            abi.encodeWithSelector(ICLSubscriber.notifySubscribe.selector, tokenId, config, data)
-        );
+        bool success =
+            _call(address(newSubscriber), abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, config, data)));
 
         if (!success) {
             Wrap__SubsciptionReverted.selector.bubbleUpAndRevertWith(address(newSubscriber));
@@ -69,12 +68,11 @@ abstract contract CLNotifier is ICLNotifier {
     {
         _positionConfigs(tokenId).setUnsubscribe();
         ICLSubscriber _subscriber = subscriber[tokenId];
+        delete subscriber[tokenId];
 
         uint256 subscriberGasLimit = block.gaslimit.calculatePortion(BLOCK_LIMIT_BPS);
-
         try _subscriber.notifyUnsubscribe{gas: subscriberGasLimit}(tokenId, config, data) {} catch {}
 
-        delete subscriber[tokenId];
         emit Unsubscribed(tokenId, address(_subscriber));
     }
 
@@ -88,9 +86,7 @@ abstract contract CLNotifier is ICLNotifier {
 
         bool success = _call(
             address(_subscriber),
-            abi.encodeWithSelector(
-                ICLSubscriber.notifyModifyLiquidity.selector, tokenId, config, liquidityChange, feesAccrued
-            )
+            abi.encodeCall(ICLSubscriber.notifyModifyLiquidity, (tokenId, config, liquidityChange, feesAccrued))
         );
 
         if (!success) {
@@ -102,8 +98,7 @@ abstract contract CLNotifier is ICLNotifier {
         ICLSubscriber _subscriber = subscriber[tokenId];
 
         bool success = _call(
-            address(_subscriber),
-            abi.encodeWithSelector(ICLSubscriber.notifyTransfer.selector, tokenId, previousOwner, newOwner)
+            address(_subscriber), abi.encodeCall(ICLSubscriber.notifyTransfer, (tokenId, previousOwner, newOwner))
         );
 
         if (!success) {
