@@ -125,39 +125,45 @@ contract BinPositionManager is
                 IBinPositionManager.BinAddLiquidityParams calldata liquidityParams =
                     params.decodeBinAddLiquidityParams();
                 _addLiquidity(liquidityParams);
+                return;
             } else if (action == Actions.BIN_REMOVE_LIQUIDITY) {
                 IBinPositionManager.BinRemoveLiquidityParams calldata liquidityParams =
                     params.decodeBinRemoveLiquidityParams();
                 _removeLiquidity(liquidityParams);
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         } else {
             if (action == Actions.SETTLE_PAIR) {
                 (Currency currency0, Currency currency1) = params.decodeCurrencyPair();
                 _settlePair(currency0, currency1);
+                return;
             } else if (action == Actions.TAKE_PAIR) {
                 (Currency currency0, Currency currency1, address to) = params.decodeCurrencyPairAndAddress();
                 _takePair(currency0, currency1, to);
+                return;
             } else if (action == Actions.SETTLE) {
                 (Currency currency, uint256 amount, bool payerIsUser) = params.decodeCurrencyUint256AndBool();
                 _settle(currency, _mapPayer(payerIsUser), _mapSettleAmount(amount, currency));
+                return;
             } else if (action == Actions.TAKE) {
                 (Currency currency, address recipient, uint256 amount) = params.decodeCurrencyAddressAndUint256();
                 _take(currency, _mapRecipient(recipient), _mapTakeAmount(amount, currency));
+                return;
             } else if (action == Actions.CLOSE_CURRENCY) {
                 Currency currency = params.decodeCurrency();
                 _close(currency);
+                return;
             } else if (action == Actions.CLEAR_OR_TAKE) {
                 (Currency currency, uint256 amountMax) = params.decodeCurrencyAndUint256();
                 _clearOrTake(currency, amountMax);
+                return;
             } else if (action == Actions.SWEEP) {
                 (Currency currency, address to) = params.decodeCurrencyAndAddress();
                 _sweep(currency, _mapRecipient(to));
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         }
+        revert UnsupportedAction(action);
     }
 
     /// @dev Store poolKey in mapping for lookup

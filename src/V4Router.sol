@@ -42,62 +42,71 @@ abstract contract V4Router is IV4Router, CLRouterBase, BinRouterBase, BaseAction
             if (action == Actions.CL_SWAP_EXACT_IN) {
                 IV4Router.CLSwapExactInputParams calldata swapParams = params.decodeCLSwapExactInParams();
                 _swapExactInput(swapParams);
+                return;
             } else if (action == Actions.CL_SWAP_EXACT_IN_SINGLE) {
                 IV4Router.CLSwapExactInputSingleParams calldata swapParams = params.decodeCLSwapExactInSingleParams();
                 _swapExactInputSingle(swapParams);
+                return;
             } else if (action == Actions.CL_SWAP_EXACT_OUT) {
                 IV4Router.CLSwapExactOutputParams calldata swapParams = params.decodeCLSwapExactOutParams();
                 _swapExactOutput(swapParams);
+                return;
             } else if (action == Actions.CL_SWAP_EXACT_OUT_SINGLE) {
                 IV4Router.CLSwapExactOutputSingleParams calldata swapParams = params.decodeCLSwapExactOutSingleParams();
                 _swapExactOutputSingle(swapParams);
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         } else if (action > Actions.BURN_6909) {
             if (action == Actions.BIN_SWAP_EXACT_IN) {
                 IV4Router.BinSwapExactInputParams calldata swapParams = params.decodeBinSwapExactInParams();
                 _swapExactInput(swapParams);
+                return;
             } else if (action == Actions.BIN_SWAP_EXACT_IN_SINGLE) {
                 IV4Router.BinSwapExactInputSingleParams calldata swapParams = params.decodeBinSwapExactInSingleParams();
                 _swapExactInputSingle(swapParams);
+                return;
             } else if (action == Actions.BIN_SWAP_EXACT_OUT) {
                 IV4Router.BinSwapExactOutputParams calldata swapParams = params.decodeBinSwapExactOutParams();
                 _swapExactOutput(swapParams);
+                return;
             } else if (action == Actions.BIN_SWAP_EXACT_OUT_SINGLE) {
                 IV4Router.BinSwapExactOutputSingleParams calldata swapParams =
                     params.decodeBinSwapExactOutSingleParams();
                 _swapExactOutputSingle(swapParams);
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         } else {
             if (action == Actions.SETTLE_TAKE_PAIR) {
                 (Currency settleCurrency, Currency takeCurrency) = params.decodeCurrencyPair();
                 _settle(settleCurrency, msgSender(), _getFullDebt(settleCurrency));
                 _take(takeCurrency, msgSender(), _getFullCredit(takeCurrency));
+                return;
             } else if (action == Actions.SETTLE_ALL) {
                 (Currency currency, uint256 maxAmount) = params.decodeCurrencyAndUint256();
                 uint256 amount = _getFullDebt(currency);
                 if (amount > maxAmount) revert V4TooMuchRequested();
                 _settle(currency, msgSender(), amount);
+                return;
             } else if (action == Actions.TAKE_ALL) {
                 (Currency currency, uint256 minAmount) = params.decodeCurrencyAndUint256();
                 uint256 amount = _getFullCredit(currency);
                 if (amount < minAmount) revert V4TooLittleReceived();
                 _take(currency, msgSender(), amount);
+                return;
             } else if (action == Actions.SETTLE) {
                 (Currency currency, uint256 amount, bool payerIsUser) = params.decodeCurrencyUint256AndBool();
                 _settle(currency, _mapPayer(payerIsUser), _mapSettleAmount(amount, currency));
+                return;
             } else if (action == Actions.TAKE) {
                 (Currency currency, address recipient, uint256 amount) = params.decodeCurrencyAddressAndUint256();
                 _take(currency, _mapRecipient(recipient), _mapTakeAmount(amount, currency));
+                return;
             } else if (action == Actions.TAKE_PORTION) {
                 (Currency currency, address recipient, uint256 bips) = params.decodeCurrencyAddressAndUint256();
                 _take(currency, _mapRecipient(recipient), _getFullCredit(currency).calculatePortion(bips));
-            } else {
-                revert UnsupportedAction(action);
+                return;
             }
         }
+        revert UnsupportedAction(action);
     }
 }
