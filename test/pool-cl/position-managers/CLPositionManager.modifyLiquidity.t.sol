@@ -38,8 +38,6 @@ import {ActionConstants} from "../../../src/libraries/ActionConstants.sol";
 import {LiquidityFuzzers} from "../shared/fuzz/LiquidityFuzzers.sol";
 
 contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, LiquidityFuzzers {
-    using PoolIdLibrary for PoolKey;
-
     IVault vault;
     ICLPoolManager manager;
 

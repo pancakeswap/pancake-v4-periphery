@@ -47,7 +47,6 @@ contract BinPositionManager_MultiCallTest is
     using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
-    using PoolIdLibrary for PoolKey;
     using BinTokenLibrary for PoolId;
 
     bytes constant ZERO_BYTES = new bytes(0);
@@ -78,7 +77,7 @@ contract BinPositionManager_MultiCallTest is
 
     function setUp() public {
         vault = new Vault();
-        poolManager = new BinPoolManager(IVault(address(vault)), 500000);
+        poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
         permit2 = IAllowanceTransfer(deployPermit2());
         initializeTokens();

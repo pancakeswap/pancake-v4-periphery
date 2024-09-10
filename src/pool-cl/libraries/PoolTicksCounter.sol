@@ -9,7 +9,6 @@ import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 /// @title Pool Ticks Counter
 /// @notice Functions for counting the number of initialized ticks between two ticks
 library PoolTicksCounter {
-    using PoolIdLibrary for PoolKey;
     using CLPoolParametersHelper for bytes32;
 
     struct TickCache {

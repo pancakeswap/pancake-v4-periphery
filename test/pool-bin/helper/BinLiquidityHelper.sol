@@ -20,7 +20,6 @@ import {Planner, Plan} from "../../../src/libraries/Planner.sol";
 contract BinLiquidityHelper is Test {
     using Planner for Plan;
     using SafeCast for uint256;
-    using PoolIdLibrary for PoolKey;
 
     /// @dev helper method to approve token0/token1 of poolKey to binPositionManager
     function approveBinPm(address from, PoolKey memory key, address binPm, IAllowanceTransfer permit2) internal {

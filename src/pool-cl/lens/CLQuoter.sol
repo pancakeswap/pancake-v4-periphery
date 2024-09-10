@@ -12,7 +12,6 @@ import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
 import {Quoter} from "../../base/Quoter.sol";
 
 contract CLQuoter is Quoter, ICLQuoter {
-    using PoolIdLibrary for PoolKey;
     using PathKeyLibrary for PathKey;
 
     ICLPoolManager public immutable poolManager;

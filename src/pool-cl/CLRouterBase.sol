@@ -15,7 +15,6 @@ import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
-    using CurrencyLibrary for Currency;
     using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
 

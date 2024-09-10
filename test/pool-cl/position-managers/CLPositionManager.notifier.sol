@@ -24,7 +24,6 @@ import {ICLNotifier} from "../../../src/pool-cl/interfaces/ICLNotifier.sol";
 import {MockCLReturnDataSubscriber, MockCLRevertSubscriber} from "../mocks/MockCLBadSubscribers.sol";
 
 contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
-    using PoolIdLibrary for PoolKey;
     using Planner for Plan;
 
     IVault vault;

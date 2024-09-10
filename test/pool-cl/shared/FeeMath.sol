@@ -17,8 +17,6 @@ import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol"
 
 library FeeMath {
     using SafeCastTemp for uint256;
-    using PoolIdLibrary for PoolKey;
-    using PoolIdLibrary for PoolKey;
 
     /// @notice Calculates the fees accrued to a position. Used for testing purposes.
     function getFeesOwed(ICLPositionManager posm, ICLPoolManager manager, PositionConfig memory config, uint256 tokenId)

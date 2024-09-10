@@ -59,7 +59,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
     function setUp() public {
         plan = Planner.init();
         vault = new Vault();
-        poolManager = new BinPoolManager(IVault(address(vault)), 500000);
+        poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
         router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());

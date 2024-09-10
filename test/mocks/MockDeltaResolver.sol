@@ -10,8 +10,6 @@ import {ERC20} from "solmate/src/tokens/ERC20.sol";
 import {Test} from "forge-std/Test.sol";
 
 contract MockDeltaResolver is Test, DeltaResolver, ILockCallback {
-    using CurrencyLibrary for Currency;
-
     uint256 public payCallCount;
 
     constructor(IVault _vault) ImmutableState(_vault) {}

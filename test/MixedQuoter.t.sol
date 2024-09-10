@@ -59,8 +59,6 @@ contract MixedQuoterTest is
 {
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
-    using PoolIdLibrary for PoolKey;
-    using CurrencyLibrary for Currency;
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
 
@@ -118,7 +116,7 @@ contract MixedQuoterTest is
         (vault, clPoolManager, poolKey, poolId) =
             createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
 
-        binPoolManager = new BinPoolManager(vault, 500000);
+        binPoolManager = new BinPoolManager(vault);
         vault.registerApp(address(binPoolManager));
 
         currency0 = poolKey.currency0;

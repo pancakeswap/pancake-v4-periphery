@@ -39,8 +39,6 @@ contract BinPositionManager is
     Permit2Forwarder,
     Multicall_v4
 {
-    using CurrencyLibrary for Currency;
-    using PoolIdLibrary for PoolKey;
     using CalldataDecoder for bytes;
     using PackedUint128Math for uint128;
     using BinCalldataDecoder for bytes;

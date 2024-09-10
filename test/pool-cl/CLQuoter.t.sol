@@ -25,7 +25,6 @@ import {PathKey} from "../../src/libraries/PathKey.sol";
 
 contract CLQuoterTest is Test, Deployers {
     using SafeCast for *;
-    using PoolIdLibrary for PoolKey;
 
     // Min tick for full range with tick spacing of 60
     int24 internal constant MIN_TICK = -887220;

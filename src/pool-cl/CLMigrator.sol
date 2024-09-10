@@ -20,7 +20,6 @@ import {Plan, Planner} from "../libraries/Planner.sol";
 import {ReentrancyLock} from "../base/ReentrancyLock.sol";
 
 contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
-    using PoolIdLibrary for PoolKey;
     using Planner for Plan;
 
     ICLPositionManager public immutable clPositionManager;

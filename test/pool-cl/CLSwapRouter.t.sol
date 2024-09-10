@@ -42,7 +42,7 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
     function setUp() public {
         plan = Planner.init();
         vault = new Vault();
-        poolManager = new CLPoolManager(vault, 3000);
+        poolManager = new CLPoolManager(vault);
         vault.registerApp(address(poolManager));
 
         initializeTokens();
