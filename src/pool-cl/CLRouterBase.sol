@@ -66,13 +66,14 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
     }
 
     function _swapExactOutputSingle(CLSwapExactOutputSingleParams calldata params) internal {
+        uint128 amountOut = params.amountOut;
+        if (amountOut == ActionConstants.OPEN_DELTA) {
+            amountOut =
+                _getFullDebt(params.zeroForOne ? params.poolKey.currency1 : params.poolKey.currency0).toUint128();
+        }
         uint128 amountIn = (
             -_swapExactPrivate(
-                params.poolKey,
-                params.zeroForOne,
-                int256(int128(params.amountOut)),
-                params.sqrtPriceLimitX96,
-                params.hookData
+                params.poolKey, params.zeroForOne, int256(int128(amountOut)), params.sqrtPriceLimitX96, params.hookData
             )
         ).toUint128();
         if (amountIn > params.amountInMaximum) {
@@ -88,6 +89,10 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
             uint128 amountOut = params.amountOut;
             Currency currencyOut = params.currencyOut;
             PathKey calldata pathKey;
+
+            if (amountOut == ActionConstants.OPEN_DELTA) {
+                amountOut = _getFullDebt(currencyOut).toUint128();
+            }
 
             for (uint256 i = pathLength; i > 0; i--) {
                 pathKey = params.path[i - 1];

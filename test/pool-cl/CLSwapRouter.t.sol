@@ -395,6 +395,36 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         assertEq(recipientBalanceAfter - recipientBalanceBefore, 0.01 ether);
     }
 
+    function testExactOutputSingle_swapOpenDelta() public {
+        // roughly 0.01 ether swap for 1 ether (pool0 -> price 100)
+        uint256 expectedAmountIn = 10030190572718166;
+
+        ICLRouterBase.CLSwapExactOutputSingleParams memory params = ICLRouterBase.CLSwapExactOutputSingleParams(
+            poolKey0, true, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn + 1), 0, bytes("")
+        );
+
+        plan = plan.add(Actions.TAKE, abi.encode(poolKey0.currency1, ActionConstants.ADDRESS_THIS, 1 ether));
+        plan = plan.add(Actions.CL_SWAP_EXACT_OUT_SINGLE, abi.encode(params));
+        plan = plan.add(Actions.SETTLE, abi.encode(poolKey0.currency0, ActionConstants.OPEN_DELTA, true));
+
+        bytes memory data = plan.encode();
+
+        uint256 callerInputBefore = poolKey0.currency0.balanceOfSelf();
+        uint256 routerInputBefore = poolKey0.currency1.balanceOfSelf();
+        uint256 callerOutputBefore = poolKey0.currency1.balanceOfSelf();
+
+        router.executeActions(data);
+
+        uint256 callerInputAfter = poolKey0.currency0.balanceOfSelf();
+        uint256 routerInputAfter = poolKey0.currency1.balanceOfSelf();
+        uint256 callerOutputAfter = poolKey0.currency1.balanceOfSelf();
+
+        // caller paid
+        assertEq(callerInputBefore - expectedAmountIn, callerInputAfter);
+        assertEq(routerInputBefore, routerInputAfter);
+        assertEq(callerOutputBefore, callerOutputAfter);
+    }
+
     function testExactOutputSingle_priceNotMatch() external {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -475,6 +505,46 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
 
         assertEq(paid, 10060472596238902);
         assertEq(recipientBalanceAfter - recipientBalanceBefore, 1 ether);
+    }
+
+    function testExactOut_swapOpenDelta() public {
+        // roughly 0.01 ether swap for 1 ether (pool0 -> price 100)
+        uint256 expectedAmountIn = 10030190572718166;
+
+        PathKey[] memory path = new PathKey[](1);
+        path[0] = PathKey({
+            intermediateCurrency: currency0,
+            fee: poolKey0.fee,
+            hooks: poolKey0.hooks,
+            hookData: new bytes(0),
+            poolManager: poolKey0.poolManager,
+            parameters: poolKey0.parameters
+        });
+
+        ICLRouterBase.CLSwapExactOutputParams memory params = ICLRouterBase.CLSwapExactOutputParams(
+            currency1, path, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn + 1)
+        );
+
+        plan = plan.add(Actions.TAKE, abi.encode(poolKey0.currency1, ActionConstants.ADDRESS_THIS, 1 ether));
+        plan = plan.add(Actions.CL_SWAP_EXACT_OUT, abi.encode(params));
+        plan = plan.add(Actions.SETTLE, abi.encode(poolKey0.currency0, ActionConstants.OPEN_DELTA, true));
+
+        bytes memory data = plan.encode();
+
+        uint256 callerInputBefore = poolKey0.currency0.balanceOfSelf();
+        uint256 routerInputBefore = poolKey0.currency1.balanceOfSelf();
+        uint256 callerOutputBefore = poolKey0.currency1.balanceOfSelf();
+
+        router.executeActions(data);
+
+        uint256 callerInputAfter = poolKey0.currency0.balanceOfSelf();
+        uint256 routerInputAfter = poolKey0.currency1.balanceOfSelf();
+        uint256 callerOutputAfter = poolKey0.currency1.balanceOfSelf();
+
+        // caller paid
+        assertEq(callerInputBefore - expectedAmountIn, callerInputAfter);
+        assertEq(routerInputBefore, routerInputAfter);
+        assertEq(callerOutputBefore, callerOutputAfter);
     }
 
     function testExactOutput_amountInMoreThanExpected() external {
