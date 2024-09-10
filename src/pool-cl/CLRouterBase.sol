@@ -31,7 +31,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 _getFullCredit(params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1).toUint128();
         }
         uint128 amountOut = _swapExactPrivate(
-            params.poolKey, params.zeroForOne, int256(-int128(amountIn)), params.sqrtPriceLimitX96, params.hookData
+            params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.sqrtPriceLimitX96, params.hookData
         ).toUint128();
         if (amountOut < params.amountOutMinimum) {
             revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
@@ -73,7 +73,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
         }
         uint128 amountIn = (
             -_swapExactPrivate(
-                params.poolKey, params.zeroForOne, int256(int128(amountOut)), params.sqrtPriceLimitX96, params.hookData
+                params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.sqrtPriceLimitX96, params.hookData
             )
         ).toUint128();
         if (amountIn > params.amountInMaximum) {
@@ -98,8 +98,11 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 pathKey = params.path[i - 1];
                 (PoolKey memory poolKey, bool oneForZero) = pathKey.getPoolAndSwapDirection(currencyOut);
                 // The output delta will always be negative, except for when interacting with certain hook pools
-                amountIn = (-_swapExactPrivate(poolKey, !oneForZero, int256(uint256(amountOut)), 0, pathKey.hookData))
-                    .toUint128();
+                amountIn = (
+                    uint256(
+                        -int256(_swapExactPrivate(poolKey, !oneForZero, int256(uint256(amountOut)), 0, pathKey.hookData))
+                    )
+                ).toUint128();
 
                 amountOut = amountIn;
                 currencyOut = pathKey.intermediateCurrency;
