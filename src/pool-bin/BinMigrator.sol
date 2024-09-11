@@ -2,7 +2,6 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 import {BaseMigrator, IV3NonfungiblePositionManager} from "../base/BaseMigrator.sol";
 import {IBinMigrator, PoolKey} from "./interfaces/IBinMigrator.sol";
 import {IBinPositionManager} from "./interfaces/IBinPositionManager.sol";
