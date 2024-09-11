@@ -2,10 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath.sol";
 import {BaseMigrator, IV3NonfungiblePositionManager} from "../base/BaseMigrator.sol";
