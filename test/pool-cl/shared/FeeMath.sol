@@ -13,31 +13,28 @@ import {Tick} from "pancake-v4-core/src/pool-cl/libraries/Tick.sol";
 
 import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 
 library FeeMath {
     using SafeCastTemp for uint256;
 
     /// @notice Calculates the fees accrued to a position. Used for testing purposes.
-    function getFeesOwed(ICLPositionManager posm, ICLPoolManager manager, PositionConfig memory config, uint256 tokenId)
+    function getFeesOwed(ICLPositionManager posm, ICLPoolManager manager, uint256 tokenId)
         internal
         view
         returns (BalanceDelta feesOwed)
     {
-        PoolId poolId = config.poolKey.toId();
-
-        // getPositionInfo(poolId, owner, tL, tU, salt)
-        // owner is the position manager
-        // salt is the tokenId
-        CLPosition.Info memory info =
-            manager.getPosition(poolId, address(posm), config.tickLower, config.tickUpper, bytes32(tokenId));
-
-        uint128 liquidity = info.liquidity;
-        uint256 feeGrowthInside0LastX128 = info.feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128 = info.feeGrowthInside1LastX128;
+        (
+            PoolKey memory poolKey,
+            int24 tickLower,
+            int24 tickUpper,
+            uint128 liquidity,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128
+        ) = posm.positions(tokenId);
+        PoolId poolId = poolKey.toId();
 
         (uint256 feeGrowthInside0X218, uint256 feeGrowthInside1X128) =
-            _getFeeGrowthInside(manager, poolId, config.tickLower, config.tickUpper);
+            _getFeeGrowthInside(manager, poolId, tickLower, tickUpper);
 
         feesOwed = getFeesOwed(
             feeGrowthInside0X218, feeGrowthInside1X128, feeGrowthInside0LastX128, feeGrowthInside1LastX128, liquidity

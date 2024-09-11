@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {CLCalldataDecoder} from "../../../src/pool-cl/libraries/CLCalldataDecoder.sol";
 import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 
 // we need to use a mock contract to make the calls happen in calldata not memory
 contract MockCLCalldataDecoder {
@@ -13,14 +13,7 @@ contract MockCLCalldataDecoder {
     function decodeCLModifyLiquidityParams(bytes calldata params)
         external
         pure
-        returns (
-            uint256 tokenId,
-            PositionConfig calldata config,
-            uint256 liquidity,
-            uint128 amount0,
-            uint128 amount1,
-            bytes calldata hookData
-        )
+        returns (uint256 tokenId, uint256 liquidity, uint128 amount0, uint128 amount1, bytes calldata hookData)
     {
         return params.decodeCLModifyLiquidityParams();
     }
@@ -28,13 +21,7 @@ contract MockCLCalldataDecoder {
     function decodeCLBurnParams(bytes calldata params)
         external
         pure
-        returns (
-            uint256 tokenId,
-            PositionConfig calldata config,
-            uint128 amount0Min,
-            uint128 amount1Min,
-            bytes calldata hookData
-        )
+        returns (uint256 tokenId, uint128 amount0Min, uint128 amount1Min, bytes calldata hookData)
     {
         return params.decodeCLBurnParams();
     }
@@ -75,7 +62,9 @@ contract MockCLCalldataDecoder {
         external
         pure
         returns (
-            PositionConfig calldata config,
+            PoolKey calldata poolKey,
+            int24 tickLower,
+            int24 tickUpper,
             uint256 liquidity,
             uint128 amount0Max,
             uint128 amount1Max,

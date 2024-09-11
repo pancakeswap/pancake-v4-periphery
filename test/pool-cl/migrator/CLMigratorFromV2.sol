@@ -20,7 +20,6 @@ import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {MockReentrantPositionManager} from "../../mocks/MockReentrantPositionManager.sol";
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
 import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
@@ -55,8 +54,10 @@ abstract contract CLMigratorFromV2 is
     IPancakeV2LikePairFactory v2Factory;
     IPancakePair v2Pair;
     IPancakePair v2PairWithoutNativeToken;
-    PositionConfig positionConfig;
     bytes32 PERMIT2_DOMAIN_SEPARATOR;
+
+    int24 tickLower;
+    int24 tickUpper;
 
     function _getBytecodePath() internal pure virtual returns (string memory);
 
@@ -100,7 +101,8 @@ abstract contract CLMigratorFromV2 is
         v2Pair = IPancakePair(v2Factory.createPair(address(weth), address(token0)));
         v2PairWithoutNativeToken = IPancakePair(v2Factory.createPair(address(token0), address(token1)));
 
-        positionConfig = PositionConfig({poolKey: poolKey, tickLower: -100, tickUpper: 100});
+        tickLower = -100;
+        tickUpper = 100;
     }
 
     function testCLMigrateFromV2ReentrancyLockRevert() public {
@@ -191,7 +193,7 @@ abstract contract CLMigratorFromV2 is
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
 
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790027832367);
     }
@@ -332,7 +334,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790027832367);
         assertApproxEqAbs(address(vault).balance, 10 ether, 0.000001 ether);
@@ -388,8 +390,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        positionConfig.poolKey = poolKeyWithoutNativeToken;
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790027832367);
 
@@ -451,7 +452,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is 3 times of the original
         assertApproxEqAbs(liquidity, 2005104164790027832367 * 3, 0.000001 ether);
@@ -518,7 +519,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is 3 times of the original
         assertApproxEqAbs(liquidity, 2005104164790027832367 * 3, 0.000001 ether);
@@ -591,7 +592,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is 3 times of the original
         assertApproxEqAbs(liquidity, 2005104164790027832367 * (10 ether + extraAmount) / 10 ether, 0.000001 ether);
@@ -659,7 +660,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is half of the original
         assertApproxEqAbs(liquidity * 2, 2005104164790027832367, 0.000001 ether);
@@ -726,8 +727,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        positionConfig.poolKey = poolKeyWithoutNativeToken;
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is half of the original
         assertApproxEqAbs(liquidity * 2, 2005104164790027832367, 0.000001 ether);
@@ -806,7 +806,7 @@ abstract contract CLMigratorFromV2 is
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790027832367);
 

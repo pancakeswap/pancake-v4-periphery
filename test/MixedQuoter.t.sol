@@ -23,7 +23,6 @@ import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {PosmTestSetup} from "./pool-cl/shared/PosmTestSetup.sol";
-import {PositionConfig} from "../src/pool-cl/libraries/PositionConfig.sol";
 import {Permit2ApproveHelper} from "./helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2Forwarder} from "../src/base/Permit2Forwarder.sol";
@@ -101,8 +100,6 @@ contract MixedQuoterTest is
     bytes32 binPoolParam;
 
     PoolKey binPoolKey;
-
-    PositionConfig positionConfig;
 
     function setUp() public {
         weth = new WETH();
@@ -219,8 +216,6 @@ contract MixedQuoterTest is
         liquidityAmounts[1] = 10 ether;
         stableSwapPair.add_liquidity(liquidityAmounts, 0);
 
-        positionConfig = PositionConfig({poolKey: poolKey, tickLower: -300, tickUpper: 300});
-
         // deploy mixed quoter
         mixedQuoter = new MixedQuoter(
             // v3Deployer,
@@ -234,19 +229,15 @@ contract MixedQuoterTest is
 
         seedBalance(address(this));
         approvePosmFor(address(this));
-        mint(positionConfig, 3000 ether, address(this), ZERO_BYTES);
+        mint(poolKey, -300, 300, 3000 ether, address(this), ZERO_BYTES);
 
         permit2Approve(address(this), permit2, address(weth), address(lpm));
         permit2Approve(address(this), permit2, address(token1), address(lpm));
         permit2Approve(address(this), permit2, address(token2), address(lpm));
 
-        PositionConfig memory nativePairConfig =
-            PositionConfig({poolKey: poolKeyWithNativeToken, tickLower: -300, tickUpper: 300});
-        mintWithNative(0, nativePairConfig, 1000 ether, address(this), ZERO_BYTES);
+        mintWithNative(0, poolKeyWithNativeToken, -300, 300, 1000 ether, address(this), ZERO_BYTES);
 
-        PositionConfig memory wethPairConfig =
-            PositionConfig({poolKey: poolKeyWithWETH, tickLower: -300, tickUpper: 300});
-        mint(wethPairConfig, 1000 ether, address(this), ZERO_BYTES);
+        mint(poolKeyWithWETH, -300, 300, 1000 ether, address(this), ZERO_BYTES);
 
         // mint some liquidity to the bin pool
         binPoolManager.initialize(binPoolKey, activeId, ZERO_BYTES);

@@ -11,7 +11,6 @@ import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPo
 
 import {ICLPositionManager} from "../../../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Actions} from "../../../../src/libraries/Actions.sol";
-import {PositionConfig} from "../../../../src/pool-cl/libraries/PositionConfig.sol";
 import {Planner, Plan} from "../../../../src/libraries/Planner.sol";
 
 contract LiquidityFuzzers is Fuzzers {
@@ -27,14 +26,14 @@ contract LiquidityFuzzers is Fuzzers {
         bytes memory hookData
     ) internal returns (uint256, ICLPoolManager.ModifyLiquidityParams memory) {
         params = Fuzzers.createFuzzyLiquidityParams(key, params, sqrtPriceX96);
-        PositionConfig memory config =
-            PositionConfig({poolKey: key, tickLower: params.tickLower, tickUpper: params.tickUpper});
 
         uint128 MAX_SLIPPAGE_INCREASE = type(uint128).max;
         Plan memory planner = Planner.init().add(
             Actions.CL_MINT_POSITION,
             abi.encode(
-                config,
+                key,
+                params.tickLower,
+                params.tickUpper,
                 uint256(params.liquidityDelta),
                 MAX_SLIPPAGE_INCREASE,
                 MAX_SLIPPAGE_INCREASE,
@@ -44,7 +43,7 @@ contract LiquidityFuzzers is Fuzzers {
         );
 
         uint256 tokenId = lpm.nextTokenId();
-        bytes memory calls = planner.finalizeModifyLiquidityWithClose(config.poolKey);
+        bytes memory calls = planner.finalizeModifyLiquidityWithClose(key);
         lpm.modifyLiquidities(calls, block.timestamp + 1);
 
         return (tokenId, params);
@@ -81,14 +80,14 @@ contract LiquidityFuzzers is Fuzzers {
         bytes memory hookData
     ) internal returns (uint256, ICLPoolManager.ModifyLiquidityParams memory) {
         params = createFuzzyTwoSidedLiquidityParams(key, params, sqrtPriceX96);
-        PositionConfig memory config =
-            PositionConfig({poolKey: key, tickLower: params.tickLower, tickUpper: params.tickUpper});
 
         uint128 MAX_SLIPPAGE_INCREASE = type(uint128).max;
         Plan memory planner = Planner.init().add(
             Actions.CL_MINT_POSITION,
             abi.encode(
-                config,
+                key,
+                params.tickLower,
+                params.tickUpper,
                 uint256(params.liquidityDelta),
                 MAX_SLIPPAGE_INCREASE,
                 MAX_SLIPPAGE_INCREASE,
@@ -98,7 +97,7 @@ contract LiquidityFuzzers is Fuzzers {
         );
 
         uint256 tokenId = lpm.nextTokenId();
-        bytes memory calls = planner.finalizeModifyLiquidityWithClose(config.poolKey);
+        bytes memory calls = planner.finalizeModifyLiquidityWithClose(key);
         lpm.modifyLiquidities(calls, block.timestamp + 1);
 
         return (tokenId, params);

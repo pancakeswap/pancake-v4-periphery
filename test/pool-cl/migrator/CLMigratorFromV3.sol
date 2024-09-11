@@ -23,7 +23,6 @@ import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IV3NonfungiblePositionManager} from "../../../src/interfaces/external/IV3NonfungiblePositionManager.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {MockReentrantPositionManager} from "../../mocks/MockReentrantPositionManager.sol";
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
 import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
@@ -55,7 +54,6 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
     IPancakeV3LikePairFactory v3Factory;
     IV3NonfungiblePositionManager v3Nfpm;
-    PositionConfig positionConfig;
 
     function _getDeployerBytecodePath() internal pure virtual returns (string memory);
     function _getFactoryBytecodePath() internal pure virtual returns (string memory);
@@ -127,8 +125,6 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         weth.approve(address(v3Nfpm), type(uint256).max);
         token0.approve(address(v3Nfpm), type(uint256).max);
         token1.approve(address(v3Nfpm), type(uint256).max);
-
-        positionConfig = PositionConfig({poolKey: poolKey, tickLower: -100, tickUpper: 100});
     }
 
     function testCLMigrateFromV3ReentrancyLockRevert() public {
@@ -217,7 +213,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790028032677);
 
@@ -358,7 +354,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790028032677);
 
@@ -411,8 +407,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        positionConfig.poolKey = poolKeyWithoutNativeToken;
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790028032677);
 
@@ -474,7 +469,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is 3 times of the original
         assertApproxEqAbs(liquidity, 2005104164790028032677 * 3, 0.000001 ether);
@@ -541,7 +536,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is 3 times of the original
         assertApproxEqAbs(liquidity, 2005104164790028032677 * 3, 0.000001 ether);
@@ -613,7 +608,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is 3 times of the original
         assertApproxEqAbs(liquidity, 2005104164790028032677 * (10 ether + extraAmount) / 10 ether, 0.000001 ether);
@@ -787,7 +782,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is half of the original
         assertApproxEqAbs(liquidity * 2, 2005104164790028032677, 0.1 ether);
@@ -849,8 +844,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        positionConfig.poolKey = poolKeyWithoutNativeToken;
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         // liquidity is half of the original
         assertApproxEqAbs(liquidity * 2, 2005104164790028032677, 0.1 ether);
@@ -961,7 +955,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 2005104164790028032677);
 
@@ -1032,7 +1026,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // make sure liuqidty is minted to the correct pool
         assertEq(lpm.ownerOf(1), address(this));
-        uint128 liquidity = lpm.getPositionLiquidity(1, positionConfig);
+        uint128 liquidity = lpm.getPositionLiquidity(1);
 
         assertEq(liquidity, 4010208329580056065555);
 

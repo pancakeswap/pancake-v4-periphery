@@ -4,9 +4,9 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 
 import {MockCLCalldataDecoder} from "../mocks/MockCLCalldataDecoder.sol";
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
 import {PathKey} from "../../../src/libraries/PathKey.sol";
 
@@ -19,59 +19,54 @@ contract CLCalldataDecoderTest is Test {
 
     function test_fuzz_decodeModifyLiquidityParams(
         uint256 _tokenId,
-        PositionConfig calldata _config,
         uint256 _liquidity,
         uint128 _amount0,
         uint128 _amount1,
         bytes calldata _hookData
     ) public view {
-        bytes memory params = abi.encode(_tokenId, _config, _liquidity, _amount0, _amount1, _hookData);
-        (
-            uint256 tokenId,
-            PositionConfig memory config,
-            uint256 liquidity,
-            uint128 amount0,
-            uint128 amount1,
-            bytes memory hookData
-        ) = decoder.decodeCLModifyLiquidityParams(params);
+        bytes memory params = abi.encode(_tokenId, _liquidity, _amount0, _amount1, _hookData);
+        (uint256 tokenId, uint256 liquidity, uint128 amount0, uint128 amount1, bytes memory hookData) =
+            decoder.decodeCLModifyLiquidityParams(params);
 
         assertEq(tokenId, _tokenId);
         assertEq(liquidity, _liquidity);
         assertEq(amount0, _amount0);
         assertEq(amount1, _amount1);
         assertEq(hookData, _hookData);
-        _assertEq(_config, config);
     }
 
     function test_fuzz_decodeBurnParams(
         uint256 _tokenId,
-        PositionConfig calldata _config,
         uint128 _amount0Min,
         uint128 _amount1Min,
         bytes calldata _hookData
     ) public view {
-        bytes memory params = abi.encode(_tokenId, _config, _amount0Min, _amount1Min, _hookData);
-        (uint256 tokenId, PositionConfig memory config, uint128 amount0Min, uint128 amount1Min, bytes memory hookData) =
+        bytes memory params = abi.encode(_tokenId, _amount0Min, _amount1Min, _hookData);
+        (uint256 tokenId, uint128 amount0Min, uint128 amount1Min, bytes memory hookData) =
             decoder.decodeCLBurnParams(params);
 
         assertEq(tokenId, _tokenId);
         assertEq(hookData, _hookData);
-        _assertEq(_config, config);
         assertEq(amount0Min, _amount0Min);
         assertEq(amount1Min, _amount1Min);
     }
 
     function test_fuzz_decodeMintParams(
-        PositionConfig calldata _config,
+        PoolKey calldata _poolKey,
+        int24 _tickLower,
+        int24 _tickUpper,
         uint256 _liquidity,
         uint128 _amount0Max,
         uint128 _amount1Max,
         address _owner,
         bytes calldata _hookData
     ) public view {
-        bytes memory params = abi.encode(_config, _liquidity, _amount0Max, _amount1Max, _owner, _hookData);
+        bytes memory params =
+            abi.encode(_poolKey, _tickLower, _tickUpper, _liquidity, _amount0Max, _amount1Max, _owner, _hookData);
         (
-            PositionConfig memory config,
+            PoolKey memory poolKey,
+            int24 tickLower,
+            int24 tickUpper,
             uint256 liquidity,
             uint128 amount0Max,
             uint128 amount1Max,
@@ -79,12 +74,14 @@ contract CLCalldataDecoderTest is Test {
             bytes memory hookData
         ) = decoder.decodeCLMintParams(params);
 
+        assertEq(PoolId.unwrap(poolKey.toId()), PoolId.unwrap(_poolKey.toId()));
+        assertEq(tickLower, _tickLower);
+        assertEq(tickUpper, _tickUpper);
         assertEq(liquidity, _liquidity);
         assertEq(amount0Max, _amount0Max);
         assertEq(amount1Max, _amount1Max);
         assertEq(owner, _owner);
         assertEq(hookData, _hookData);
-        _assertEq(_config, config);
     }
 
     function test_fuzz_decodeSwapExactInParams(IV4Router.CLSwapExactInputParams calldata _swapParams) public view {
@@ -147,12 +144,6 @@ contract CLCalldataDecoderTest is Test {
             assertEq(path1[i].hookData, path2[i].hookData);
             assertEq(path1[i].parameters, path2[i].parameters);
         }
-    }
-
-    function _assertEq(PositionConfig memory config1, PositionConfig memory config2) internal pure {
-        _assertEq(config1.poolKey, config2.poolKey);
-        assertEq(config1.tickLower, config2.tickLower);
-        assertEq(config1.tickUpper, config2.tickUpper);
     }
 
     function _assertEq(PoolKey memory key1, PoolKey memory key2) internal pure {

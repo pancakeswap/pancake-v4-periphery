@@ -25,7 +25,6 @@ import {IMulticall_v4} from "../../../src/interfaces/IMulticall_v4.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Actions} from "../../../src/libraries/Actions.sol";
 import {Planner, Plan} from "../../../src/libraries/Planner.sol";
@@ -66,8 +65,6 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
     error InvalidNonce();
 
     bytes32 PERMIT2_DOMAIN_SEPARATOR;
-
-    PositionConfig config;
 
     function setUp() public {
         (alice, alicePK) = makeAddrAndKey("ALICE");
@@ -110,20 +107,21 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         bytes[] memory calls = new bytes[](2);
         calls[0] = abi.encodeWithSelector(lpm.initializePool.selector, key, SQRT_RATIO_1_1, ZERO_BYTES);
 
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
-
         Plan memory planner = Planner.init();
         planner.add(
             Actions.CL_MINT_POSITION,
             abi.encode(
-                config, 100e18, MAX_SLIPPAGE_INCREASE, MAX_SLIPPAGE_INCREASE, ActionConstants.MSG_SENDER, ZERO_BYTES
+                key,
+                TickMath.minUsableTick(key.parameters.getTickSpacing()),
+                TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+                100e18,
+                MAX_SLIPPAGE_INCREASE,
+                MAX_SLIPPAGE_INCREASE,
+                ActionConstants.MSG_SENDER,
+                ZERO_BYTES
             )
         );
-        bytes memory actions = planner.finalizeModifyLiquidityWithClose(config.poolKey);
+        bytes memory actions = planner.finalizeModifyLiquidityWithClose(key);
 
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
@@ -139,20 +137,22 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
     // Ted will attempt to decrease liquidity without approval
     // posm's NotApproved(Ted) should bubble up through Multicall
     function test_multicall_bubbleRevert() public {
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, 100e18, address(this), ZERO_BYTES);
+        mint(
+            key,
+            TickMath.minUsableTick(key.parameters.getTickSpacing()),
+            TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+            100e18,
+            address(this),
+            ZERO_BYTES
+        );
 
         Plan memory planner = Planner.init();
         planner.add(
             Actions.CL_DECREASE_LIQUIDITY,
-            abi.encode(tokenId, config, 100e18, MIN_SLIPPAGE_DECREASE, MIN_SLIPPAGE_DECREASE, ZERO_BYTES)
+            abi.encode(tokenId, 100e18, MIN_SLIPPAGE_DECREASE, MIN_SLIPPAGE_DECREASE, ZERO_BYTES)
         );
-        bytes memory actions = planner.finalizeModifyLiquidityWithClose(config.poolKey);
+        bytes memory actions = planner.finalizeModifyLiquidityWithClose(key);
 
         // Use multicall to decrease liquidity
         bytes[] memory calls = new bytes[](1);
@@ -168,19 +168,21 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
     // decrease liquidity but forget to close
     // core's CurrencyNotSettled should bubble up through Multicall
     function test_multicall_bubbleRevert_core() public {
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, 100e18, address(this), ZERO_BYTES);
+        mint(
+            key,
+            TickMath.minUsableTick(key.parameters.getTickSpacing()),
+            TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+            100e18,
+            address(this),
+            ZERO_BYTES
+        );
 
         // do not close deltas to throw CurrencyNotSettled in core
         Plan memory planner = Planner.init();
         planner.add(
             Actions.CL_DECREASE_LIQUIDITY,
-            abi.encode(tokenId, config, 100e18, MIN_SLIPPAGE_DECREASE, MIN_SLIPPAGE_DECREASE, ZERO_BYTES)
+            abi.encode(tokenId, 100e18, MIN_SLIPPAGE_DECREASE, MIN_SLIPPAGE_DECREASE, ZERO_BYTES)
         );
         bytes memory actions = planner.encode();
 
@@ -214,11 +216,10 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
     }
 
     function test_multicall_permitAndDecrease() public {
-        config = PositionConfig({poolKey: key, tickLower: -60, tickUpper: 60});
         uint256 liquidityAlice = 1e18;
         vm.startPrank(alice);
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, liquidityAlice, alice, ZERO_BYTES);
+        mint(key, -60, 60, liquidityAlice, alice, ZERO_BYTES);
         vm.stopPrank();
 
         // Alice gives Bob permission to operate on her liquidity
@@ -233,22 +234,17 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
             IERC721Permit_v4(lpm).permit.selector, bob, tokenId, block.timestamp + 1, nonce, signature
         );
         uint256 liquidityToRemove = 0.4444e18;
-        bytes memory actions = getDecreaseEncoded(tokenId, config, liquidityToRemove, ZERO_BYTES);
+        bytes memory actions = getDecreaseEncoded(tokenId, liquidityToRemove, ZERO_BYTES);
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
         vm.prank(bob);
         lpm.multicall(calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
         assertEq(liquidity, liquidityAlice - liquidityToRemove);
     }
 
     function test_multicall_permit_mint() public {
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
         // 1. revoke the auto permit we give to posm for 1 token
         vm.prank(bob);
         permit2.approve(Currency.unwrap(currency0), address(lpm), 0, 0);
@@ -260,7 +256,14 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         assertEq(_expiration, 0);
 
         uint256 tokenId = lpm.nextTokenId();
-        bytes memory mintCall = getMintEncoded(config, 10e18, bob, ZERO_BYTES);
+        bytes memory mintCall = getMintEncoded(
+            key,
+            TickMath.minUsableTick(key.parameters.getTickSpacing()),
+            TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+            10e18,
+            bob,
+            ZERO_BYTES
+        );
 
         // 2 . call a mint that reverts because position manager doesn't have permission on permit2
         vm.expectRevert(abi.encodeWithSelector(IAllowanceTransfer.InsufficientAllowance.selector, 0));
@@ -280,7 +283,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         vm.prank(bob);
         lpm.multicall(calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         (_amount,,) = permit2.allowance(address(bob), Currency.unwrap(currency0), address(lpm));
 
@@ -290,11 +293,6 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
     }
 
     function test_multicall_permit_batch_mint() public {
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
         // 1. revoke the auto permit we give to posm for 1 token
         vm.prank(bob);
         permit2.approve(Currency.unwrap(currency0), address(lpm), 0, 0);
@@ -312,7 +310,14 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         assertEq(_expiration1, 0);
 
         uint256 tokenId = lpm.nextTokenId();
-        bytes memory mintCall = getMintEncoded(config, 10e18, bob, ZERO_BYTES);
+        bytes memory mintCall = getMintEncoded(
+            key,
+            TickMath.minUsableTick(key.parameters.getTickSpacing()),
+            TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+            10e18,
+            bob,
+            ZERO_BYTES
+        );
 
         // 2 . call a mint that reverts because position manager doesn't have permission on permit2
         vm.expectRevert(abi.encodeWithSelector(IAllowanceTransfer.InsufficientAllowance.selector, 0));
@@ -336,7 +341,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         vm.prank(bob);
         lpm.multicall(calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         (_amount0,,) = permit2.allowance(address(bob), Currency.unwrap(currency0), address(lpm));
         (_amount1,,) = permit2.allowance(address(bob), Currency.unwrap(currency1), address(lpm));
@@ -348,12 +353,6 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
 
     /// @notice test that a front-ran permit does not fail a multicall with permit
     function test_multicall_permit_frontrun_suceeds() public {
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
-
         // Charlie signs permit for the two tokens
         IAllowanceTransfer.PermitSingle memory permit0 =
             defaultERC20PermitAllowance(Currency.unwrap(currency0), permitAmount, permitExpiration, permitNonce);
@@ -387,7 +386,14 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         bytes[] memory calls = new bytes[](3);
         calls[0] = abi.encodeWithSelector(Permit2Forwarder(lpm).permit.selector, charlie, permit0, sig0);
         calls[1] = abi.encodeWithSelector(Permit2Forwarder(lpm).permit.selector, charlie, permit1, sig1);
-        bytes memory mintCall = getMintEncoded(config, 10e18, charlie, ZERO_BYTES);
+        bytes memory mintCall = getMintEncoded(
+            key,
+            TickMath.minUsableTick(key.parameters.getTickSpacing()),
+            TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+            10e18,
+            charlie,
+            ZERO_BYTES
+        );
         calls[2] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, mintCall, _deadline);
 
         uint256 tokenId = lpm.nextTokenId();
@@ -403,12 +409,6 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
 
     /// @notice test that a front-ran permitBatch does not fail a multicall with permitBatch
     function test_multicall_permitBatch_frontrun_suceeds() public {
-        config = PositionConfig({
-            poolKey: key,
-            tickLower: TickMath.minUsableTick(key.parameters.getTickSpacing()),
-            tickUpper: TickMath.maxUsableTick(key.parameters.getTickSpacing())
-        });
-
         // Charlie signs permitBatch for the two tokens
         address[] memory tokens = new address[](2);
         tokens[0] = Currency.unwrap(currency0);
@@ -438,7 +438,14 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         // charlie tries to mint an LP token with multicall(permitBatch, mint)
         bytes[] memory calls = new bytes[](2);
         calls[0] = abi.encodeWithSelector(Permit2Forwarder(lpm).permitBatch.selector, charlie, permit, sig);
-        bytes memory mintCall = getMintEncoded(config, 10e18, charlie, ZERO_BYTES);
+        bytes memory mintCall = getMintEncoded(
+            key,
+            TickMath.minUsableTick(key.parameters.getTickSpacing()),
+            TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+            10e18,
+            charlie,
+            ZERO_BYTES
+        );
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, mintCall, _deadline);
 
         uint256 tokenId = lpm.nextTokenId();

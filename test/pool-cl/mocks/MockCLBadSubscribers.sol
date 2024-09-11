@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import {ICLSubscriber} from "../../../src/pool-cl/interfaces/ICLSubscriber.sol";
-import {PositionConfig} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 
@@ -30,11 +29,11 @@ contract MockCLReturnDataSubscriber is ICLSubscriber {
         _;
     }
 
-    function notifySubscribe(uint256, PositionConfig memory, bytes memory) external onlyByPosm {
+    function notifySubscribe(uint256, bytes memory) external onlyByPosm {
         notifySubscribeCount++;
     }
 
-    function notifyUnsubscribe(uint256, PositionConfig memory) external onlyByPosm {
+    function notifyUnsubscribe(uint256) external onlyByPosm {
         notifyUnsubscribeCount++;
         uint256 _memPtr = memPtr;
         assembly {
@@ -45,7 +44,7 @@ contract MockCLReturnDataSubscriber is ICLSubscriber {
         }
     }
 
-    function notifyModifyLiquidity(uint256, PositionConfig memory, int256, BalanceDelta) external onlyByPosm {
+    function notifyModifyLiquidity(uint256, int256, BalanceDelta) external onlyByPosm {
         notifyModifyLiquidityCount++;
     }
 
@@ -77,17 +76,17 @@ contract MockCLRevertSubscriber is ICLSubscriber {
         _;
     }
 
-    function notifySubscribe(uint256, PositionConfig memory, bytes memory) external view onlyByPosm {
+    function notifySubscribe(uint256, bytes memory) external view onlyByPosm {
         if (shouldRevert) {
             revert TestRevert("notifySubscribe");
         }
     }
 
-    function notifyUnsubscribe(uint256, PositionConfig memory) external view onlyByPosm {
+    function notifyUnsubscribe(uint256) external view onlyByPosm {
         revert TestRevert("notifyUnsubscribe");
     }
 
-    function notifyModifyLiquidity(uint256, PositionConfig memory, int256, BalanceDelta) external view onlyByPosm {
+    function notifyModifyLiquidity(uint256, int256, BalanceDelta) external view onlyByPosm {
         revert TestRevert("notifyModifyLiquidity");
     }
 
