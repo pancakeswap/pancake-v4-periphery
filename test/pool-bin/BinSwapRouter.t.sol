@@ -27,6 +27,7 @@ import {Actions} from "../../src/libraries/Actions.sol";
 import {SafeCallback} from "../../src/base/SafeCallback.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
+import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 
 contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
@@ -59,7 +60,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
     function setUp() public {
         plan = Planner.init();
         vault = new Vault();
-        poolManager = new BinPoolManager(IVault(address(vault)), 500000);
+        poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
         router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());
@@ -419,6 +420,40 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         }
     }
 
+    function testExactOutputSingle_SwapOpenDelta() public {
+        vm.startPrank(alice);
+        token0.mint(alice, 1.1 ether);
+        // roughly 1 ether swap for 1 ether (pool0 -> price 1)
+        uint256 expectedAmountIn = 1003009027081243732;
+
+        IBinRouterBase.BinSwapExactOutputSingleParams memory params = IBinRouterBase.BinSwapExactOutputSingleParams(
+            key, true, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn + 1), bytes("")
+        );
+
+        plan = plan.add(Actions.TAKE, abi.encode(key.currency1, ActionConstants.ADDRESS_THIS, 1 ether));
+        plan = plan.add(Actions.BIN_SWAP_EXACT_OUT_SINGLE, abi.encode(params));
+        plan = plan.add(Actions.SETTLE, abi.encode(key.currency0, ActionConstants.OPEN_DELTA, true));
+
+        bytes memory data = plan.encode();
+
+        uint256 callerInputBefore = key.currency0.balanceOf(alice);
+        uint256 routerInputBefore = key.currency1.balanceOf(alice);
+        uint256 callerOutputBefore = key.currency1.balanceOf(alice);
+
+        router.executeActions(data);
+
+        uint256 callerInputAfter = key.currency0.balanceOf(alice);
+        uint256 routerInputAfter = key.currency1.balanceOf(alice);
+        uint256 callerOutputAfter = key.currency1.balanceOf(alice);
+
+        // caller paid
+        assertEq(callerInputBefore - expectedAmountIn, callerInputAfter);
+        assertEq(routerInputBefore, routerInputAfter);
+        assertEq(callerOutputBefore, callerOutputAfter);
+
+        vm.stopPrank();
+    }
+
     function testExactOutputSingle_DifferentRecipient() public {
         vm.startPrank(alice);
         token0.mint(alice, 1 ether);
@@ -483,6 +518,48 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         // amountIs is 501504513540621866
         assertEq(token0.balanceOf(alice), 1 ether - 501504513540621866);
         assertEq(token1.balanceOf(alice), 0.5 ether);
+    }
+
+    function testExactOut_swapOpenDelta() public {
+        vm.startPrank(alice);
+        token0.mint(alice, 1.1 ether);
+        // roughly 1 ether swap for 1 ether (pool0 -> price 1)
+        uint256 expectedAmountIn = 1003009027081243732;
+
+        PathKey[] memory path = new PathKey[](1);
+        path[0] = PathKey({
+            intermediateCurrency: key.currency0,
+            fee: key.fee,
+            hooks: key.hooks,
+            hookData: new bytes(0),
+            poolManager: key.poolManager,
+            parameters: key.parameters
+        });
+
+        IBinRouterBase.BinSwapExactOutputParams memory params = IBinRouterBase.BinSwapExactOutputParams(
+            Currency.wrap(address(token1)), path, ActionConstants.OPEN_DELTA, uint128(expectedAmountIn + 1)
+        );
+
+        plan = plan.add(Actions.TAKE, abi.encode(key.currency1, ActionConstants.ADDRESS_THIS, 1 ether));
+        plan = plan.add(Actions.BIN_SWAP_EXACT_OUT, abi.encode(params));
+        plan = plan.add(Actions.SETTLE, abi.encode(key.currency0, ActionConstants.OPEN_DELTA, true));
+
+        bytes memory data = plan.encode();
+
+        uint256 callerInputBefore = key.currency0.balanceOf(alice);
+        uint256 routerInputBefore = key.currency1.balanceOf(alice);
+        uint256 callerOutputBefore = key.currency1.balanceOf(alice);
+
+        router.executeActions(data);
+
+        uint256 callerInputAfter = key.currency0.balanceOf(alice);
+        uint256 routerInputAfter = key.currency1.balanceOf(alice);
+        uint256 callerOutputAfter = key.currency1.balanceOf(alice);
+
+        // caller paid
+        assertEq(callerInputBefore - expectedAmountIn, callerInputAfter);
+        assertEq(routerInputBefore, routerInputAfter);
+        assertEq(callerOutputBefore, callerOutputAfter);
     }
 
     function testExactOutput_MultiHopDifferentRecipient() public {

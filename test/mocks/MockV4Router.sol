@@ -12,7 +12,6 @@ import {ERC20} from "solmate/src/tokens/ERC20.sol";
 
 contract MockV4Router is V4Router, ReentrancyLock {
     using SafeTransferLib for *;
-    using CurrencyLibrary for Currency;
 
     constructor(IVault _vault, ICLPoolManager _poolManager, IBinPoolManager _binPoolManager)
         V4Router(_vault, _poolManager, _binPoolManager)

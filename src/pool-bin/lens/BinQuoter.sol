@@ -15,7 +15,6 @@ import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
 import {Quoter} from "../../base/Quoter.sol";
 
 contract BinQuoter is Quoter, IBinQuoter {
-    using PoolIdLibrary for PoolKey;
     using SafeCast for uint128;
     using PathKeyLibrary for PathKey;
 

@@ -25,8 +25,6 @@ import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
 
 contract PermitTest is Test, PosmTestSetup {
     using FixedPointMathLib for uint256;
-    using CurrencyLibrary for Currency;
-    using PoolIdLibrary for PoolKey;
 
     IVault vault;
     ICLPoolManager manager;

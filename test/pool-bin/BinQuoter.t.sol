@@ -36,8 +36,6 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
     using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
-    using CurrencyLibrary for Currency;
-    using PoolIdLibrary for PoolKey;
 
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
@@ -66,7 +64,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
     function setUp() public {
         plan = Planner.init();
         vault = new Vault();
-        poolManager = new BinPoolManager(IVault(address(vault)), 500000);
+        poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
         router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());

@@ -35,8 +35,6 @@ import {MockCLSubscriber} from "../mocks/MockCLSubscriber.sol";
 
 contract CLPositionManagerGasTest is Test, PosmTestSetup, GasSnapshot {
     using FixedPointMathLib for uint256;
-    using CurrencyLibrary for Currency;
-    using PoolIdLibrary for PoolKey;
     using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
 

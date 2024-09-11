@@ -49,7 +49,6 @@ abstract contract BinMigratorFromV2 is
     GasSnapshot
 {
     using BinPoolParametersHelper for bytes32;
-    using PoolIdLibrary for PoolKey;
     using BinTokenLibrary for PoolId;
 
     // 1 tokenX = 1 tokenY
@@ -84,7 +83,7 @@ abstract contract BinMigratorFromV2 is
 
         // init v4 nfpm & migrator
         vault = new Vault();
-        poolManager = new BinPoolManager(IVault(address(vault)), 3000);
+        poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
         permit2 = IAllowanceTransfer(deployPermit2());
         binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);

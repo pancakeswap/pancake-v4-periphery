@@ -21,7 +21,6 @@ import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionMan
 
 contract FeeCollectionTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
-    using CurrencyLibrary for Currency;
     using FeeMath for ICLPositionManager;
 
     IVault vault;

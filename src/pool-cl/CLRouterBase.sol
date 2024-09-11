@@ -15,7 +15,6 @@ import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
-    using CurrencyLibrary for Currency;
     using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
 
@@ -32,7 +31,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 _getFullCredit(params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1).toUint128();
         }
         uint128 amountOut = _swapExactPrivate(
-            params.poolKey, params.zeroForOne, int256(-int128(amountIn)), params.sqrtPriceLimitX96, params.hookData
+            params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.sqrtPriceLimitX96, params.hookData
         ).toUint128();
         if (amountOut < params.amountOutMinimum) {
             revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
@@ -67,13 +66,14 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
     }
 
     function _swapExactOutputSingle(CLSwapExactOutputSingleParams calldata params) internal {
+        uint128 amountOut = params.amountOut;
+        if (amountOut == ActionConstants.OPEN_DELTA) {
+            amountOut =
+                _getFullDebt(params.zeroForOne ? params.poolKey.currency1 : params.poolKey.currency0).toUint128();
+        }
         uint128 amountIn = (
             -_swapExactPrivate(
-                params.poolKey,
-                params.zeroForOne,
-                int256(int128(params.amountOut)),
-                params.sqrtPriceLimitX96,
-                params.hookData
+                params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.sqrtPriceLimitX96, params.hookData
             )
         ).toUint128();
         if (amountIn > params.amountInMaximum) {
@@ -90,12 +90,19 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
             Currency currencyOut = params.currencyOut;
             PathKey calldata pathKey;
 
+            if (amountOut == ActionConstants.OPEN_DELTA) {
+                amountOut = _getFullDebt(currencyOut).toUint128();
+            }
+
             for (uint256 i = pathLength; i > 0; i--) {
                 pathKey = params.path[i - 1];
                 (PoolKey memory poolKey, bool oneForZero) = pathKey.getPoolAndSwapDirection(currencyOut);
                 // The output delta will always be negative, except for when interacting with certain hook pools
-                amountIn = (-_swapExactPrivate(poolKey, !oneForZero, int256(uint256(amountOut)), 0, pathKey.hookData))
-                    .toUint128();
+                amountIn = (
+                    uint256(
+                        -int256(_swapExactPrivate(poolKey, !oneForZero, int256(uint256(amountOut)), 0, pathKey.hookData))
+                    )
+                ).toUint128();
 
                 amountOut = amountIn;
                 currencyOut = pathKey.intermediateCurrency;

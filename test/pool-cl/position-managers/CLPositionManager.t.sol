@@ -39,9 +39,7 @@ import {ReentrantToken} from "../mocks/ReentrantToken.sol";
 
 contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
-    using CurrencyLibrary for Currency;
     using Planner for Plan;
-    using PoolIdLibrary for PoolKey;
     using CLPoolParametersHelper for bytes32;
 
     IVault vault;

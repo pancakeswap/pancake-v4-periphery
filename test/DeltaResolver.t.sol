@@ -11,8 +11,6 @@ import {MockDeltaResolver} from "./mocks/MockDeltaResolver.sol";
 import {TokenFixture} from "pancake-v4-core/test/helpers/TokenFixture.sol";
 
 contract DeltaResolverTest is Test, GasSnapshot, TokenFixture {
-    using CurrencyLibrary for Currency;
-
     IVault vault;
     MockDeltaResolver resolver;
 

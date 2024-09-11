@@ -39,8 +39,6 @@ contract BinPositionManager is
     Permit2Forwarder,
     Multicall_v4
 {
-    using CurrencyLibrary for Currency;
-    using PoolIdLibrary for PoolKey;
     using CalldataDecoder for bytes;
     using PackedUint128Math for uint128;
     using BinCalldataDecoder for bytes;
@@ -205,9 +203,11 @@ contract BinPositionManager is
             ZERO_BYTES
         );
 
+        int256 amount0 = delta.amount0();
+        int256 amount1 = delta.amount1();
         // delta amt0/amt1 will always be negative in mint case
-        if (delta.amount0() > 0 || delta.amount1() > 0) revert IncorrectOutputAmount();
-        if (uint128(-delta.amount0()) < params.amount0Min || uint128(-delta.amount1()) < params.amount1Min) {
+        if (amount0 > 0 || amount1 > 0) revert IncorrectOutputAmount();
+        if (uint128(uint256(-amount0)) < params.amount0Min || uint128(uint256(-amount1)) < params.amount1Min) {
             revert OutputAmountSlippage();
         }
 

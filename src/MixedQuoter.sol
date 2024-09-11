@@ -23,7 +23,6 @@ import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
 contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     using SafeCast for *;
     using V3PoolTicksCounter for IPancakeV3Pool;
-    using CurrencyLibrary for Currency;
 
     address constant ZERO_ADDRESS = address(0);
 

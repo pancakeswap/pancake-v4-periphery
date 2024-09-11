@@ -41,7 +41,6 @@ abstract contract CLMigratorFromV2 is
     GasSnapshot
 {
     using CLPoolParametersHelper for bytes32;
-    using PoolIdLibrary for PoolKey;
 
     WETH weth;
     MockERC20 token0;

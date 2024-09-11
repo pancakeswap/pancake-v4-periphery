@@ -40,8 +40,6 @@ interface IPancakeV3LikePairFactory {
 abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2ApproveHelper, GasSnapshot {
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
-    using PoolIdLibrary for PoolKey;
-    using CurrencyLibrary for Currency;
 
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
 

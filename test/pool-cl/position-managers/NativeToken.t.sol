@@ -35,10 +35,8 @@ import {LiquidityFuzzers} from "../shared/fuzz/LiquidityFuzzers.sol";
 
 contract NativeTokenTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
-    using CurrencyLibrary for Currency;
     using PositionConfigLibrary for PositionConfig;
     using Planner for Plan;
-    using PoolIdLibrary for PoolKey;
     using SafeCast for *;
     using SafeCastTemp for *;
 

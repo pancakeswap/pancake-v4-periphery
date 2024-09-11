@@ -15,7 +15,6 @@ import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
-    using CurrencyLibrary for Currency;
     using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
     using SafeCast for *;
@@ -69,9 +68,12 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
 
     /// @notice Perform a swap that ensure at least `amountOut` tokens with `amountInMaximum` tokens
     function _swapExactOutputSingle(BinSwapExactOutputSingleParams calldata params) internal {
-        uint128 amountIn = (
-            -_swapExactPrivate(params.poolKey, params.swapForY, params.amountOut.safeInt128(), params.hookData)
-        ).toUint128();
+        uint128 amountOut = params.amountOut;
+        if (amountOut == ActionConstants.OPEN_DELTA) {
+            amountOut = _getFullDebt(params.swapForY ? params.poolKey.currency1 : params.poolKey.currency0).toUint128();
+        }
+        uint128 amountIn =
+            (-_swapExactPrivate(params.poolKey, params.swapForY, amountOut.safeInt128(), params.hookData)).toUint128();
 
         if (amountIn > params.amountInMaximum) {
             revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
@@ -87,6 +89,10 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             uint128 amountOut = params.amountOut;
             Currency currencyOut = params.currencyOut;
             PathKey calldata pathKey;
+
+            if (amountOut == ActionConstants.OPEN_DELTA) {
+                amountOut = _getFullDebt(currencyOut).toUint128();
+            }
 
             /// @dev Iterate backward from last path to first path
             for (uint256 i = pathLength; i > 0; i--) {

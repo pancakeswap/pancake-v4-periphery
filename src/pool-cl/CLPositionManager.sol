@@ -41,7 +41,6 @@ contract CLPositionManager is
     CLNotifier,
     Permit2Forwarder
 {
-    using PoolIdLibrary for PoolKey;
     using CalldataDecoder for bytes;
     using CLCalldataDecoder for bytes;
     using PositionConfigLibrary for PositionConfig;

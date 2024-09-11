@@ -16,7 +16,6 @@ import {ReentrancyLock} from "../base/ReentrancyLock.sol";
 
 contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
     using SafeCast for uint256;
-    using CurrencyLibrary for Currency;
     using Planner for Plan;
 
     IBinPositionManager public immutable binPositionManager;

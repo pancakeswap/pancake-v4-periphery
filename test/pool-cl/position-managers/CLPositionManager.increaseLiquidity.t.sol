@@ -31,8 +31,6 @@ import {ActionConstants} from "../../../src/libraries/ActionConstants.sol";
 
 contract CLPositionManagerIncreaseLiquidityTest is Test, PosmTestSetup, Fuzzers {
     using FixedPointMathLib for uint256;
-    using CurrencyLibrary for Currency;
-    using PoolIdLibrary for PoolKey;
     using Planner for Plan;
     using FeeMath for ICLPositionManager;
 
