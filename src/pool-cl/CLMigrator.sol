@@ -7,7 +7,6 @@ import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath.sol";
 import {BaseMigrator, IV3NonfungiblePositionManager} from "../base/BaseMigrator.sol";
 import {ICLMigrator, PoolKey} from "./interfaces/ICLMigrator.sol";
-import {PositionConfig} from "./libraries/PositionConfig.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {LiquidityAmounts} from "./libraries/LiquidityAmounts.sol";
@@ -151,13 +150,19 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
             amount1Consumed = SqrtPriceMath.getAmount1Delta(sqrtRatioAX96, sqrtPriceX96, liquidity, true);
         }
 
-        PositionConfig memory config =
-            PositionConfig({poolKey: params.poolKey, tickLower: params.tickLower, tickUpper: params.tickUpper});
-
         Plan memory planner = Planner.init();
         planner.add(
             Actions.CL_MINT_POSITION,
-            abi.encode(config, uint256(liquidity), params.amount0In, params.amount1In, params.recipient, new bytes(0))
+            abi.encode(
+                params.poolKey,
+                params.tickLower,
+                params.tickUpper,
+                uint256(liquidity),
+                params.amount0In,
+                params.amount1In,
+                params.recipient,
+                new bytes(0)
+            )
         );
         bytes memory lockData = planner.finalizeModifyLiquidityWithSettlePair(params.poolKey);
 

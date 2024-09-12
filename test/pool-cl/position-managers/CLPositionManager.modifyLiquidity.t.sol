@@ -27,7 +27,6 @@ import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
-import {PositionConfig, PositionConfigLibrary} from "../../../src/pool-cl/libraries/PositionConfig.sol";
 import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Actions} from "../../../src/libraries/Actions.sol";
 import {Planner, Plan} from "../../../src/libraries/Planner.sol";
@@ -47,8 +46,6 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     address alice;
     uint256 alicePK;
     address bob;
-
-    PositionConfig config;
 
     function setUp() public {
         (alice, alicePK) = makeAddrAndKey("ALICE");
@@ -80,30 +77,28 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         seedBalance(alice);
         approvePosmFor(alice);
         seedBalance(address(hookModifyLiquidities));
-
-        config = PositionConfig({poolKey: key, tickLower: -60, tickUpper: 60});
     }
 
     /// @dev minting liquidity without approval is allowable
     function test_hook_mint() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // hook mints a new position in beforeSwap via hookData
         uint256 hookTokenId = lpm.nextTokenId();
         uint256 newLiquidity = 10e18;
-        bytes memory calls = getMintEncoded(config, newLiquidity, address(hookModifyLiquidities), ZERO_BYTES);
+        bytes memory calls = getMintEncoded(key, -60, 60, newLiquidity, address(hookModifyLiquidities), ZERO_BYTES);
 
         swap(key, true, -1e18, calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         // original liquidity unchanged
         assertEq(liquidity, initialLiquidity, "fuck");
 
         // hook minted its own position
-        liquidity = lpm.getPositionLiquidity(hookTokenId, config);
+        liquidity = lpm.getPositionLiquidity(hookTokenId);
         assertEq(liquidity, newLiquidity);
 
         assertEq(lpm.ownerOf(tokenId), address(this)); // original position owned by this contract
@@ -114,18 +109,18 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_increaseLiquidity() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // approve the hook for increasing liquidity
         lpm.approve(address(hookModifyLiquidities), tokenId);
 
         // hook increases liquidity in beforeSwap via hookData
         uint256 newLiquidity = 10e18;
-        bytes memory calls = getIncreaseEncoded(tokenId, config, newLiquidity, ZERO_BYTES);
+        bytes memory calls = getIncreaseEncoded(tokenId, newLiquidity, ZERO_BYTES);
 
         swap(key, true, -1e18, calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         assertEq(liquidity, initialLiquidity + newLiquidity);
     }
@@ -134,18 +129,18 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_decreaseLiquidity() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // approve the hook for decreasing liquidity
         lpm.approve(address(hookModifyLiquidities), tokenId);
 
         // hook decreases liquidity in beforeSwap via hookData
         uint256 liquidityToDecrease = 10e18;
-        bytes memory calls = getDecreaseEncoded(tokenId, config, liquidityToDecrease, ZERO_BYTES);
+        bytes memory calls = getDecreaseEncoded(tokenId, liquidityToDecrease, ZERO_BYTES);
 
         swap(key, true, -1e18, calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         assertEq(liquidity, initialLiquidity - liquidityToDecrease);
     }
@@ -154,7 +149,7 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_collect() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // approve the hook for collecting liquidity
         lpm.approve(address(hookModifyLiquidities), tokenId);
@@ -162,16 +157,16 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         // donate to generate revenue
         uint256 feeRevenue0 = 1e18;
         uint256 feeRevenue1 = 0.1e18;
-        router.donate(config.poolKey, feeRevenue0, feeRevenue1, ZERO_BYTES);
+        router.donate(key, feeRevenue0, feeRevenue1, ZERO_BYTES);
 
         uint256 balance0HookBefore = currency0.balanceOf(address(hookModifyLiquidities));
         uint256 balance1HookBefore = currency1.balanceOf(address(hookModifyLiquidities));
 
         // hook collects liquidity in beforeSwap via hookData
-        bytes memory calls = getCollectEncoded(tokenId, config, ZERO_BYTES);
+        bytes memory calls = getCollectEncoded(tokenId, ZERO_BYTES);
         swap(key, true, -1e18, calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         // liquidity unchanged
         assertEq(liquidity, initialLiquidity);
@@ -184,12 +179,12 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     /// @dev hook can burn liquidity with approval
     function test_hook_burn() public {
         // mint some liquidity that is NOT burned in beforeSwap
-        mint(config, 100e18, address(this), ZERO_BYTES);
+        mint(key, -60, 60, 100e18, address(this), ZERO_BYTES);
 
         // the position to be burned by the hook
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
         // TODO: make this less jank since HookModifyLiquidites also has delta saving capabilities
         // BalanceDelta mintDelta = getLastDelta();
         BalanceDelta mintDelta = hookModifyLiquidities.deltas(hookModifyLiquidities.numberDeltasReturned() - 1);
@@ -201,10 +196,10 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         uint256 balance1HookBefore = currency1.balanceOf(address(hookModifyLiquidities));
 
         // hook burns liquidity in beforeSwap via hookData
-        bytes memory calls = getBurnEncoded(tokenId, config, ZERO_BYTES);
+        bytes memory calls = getBurnEncoded(tokenId, ZERO_BYTES);
         swap(key, true, -1e18, calls);
 
-        uint256 liquidity = lpm.getPositionLiquidity(tokenId, config);
+        uint256 liquidity = lpm.getPositionLiquidity(tokenId);
 
         // liquidity burned
         assertEq(liquidity, 0);
@@ -228,11 +223,11 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_increaseLiquidity_revert() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // hook decreases liquidity in beforeSwap via hookData
         uint256 liquidityToAdd = 10e18;
-        bytes memory calls = getIncreaseEncoded(tokenId, config, liquidityToAdd, ZERO_BYTES);
+        bytes memory calls = getIncreaseEncoded(tokenId, liquidityToAdd, ZERO_BYTES);
 
         // should revert because hook is not approved
         vm.expectRevert(
@@ -249,11 +244,11 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_decreaseLiquidity_revert() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // hook decreases liquidity in beforeSwap via hookData
         uint256 liquidityToDecrease = 10e18;
-        bytes memory calls = getDecreaseEncoded(tokenId, config, liquidityToDecrease, ZERO_BYTES);
+        bytes memory calls = getDecreaseEncoded(tokenId, liquidityToDecrease, ZERO_BYTES);
 
         // should revert because hook is not approved
         vm.expectRevert(
@@ -270,15 +265,15 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_collect_revert() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // donate to generate revenue
         uint256 feeRevenue0 = 1e18;
         uint256 feeRevenue1 = 0.1e18;
-        router.donate(config.poolKey, feeRevenue0, feeRevenue1, ZERO_BYTES);
+        router.donate(key, feeRevenue0, feeRevenue1, ZERO_BYTES);
 
         // hook collects liquidity in beforeSwap via hookData
-        bytes memory calls = getCollectEncoded(tokenId, config, ZERO_BYTES);
+        bytes memory calls = getCollectEncoded(tokenId, ZERO_BYTES);
 
         // should revert because hook is not approved
         vm.expectRevert(
@@ -296,10 +291,10 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         // the position to be burned by the hook
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         // hook burns liquidity in beforeSwap via hookData
-        bytes memory calls = getBurnEncoded(tokenId, config, ZERO_BYTES);
+        bytes memory calls = getBurnEncoded(tokenId, ZERO_BYTES);
 
         // should revert because hook is not approved
         vm.expectRevert(
@@ -316,13 +311,13 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
     function test_hook_increaseLiquidity_reenter_revert() public {
         uint256 initialLiquidity = 100e18;
         uint256 tokenId = lpm.nextTokenId();
-        mint(config, initialLiquidity, address(this), ZERO_BYTES);
+        mint(key, -60, 60, initialLiquidity, address(this), ZERO_BYTES);
 
         uint256 newLiquidity = 10e18;
 
         // to be provided as hookData, so beforeAddLiquidity attempts to increase liquidity
-        bytes memory hookCall = getIncreaseEncoded(tokenId, config, newLiquidity, ZERO_BYTES);
-        bytes memory calls = getIncreaseEncoded(tokenId, config, newLiquidity, hookCall);
+        bytes memory hookCall = getIncreaseEncoded(tokenId, newLiquidity, ZERO_BYTES);
+        bytes memory calls = getIncreaseEncoded(tokenId, newLiquidity, hookCall);
 
         // should revert because hook is re-entering modifyLiquiditiesWithoutUnlock
         vm.expectRevert(
