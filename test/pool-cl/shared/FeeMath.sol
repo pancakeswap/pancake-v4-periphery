@@ -29,7 +29,7 @@ library FeeMath {
             int24 tickUpper,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128
+            uint256 feeGrowthInside1LastX128,
         ) = posm.positions(tokenId);
         PoolId poolId = poolKey.toId();
 

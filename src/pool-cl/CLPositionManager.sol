@@ -241,9 +241,9 @@ contract CLPositionManager is
         positionInfo[tokenId] = info;
 
         // Store the poolKey if it is not already stored.
-        // if poolManager is address(0), it means the pool is not initialized yet
+        // if parameter (hook permission and tickSpacing) is bytes(0), it means the pool is not initialized yet
         bytes25 poolId = info.poolId();
-        if (address(poolKeys[poolId].poolManager) == address(0)) {
+        if (poolKeys[poolId].parameters == bytes32(0)) {
             poolKeys[poolId] = poolKey;
         }
 
@@ -401,7 +401,8 @@ contract CLPositionManager is
             int24 tickUpper,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128
+            uint256 feeGrowthInside1LastX128,
+            bool hasSubscriber
         )
     {
         CLPositionInfo info;
@@ -417,6 +418,7 @@ contract CLPositionManager is
         liquidity = position.liquidity;
         feeGrowthInside0LastX128 = position.feeGrowthInside0LastX128;
         feeGrowthInside1LastX128 = position.feeGrowthInside1LastX128;
+        hasSubscriber = info.hasSubscriber();
     }
 
     function _getLiquidity(uint256 tokenId, PoolKey memory poolKey, int24 tickLower, int24 tickUpper)

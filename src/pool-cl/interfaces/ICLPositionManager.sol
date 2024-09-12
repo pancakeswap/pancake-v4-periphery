@@ -49,6 +49,7 @@ interface ICLPositionManager is IPositionManager {
     /// @return liquidity the liquidity of the position
     /// @return feeGrowthInside0LastX128 the fee growth count of token0 since last time updated
     /// @return feeGrowthInside1LastX128 the fee growth count of token1 since last time updated
+    /// @return hasSubscriber the flag to know if the position has a subscriber
     function positions(uint256 tokenId)
         external
         view
@@ -58,7 +59,8 @@ interface ICLPositionManager is IPositionManager {
             int24 tickUpper,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128
+            uint256 feeGrowthInside1LastX128,
+            bool hasSubscriber
         );
 
     /// @param tokenId the ERC721 tokenId
