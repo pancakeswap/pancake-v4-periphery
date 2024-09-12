@@ -9,6 +9,14 @@ import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 contract MockCalldataDecoder {
     using CalldataDecoder for bytes;
 
+    function decodeActionsRouterParams(bytes calldata params)
+        external
+        pure
+        returns (bytes calldata actions, bytes[] calldata actionParams)
+    {
+        return params.decodeActionsRouterParams();
+    }
+
     function decodeCurrencyAndAddress(bytes calldata params)
         external
         pure
