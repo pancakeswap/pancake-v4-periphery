@@ -6,6 +6,7 @@ import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 import {CLPositionInfo} from "../libraries/CLPositionInfoLibrary.sol";
+import {ICLSubscriber} from "./ICLSubscriber.sol";
 
 interface ICLPositionManager is IPositionManager {
     /// @notice Thrown when the caller is not approved to modify a position
@@ -60,7 +61,7 @@ interface ICLPositionManager is IPositionManager {
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,
-            address _subscriber
+            ICLSubscriber _subscriber
         );
 
     /// @param tokenId the ERC721 tokenId
