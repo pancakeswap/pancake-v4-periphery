@@ -402,7 +402,7 @@ contract CLPositionManager is
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,
-            bool hasSubscriber
+            address _subscriber
         )
     {
         CLPositionInfo info;
@@ -418,7 +418,7 @@ contract CLPositionManager is
         liquidity = position.liquidity;
         feeGrowthInside0LastX128 = position.feeGrowthInside0LastX128;
         feeGrowthInside1LastX128 = position.feeGrowthInside1LastX128;
-        hasSubscriber = info.hasSubscriber();
+        _subscriber = address(subscriber[tokenId]);
     }
 
     function _getLiquidity(uint256 tokenId, PoolKey memory poolKey, int24 tickLower, int24 tickUpper)

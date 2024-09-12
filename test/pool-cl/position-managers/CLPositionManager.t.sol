@@ -974,7 +974,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
                 uint128 _liquidity,
                 uint256 _feeGrowthInside0LastX128,
                 uint256 _feeGrowthInside1LastX128,
-                bool _hasSubscriber
+                address _subscriber
             ) = lpm.positions(tokenId);
 
             assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key.toId()));
@@ -983,7 +983,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             assertEq(_liquidity, uint256(params.liquidityDelta));
             assertEq(_feeGrowthInside0LastX128, 0);
             assertEq(_feeGrowthInside1LastX128, 0);
-            assertEq(_hasSubscriber, false);
+            assertEq(_subscriber, address(0));
         }
 
         decreaseLiquidityDelta = bound(decreaseLiquidityDelta, 1, uint256(params.liquidityDelta));
@@ -1000,7 +1000,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
                 uint128 _liquidity,
                 uint256 _feeGrowthInside0LastX128,
                 uint256 _feeGrowthInside1LastX128,
-                bool _hasSubscriber
+                address _subscriber
             ) = lpm.positions(tokenId);
 
             assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key.toId()));
@@ -1009,7 +1009,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             assertEq(_liquidity, uint256(params.liquidityDelta));
             assertEq(_feeGrowthInside0LastX128, 0);
             assertEq(_feeGrowthInside1LastX128, 0);
-            assertEq(_hasSubscriber, false);
+            assertEq(_subscriber, address(0));
         }
 
         decreaseLiquidity(tokenId, decreaseLiquidityDelta, ZERO_BYTES);
@@ -1023,7 +1023,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
                 uint128 _liquidity,
                 uint256 _feeGrowthInside0LastX128,
                 uint256 _feeGrowthInside1LastX128,
-                bool _hasSubscriber
+                address _subscriber
             ) = lpm.positions(tokenId);
 
             assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key.toId()));
@@ -1033,7 +1033,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             assertEq(_feeGrowthInside0LastX128, 0);
             // feeGrowthInside1LastX128 is updated after swap
             assertNotEq(_feeGrowthInside1LastX128, 0);
-            assertEq(_hasSubscriber, false);
+            assertEq(_subscriber, address(0));
         }
 
         MockCLSubscriber subscriber = new MockCLSubscriber(lpm);
@@ -1041,9 +1041,9 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
 
         // make sure the position info is correctly returned after subscribing
         {
-            (,,,,,, bool _hasSubscriber) = lpm.positions(tokenId);
+            (,,,,,, address _subscriber) = lpm.positions(tokenId);
 
-            assertEq(_hasSubscriber, true);
+            assertEq(_subscriber, address(subscriber));
         }
     }
 }
