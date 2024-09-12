@@ -6,6 +6,7 @@ import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 import {CLPositionInfo} from "../libraries/CLPositionInfoLibrary.sol";
+import {ICLSubscriber} from "./ICLSubscriber.sol";
 
 interface ICLPositionManager is IPositionManager {
     /// @notice Thrown when the caller is not approved to modify a position
@@ -49,7 +50,7 @@ interface ICLPositionManager is IPositionManager {
     /// @return liquidity the liquidity of the position
     /// @return feeGrowthInside0LastX128 the fee growth count of token0 since last time updated
     /// @return feeGrowthInside1LastX128 the fee growth count of token1 since last time updated
-    /// @return hasSubscriber the flag to know if the position has a subscriber
+    /// @return _subscriber the address of the subscriber, if not set, it returns address(0)
     function positions(uint256 tokenId)
         external
         view
@@ -60,7 +61,7 @@ interface ICLPositionManager is IPositionManager {
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,
-            bool hasSubscriber
+            ICLSubscriber _subscriber
         );
 
     /// @param tokenId the ERC721 tokenId

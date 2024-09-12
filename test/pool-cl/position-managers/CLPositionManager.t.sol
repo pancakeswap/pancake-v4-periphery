@@ -21,7 +21,6 @@ import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPo
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {MockCLSubscriber} from "../mocks/MockCLSubscriber.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
@@ -35,6 +34,7 @@ import {ActionConstants} from "../../../src/libraries/ActionConstants.sol";
 import {LiquidityFuzzers} from "../shared/fuzz/LiquidityFuzzers.sol";
 import {BaseActionsRouter} from "../../../src/base/BaseActionsRouter.sol";
 import {ReentrantToken} from "../mocks/ReentrantToken.sol";
+import {ICLSubscriber} from "../../../src/pool-cl/interfaces/ICLSubscriber.sol";
 
 contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
@@ -974,7 +974,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
                 uint128 _liquidity,
                 uint256 _feeGrowthInside0LastX128,
                 uint256 _feeGrowthInside1LastX128,
-                bool _hasSubscriber
+                ICLSubscriber _subscriber
             ) = lpm.positions(tokenId);
 
             assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key.toId()));
@@ -983,7 +983,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             assertEq(_liquidity, uint256(params.liquidityDelta));
             assertEq(_feeGrowthInside0LastX128, 0);
             assertEq(_feeGrowthInside1LastX128, 0);
-            assertEq(_hasSubscriber, false);
+            assertEq(address(_subscriber), address(0));
         }
 
         decreaseLiquidityDelta = bound(decreaseLiquidityDelta, 1, uint256(params.liquidityDelta));
@@ -1000,7 +1000,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
                 uint128 _liquidity,
                 uint256 _feeGrowthInside0LastX128,
                 uint256 _feeGrowthInside1LastX128,
-                bool _hasSubscriber
+                ICLSubscriber _subscriber
             ) = lpm.positions(tokenId);
 
             assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key.toId()));
@@ -1009,7 +1009,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             assertEq(_liquidity, uint256(params.liquidityDelta));
             assertEq(_feeGrowthInside0LastX128, 0);
             assertEq(_feeGrowthInside1LastX128, 0);
-            assertEq(_hasSubscriber, false);
+            assertEq(address(_subscriber), address(0));
         }
 
         decreaseLiquidity(tokenId, decreaseLiquidityDelta, ZERO_BYTES);
@@ -1023,7 +1023,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
                 uint128 _liquidity,
                 uint256 _feeGrowthInside0LastX128,
                 uint256 _feeGrowthInside1LastX128,
-                bool _hasSubscriber
+                ICLSubscriber _subscriber
             ) = lpm.positions(tokenId);
 
             assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key.toId()));
@@ -1033,7 +1033,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             assertEq(_feeGrowthInside0LastX128, 0);
             // feeGrowthInside1LastX128 is updated after swap
             assertNotEq(_feeGrowthInside1LastX128, 0);
-            assertEq(_hasSubscriber, false);
+            assertEq(address(_subscriber), address(0));
         }
 
         MockCLSubscriber subscriber = new MockCLSubscriber(lpm);
@@ -1041,9 +1041,9 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
 
         // make sure the position info is correctly returned after subscribing
         {
-            (,,,,,, bool _hasSubscriber) = lpm.positions(tokenId);
+            (,,,,,, ICLSubscriber _subscriber) = lpm.positions(tokenId);
 
-            assertEq(_hasSubscriber, true);
+            assertEq(address(_subscriber), address(subscriber));
         }
     }
 }
