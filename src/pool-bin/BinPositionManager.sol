@@ -202,7 +202,7 @@ contract BinPositionManager is
         (BalanceDelta delta, BinPool.MintArrays memory mintArray) = binPoolManager.mint(
             params.poolKey,
             IBinPoolManager.MintParams({liquidityConfigs: liquidityConfigs, amountIn: amountIn, salt: bytes32(0)}),
-            ZERO_BYTES
+            params.hookData
         );
 
         /// Slippage checks, similar to CL type. However, this is different from TJ, in PCS v4,
@@ -235,7 +235,7 @@ contract BinPositionManager is
         BalanceDelta delta = binPoolManager.burn(
             params.poolKey,
             IBinPoolManager.BurnParams({ids: params.ids, amountsToBurn: params.amounts, salt: bytes32(0)}),
-            ZERO_BYTES
+            params.hookData
         );
 
         // Slippage checks, similar to CL type, if delta is negative, it will revert.
