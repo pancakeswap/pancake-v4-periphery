@@ -29,6 +29,7 @@ import {BinTokenLibrary} from "../../src/pool-bin/libraries/BinTokenLibrary.sol"
 import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
+import {SlippageCheck} from "../../src/libraries/SlippageCheck.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
     using Planner for Plan;
@@ -149,26 +150,27 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         IBinPositionManager.BinAddLiquidityParams memory param;
         bytes memory payload;
 
-        // overwrite amount0Min
+        // overwrite amount0Max
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Min = 1.1 ether;
+        param.amount0Max = 0.9 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
-        // overwrite amount1Min
+        // overwrite amount0Max
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount1Min = 1.1 ether;
+        param.amount0Max = 0.9 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
         // overwrite to 1 eth (expected to not fail)
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Min = 1 ether;
-        param.amount1Min = 1 ether;
+        param.amount0Max = 0.9 ether;
+        param.amount0Max = 0.9 ether;
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         payload = planner.finalizeModifyLiquidityWithClose(key1);
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
     }
 
@@ -292,6 +294,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
     }
 
     function test_decreaseLiquidity_OutputAmountSlippage() public {
+        // add 1 ether of token0 and token1
         uint24[] memory binIds = getBinIds(activeId, 3);
         (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, key1, binIds, activeId);
 
@@ -302,14 +305,18 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         param = _getRemoveParams(key1, binIds, liquidityMinted, address(this));
         param.amount0Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether)
+        );
         binPm.modifyLiquidities(payload, _deadline);
 
         // amount1 min slippage
         param = _getRemoveParams(key1, binIds, liquidityMinted, address(this));
         param.amount1Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount1Min, 1 ether)
+        );
         binPm.modifyLiquidities(payload, _deadline);
 
         // amount and amount0 min slippage
@@ -317,7 +324,9 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         param.amount0Min = 2 ether;
         param.amount1Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether)
+        );
         binPm.modifyLiquidities(payload, _deadline);
     }
 

@@ -88,8 +88,8 @@ contract MockReentrantPositionManager is Test {
     function _generateMockV4BinPoolParams() internal returns (IBinMigrator.V4BinPoolParams memory) {
         return IBinMigrator.V4BinPoolParams({
             poolKey: _generateMockPoolKey(),
-            amount0Min: 0,
-            amount1Min: 0,
+            amount0Max: type(uint128).max,
+            amount1Max: type(uint128).max,
             activeIdDesired: 0,
             idSlippage: 0,
             deltaIds: new int256[](0),

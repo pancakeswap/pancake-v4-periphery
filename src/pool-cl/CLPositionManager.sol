@@ -22,7 +22,7 @@ import {CalldataDecoder} from "../libraries/CalldataDecoder.sol";
 import {CLCalldataDecoder} from "./libraries/CLCalldataDecoder.sol";
 import {Actions} from "../libraries/Actions.sol";
 import {ERC721Permit_v4} from "./base/ERC721Permit_v4.sol";
-import {SlippageCheck} from "./libraries/SlippageCheck.sol";
+import {SlippageCheck} from "../libraries/SlippageCheck.sol";
 import {Multicall_v4} from "../base/Multicall_v4.sol";
 import {CLNotifier} from "./base/CLNotifier.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "./libraries/CLPositionInfoLibrary.sol";

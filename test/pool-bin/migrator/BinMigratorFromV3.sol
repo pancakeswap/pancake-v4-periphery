@@ -179,8 +179,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -219,8 +219,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -310,8 +310,8 @@ abstract contract BinMigratorFromV3 is
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: poolKeyMismatch,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -371,8 +371,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -460,8 +460,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -547,8 +547,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -644,8 +644,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -735,8 +735,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -852,8 +852,8 @@ abstract contract BinMigratorFromV3 is
         // (0, 50%) (50%, 50%) (50%, 0) => (0, 50%) (50%, 50%)
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: deltaIds,
@@ -959,8 +959,8 @@ abstract contract BinMigratorFromV3 is
         // (0, 50%) (50%, 50%) (50%, 0) => (0, 50%) (50%, 50%)
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: deltaIds,
@@ -1066,8 +1066,8 @@ abstract contract BinMigratorFromV3 is
         // (0, 50%) (50%, 50%) (50%, 0) => (0, 50%) (50%, 50%)
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: deltaIds,
@@ -1127,8 +1127,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,
@@ -1226,8 +1226,8 @@ abstract contract BinMigratorFromV3 is
 
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
             poolKey: params.poolKey,
-            amount0Min: params.amount0Min,
-            amount1Min: params.amount1Min,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
             activeIdDesired: params.activeIdDesired,
             idSlippage: params.idSlippage,
             deltaIds: params.deltaIds,

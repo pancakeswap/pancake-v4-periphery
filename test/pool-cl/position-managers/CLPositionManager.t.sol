@@ -24,7 +24,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
-import {SlippageCheck} from "../../../src/pool-cl/libraries/SlippageCheck.sol";
+import {SlippageCheck} from "../../../src/libraries/SlippageCheck.sol";
 import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Actions} from "../../../src/libraries/Actions.sol";
 import {Planner, Plan} from "../../../src/libraries/Planner.sol";

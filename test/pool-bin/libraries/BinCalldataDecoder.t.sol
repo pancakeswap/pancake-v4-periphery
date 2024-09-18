@@ -28,8 +28,8 @@ contract BinCalldataDecoderTest is Test {
         _assertEq(addLiquidityParams.poolKey, _addLiquidityParams.poolKey);
         assertEq(addLiquidityParams.amount0, _addLiquidityParams.amount0);
         assertEq(addLiquidityParams.amount1, _addLiquidityParams.amount1);
-        assertEq(addLiquidityParams.amount0Min, _addLiquidityParams.amount0Min);
-        assertEq(addLiquidityParams.amount1Min, _addLiquidityParams.amount1Min);
+        assertEq(addLiquidityParams.amount0Max, _addLiquidityParams.amount0Max);
+        assertEq(addLiquidityParams.amount1Max, _addLiquidityParams.amount1Max);
         assertEq(addLiquidityParams.activeIdDesired, _addLiquidityParams.activeIdDesired);
         assertEq(addLiquidityParams.idSlippage, _addLiquidityParams.idSlippage);
         _assertEq(addLiquidityParams.deltaIds, _addLiquidityParams.deltaIds);
