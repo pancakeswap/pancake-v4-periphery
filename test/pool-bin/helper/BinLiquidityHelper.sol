@@ -143,7 +143,8 @@ contract BinLiquidityHelper is Test {
             deltaIds: convertToRelative(binIds, activeId),
             distributionX: distribX,
             distributionY: distribY,
-            to: recipient
+            to: recipient,
+            hookData: new bytes(0) // replace param.hookData if needed after calling this func
         });
     }
 
@@ -163,7 +164,8 @@ contract BinLiquidityHelper is Test {
             amount1Min: 0,
             ids: ids,
             amounts: amounts,
-            from: from
+            from: from,
+            hookData: new bytes(0) // replace param.hookData if needed after calling this func
         });
     }
 

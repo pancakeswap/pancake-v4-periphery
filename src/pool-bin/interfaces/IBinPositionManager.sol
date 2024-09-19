@@ -38,6 +38,7 @@ interface IBinPositionManager is IPositionManager {
         uint256[] distributionX;
         uint256[] distributionY;
         address to;
+        bytes hookData;
     }
 
     /// @notice BinRemoveLiquidityParams
@@ -54,6 +55,7 @@ interface IBinPositionManager is IPositionManager {
         uint256[] ids;
         uint256[] amounts;
         address from;
+        bytes hookData;
     }
 
     function binPoolManager() external view returns (IBinPoolManager);
