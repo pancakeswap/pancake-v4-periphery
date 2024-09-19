@@ -29,6 +29,8 @@ import {BinTokenLibrary} from "../../src/pool-bin/libraries/BinTokenLibrary.sol"
 import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
+import {SlippageCheck} from "../../src/libraries/SlippageCheck.sol";
+import {BinHookHookData} from "./shared/BinHookHookData.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
     using Planner for Plan;
@@ -40,6 +42,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
     uint256 _deadline = block.timestamp + 1;
 
     PoolKey key1;
+    PoolKey key2; // with hookData hook
+    BinHookHookData hook;
     Vault vault;
     BinPoolManager poolManager;
     BinPositionManager binPm;
@@ -69,6 +73,17 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
             parameters: poolParam.setBinStep(10) // binStep
         });
         binPm.initializePool(key1, activeId, ZERO_BYTES);
+
+        hook = new BinHookHookData();
+        key2 = PoolKey({
+            currency0: currency0,
+            currency1: currency1,
+            hooks: IHooks(address(hook)),
+            poolManager: IBinPoolManager(address(poolManager)),
+            fee: uint24(3000), // 3000 = 0.3%
+            parameters: bytes32(uint256(hook.getHooksRegistrationBitmap())).setBinStep(10) // binStep
+        });
+        binPm.initializePool(key2, activeId, ZERO_BYTES);
 
         // approval
         approveBinPm(address(this), key1, address(binPm), permit2);
@@ -144,31 +159,32 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(payload, _deadline);
     }
 
-    function test_addLiquidity_outputAmountSlippage() public {
+    function test_addLiquidity_MaximumAmountExceeded() public {
         uint24[] memory binIds = getBinIds(activeId, 3);
         IBinPositionManager.BinAddLiquidityParams memory param;
         bytes memory payload;
 
-        // overwrite amount0Min
+        // overwrite amount0Max
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Min = 1.1 ether;
+        param.amount0Max = 0.9 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
-        // overwrite amount1Min
+        // overwrite amount0Max
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount1Min = 1.1 ether;
+        param.amount0Max = 0.9 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
         // overwrite to 1 eth (expected to not fail)
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Min = 1 ether;
-        param.amount1Min = 1 ether;
+        param.amount0Max = 0.9 ether;
+        param.amount0Max = 0.9 ether;
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         payload = planner.finalizeModifyLiquidityWithClose(key1);
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
     }
 
@@ -244,9 +260,21 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         snapEnd();
     }
 
-    function test_addLiquidity_WithHook() public {
-        // todo: add liquidity, hook do a swap at beforeMint
-        // ref: https://github.com/pancakeswap/pancake-v4-periphery/blob/main/test/pool-bin/BinFungiblePositionManager_AddLiquidity.t.sol#L407
+    function test_addLiquidity_HookData() public {
+        // add liquidity
+        uint24[] memory binIds = getBinIds(activeId, 3);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(key2, binIds, 1 ether, 1 ether, activeId, address(this));
+        param.hookData = "data";
+
+        Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
+        binPm.modifyLiquidities(payload, _deadline);
+
+        assertEq(hook.beforeMintHookData(), param.hookData);
+        assertEq(hook.afterMintHookData(), param.hookData);
+        assertEq(hook.beforeBurnHookData(), "");
+        assertEq(hook.afterBurnHookData(), "");
     }
 
     function test_positions() public {
@@ -291,7 +319,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(payload, _deadline);
     }
 
-    function test_decreaseLiquidity_OutputAmountSlippage() public {
+    function test_decreaseLiquidity_MinimumAmountInsufficient() public {
+        // add 1 ether of token0 and token1
         uint24[] memory binIds = getBinIds(activeId, 3);
         (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, key1, binIds, activeId);
 
@@ -302,14 +331,18 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         param = _getRemoveParams(key1, binIds, liquidityMinted, address(this));
         param.amount0Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether)
+        );
         binPm.modifyLiquidities(payload, _deadline);
 
         // amount1 min slippage
         param = _getRemoveParams(key1, binIds, liquidityMinted, address(this));
         param.amount1Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount1Min, 1 ether)
+        );
         binPm.modifyLiquidities(payload, _deadline);
 
         // amount and amount0 min slippage
@@ -317,7 +350,9 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         param.amount0Min = 2 ether;
         param.amount1Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.OutputAmountSlippage.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether)
+        );
         binPm.modifyLiquidities(payload, _deadline);
     }
 
@@ -425,5 +460,25 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         // after, verify alice balance increased as tokens sent to alice
         assertEq(token1.balanceOf(alice), 1 ether);
         assertEq(token1.balanceOf(alice), 1 ether);
+    }
+
+    function test_removeLiquidity_hookData() public {
+        // pre-req: add liquidity
+        uint24[] memory binIds = getBinIds(activeId, 3);
+        (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, key2, binIds, activeId);
+
+        // remove liquidity
+        IBinPositionManager.BinRemoveLiquidityParams memory param =
+            _getRemoveParams(key2, binIds, liquidityMinted, address(this));
+        param.hookData = "data";
+        Plan memory planner = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param));
+        bytes memory payload = planner.finalizeModifyLiquidityWithClose(key2);
+
+        binPm.modifyLiquidities(payload, _deadline);
+
+        assertEq(hook.beforeMintHookData(), "");
+        assertEq(hook.afterMintHookData(), "");
+        assertEq(hook.beforeBurnHookData(), param.hookData);
+        assertEq(hook.afterBurnHookData(), param.hookData);
     }
 }

@@ -11,8 +11,8 @@ interface IBinMigrator is IBaseMigrator {
     /// except amount0/amount1 which will be calculated by migrator
     struct V4BinPoolParams {
         PoolKey poolKey;
-        uint128 amount0Min;
-        uint128 amount1Min;
+        uint128 amount0Max;
+        uint128 amount1Max;
         uint256 activeIdDesired;
         uint256 idSlippage;
         int256[] deltaIds;

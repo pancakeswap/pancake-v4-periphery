@@ -11,14 +11,12 @@ interface IBinPositionManager is IPositionManager {
     error IdOverflows(int256);
     error IdDesiredOverflows(uint24);
     error AddLiquidityInputActiveIdMismath();
-    error OutputAmountSlippage();
-    error IncorrectOutputAmount();
 
     /// @notice BinAddLiquidityParams
     /// - amount0: Amount to send for token0
     /// - amount1: Amount to send for token1
-    /// - amount0Min: Min amount to send for token0
-    /// - amount1Min: Min amount to send for token1
+    /// - amount0Max: Max amount to send for token0
+    /// - amount1Max: Max amount to send for token1
     /// - activeIdDesired: Active id that user wants to add liquidity from
     /// - idSlippage: Number of id that are allowed to slip
     /// - deltaIds: List of delta ids to add liquidity (`deltaId = activeId - desiredId`)
@@ -30,14 +28,15 @@ interface IBinPositionManager is IPositionManager {
         PoolKey poolKey;
         uint128 amount0;
         uint128 amount1;
-        uint128 amount0Min;
-        uint128 amount1Min;
+        uint128 amount0Max;
+        uint128 amount1Max;
         uint256 activeIdDesired;
         uint256 idSlippage;
         int256[] deltaIds;
         uint256[] distributionX;
         uint256[] distributionY;
         address to;
+        bytes hookData;
     }
 
     /// @notice BinRemoveLiquidityParams
@@ -54,6 +53,7 @@ interface IBinPositionManager is IPositionManager {
         uint256[] ids;
         uint256[] amounts;
         address from;
+        bytes hookData;
     }
 
     function binPoolManager() external view returns (IBinPoolManager);

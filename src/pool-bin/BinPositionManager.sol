@@ -27,6 +27,7 @@ import {BinCalldataDecoder} from "./libraries/BinCalldataDecoder.sol";
 import {BinFungibleToken} from "./BinFungibleToken.sol";
 import {BinTokenLibrary} from "./libraries/BinTokenLibrary.sol";
 import {Multicall_v4} from "../base/Multicall_v4.sol";
+import {SlippageCheck} from "../libraries/SlippageCheck.sol";
 
 /// @title BinPositionManager
 /// @notice Contract for modifying liquidity for PCS v4 Bin pools
@@ -44,8 +45,8 @@ contract BinPositionManager is
     using BinCalldataDecoder for bytes;
     using BinTokenLibrary for PoolId;
     using BinPoolParametersHelper for bytes32;
+    using SlippageCheck for BalanceDelta;
 
-    bytes constant ZERO_BYTES = new bytes(0);
     IBinPoolManager public immutable override binPoolManager;
 
     struct TokenPosition {
@@ -200,16 +201,12 @@ contract BinPositionManager is
         (BalanceDelta delta, BinPool.MintArrays memory mintArray) = binPoolManager.mint(
             params.poolKey,
             IBinPoolManager.MintParams({liquidityConfigs: liquidityConfigs, amountIn: amountIn, salt: bytes32(0)}),
-            ZERO_BYTES
+            params.hookData
         );
 
-        int256 amount0 = delta.amount0();
-        int256 amount1 = delta.amount1();
-        // delta amt0/amt1 will always be negative in mint case
-        if (amount0 > 0 || amount1 > 0) revert IncorrectOutputAmount();
-        if (uint128(uint256(-amount0)) < params.amount0Min || uint128(uint256(-amount1)) < params.amount1Min) {
-            revert OutputAmountSlippage();
-        }
+        /// Slippage checks, similar to CL type. However, this is different from TJ, in PCS v4,
+        /// as hooks can impact delta (take extra token), user need to be protected with amountMax instead
+        delta.validateMaxIn(params.amount0Max, params.amount0Max);
 
         // mint
         PoolId poolId = cachePoolKey(params.poolKey);
@@ -237,14 +234,11 @@ contract BinPositionManager is
         BalanceDelta delta = binPoolManager.burn(
             params.poolKey,
             IBinPoolManager.BurnParams({ids: params.ids, amountsToBurn: params.amounts, salt: bytes32(0)}),
-            ZERO_BYTES
+            params.hookData
         );
 
-        // delta amt0/amt1 will either be 0 or positive in removing liquidity
-        if (delta.amount0() < 0 || delta.amount1() < 0) revert IncorrectOutputAmount();
-        if (uint128(delta.amount0()) < params.amount0Min || uint128(delta.amount1()) < params.amount1Min) {
-            revert OutputAmountSlippage();
-        }
+        // Slippage checks, similar to CL type, if delta is negative, it will revert.
+        delta.validateMinOut(params.amount0Min, params.amount1Min);
 
         PoolId poolId = params.poolKey.toId();
         uint256[] memory tokenIds = new uint256[](params.ids.length);

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {SafeCastTemp} from "../../libraries/SafeCast.sol";
+import {SafeCastTemp} from "./SafeCast.sol";
 
 /// @title Slippage Check Library
 /// @notice a library for checking if a delta exceeds a maximum ceiling or fails to meet a minimum floor

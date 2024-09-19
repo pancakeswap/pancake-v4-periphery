@@ -136,14 +136,15 @@ contract BinLiquidityHelper is Test {
             poolKey: key,
             amount0: amountX,
             amount1: amountY,
-            amount0Min: 0,
-            amount1Min: 0,
+            amount0Max: type(uint128).max,
+            amount1Max: type(uint128).max,
             activeIdDesired: uint256(activeId),
             idSlippage: 0,
             deltaIds: convertToRelative(binIds, activeId),
             distributionX: distribX,
             distributionY: distribY,
-            to: recipient
+            to: recipient,
+            hookData: new bytes(0) // replace param.hookData if needed after calling this func
         });
     }
 
@@ -163,7 +164,8 @@ contract BinLiquidityHelper is Test {
             amount1Min: 0,
             ids: ids,
             amounts: amounts,
-            from: from
+            from: from,
+            hookData: new bytes(0) // replace param.hookData if needed after calling this func
         });
     }
 
