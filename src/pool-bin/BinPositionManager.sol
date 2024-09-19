@@ -47,7 +47,6 @@ contract BinPositionManager is
     using BinPoolParametersHelper for bytes32;
     using SlippageCheck for BalanceDelta;
 
-    bytes constant ZERO_BYTES = new bytes(0);
     IBinPoolManager public immutable override binPoolManager;
 
     struct TokenPosition {
