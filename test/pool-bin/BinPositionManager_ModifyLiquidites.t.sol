@@ -159,7 +159,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(payload, _deadline);
     }
 
-    function test_addLiquidity_outputAmountSlippage() public {
+    function test_addLiquidity_MaximumAmountExceeded() public {
         uint24[] memory binIds = getBinIds(activeId, 3);
         IBinPositionManager.BinAddLiquidityParams memory param;
         bytes memory payload;
@@ -319,7 +319,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(payload, _deadline);
     }
 
-    function test_decreaseLiquidity_OutputAmountSlippage() public {
+    function test_decreaseLiquidity_MinimumAmountInsufficient() public {
         // add 1 ether of token0 and token1
         uint24[] memory binIds = getBinIds(activeId, 3);
         (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, key1, binIds, activeId);

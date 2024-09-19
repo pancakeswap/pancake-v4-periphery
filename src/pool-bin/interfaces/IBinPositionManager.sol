@@ -11,8 +11,6 @@ interface IBinPositionManager is IPositionManager {
     error IdOverflows(int256);
     error IdDesiredOverflows(uint24);
     error AddLiquidityInputActiveIdMismath();
-    error OutputAmountSlippage();
-    error IncorrectOutputAmount();
 
     /// @notice BinAddLiquidityParams
     /// - amount0: Amount to send for token0
