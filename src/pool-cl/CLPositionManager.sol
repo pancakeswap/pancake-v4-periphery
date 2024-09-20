@@ -12,6 +12,8 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IPositionManager} from "../interfaces/IPositionManager.sol";
 import {BaseActionsRouter} from "../base/BaseActionsRouter.sol";
 import {ReentrancyLock} from "../base/ReentrancyLock.sol";
@@ -370,8 +372,8 @@ contract CLPositionManager is
         positionInfo[tokenId] = positionInfo[tokenId].setUnsubscribe();
     }
 
-    /// @dev overrides solmate transferFrom in case a notification to subscribers is needed
-    function transferFrom(address from, address to, uint256 id) public virtual override {
+    /// @dev overrides openzepplin transferFrom in case a notification to subscribers is needed
+    function transferFrom(address from, address to, uint256 id) public virtual override(ERC721, IERC721) {
         super.transferFrom(from, to, id);
         if (positionInfo[id].hasSubscriber()) _notifyTransfer(id, from, to);
     }

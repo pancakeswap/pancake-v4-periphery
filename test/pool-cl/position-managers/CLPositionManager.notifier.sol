@@ -11,6 +11,7 @@ import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {BalanceDelta, toBalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
+import {IERC721Errors} from "openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
 
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
@@ -60,7 +61,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
     function test_subscribe_revertsWithEmptyPositionConfig() public {
         uint256 tokenId = lpm.nextTokenId();
-        vm.expectRevert("NOT_MINTED");
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, tokenId));
         lpm.subscribe(tokenId, address(sub), ZERO_BYTES);
     }
 

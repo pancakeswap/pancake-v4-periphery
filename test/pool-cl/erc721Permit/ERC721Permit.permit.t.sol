@@ -9,6 +9,7 @@ import {MockERC721Permit} from "../mocks/MockERC721Permit.sol";
 import {IERC721Permit_v4} from "../../../src/pool-cl/interfaces/IERC721Permit_v4.sol";
 import {IERC721} from "forge-std/interfaces/IERC721.sol";
 import {UnorderedNonce} from "../../../src/pool-cl/base/UnorderedNonce.sol";
+import {IERC721Errors} from "openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
 
 contract ERC721PermitTest is Test {
     MockERC721Permit erc721Permit;
@@ -38,6 +39,8 @@ contract ERC721PermitTest is Test {
     }
 
     function test_fuzz_approvedOperator_reapproves(address operator, address spender) public {
+        // operator cant be address(0)
+        vm.assume(operator != address(0));
         uint256 tokenId = erc721Permit.mint();
         erc721Permit.setApprovalForAll(operator, true);
         assertEq(erc721Permit.isApprovedForAll(address(this), operator), true);
@@ -52,9 +55,14 @@ contract ERC721PermitTest is Test {
     }
 
     function test_fuzz_approve_unauthorizedRevert(address caller) public {
+        // due to the implementation detail of ERC721#approve, if caller is address(0), it won't revert
+        vm.assume(caller != address(0));
+
         uint256 tokenId = erc721Permit.mint();
         vm.prank(caller);
-        if (caller != address(this)) vm.expectRevert(IERC721Permit_v4.Unauthorized.selector);
+        if (caller != address(this)) {
+            vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721InvalidApprover.selector, caller));
+        }
         erc721Permit.approve(address(this), tokenId);
     }
 

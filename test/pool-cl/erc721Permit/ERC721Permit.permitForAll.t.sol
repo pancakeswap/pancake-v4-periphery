@@ -29,6 +29,8 @@ contract ERC721PermitForAllTest is Test {
 
     // --- Test the overriden setApprovalForAll ---
     function test_fuzz_setApprovalForAll(address operator) public {
+        // operator cant be zero in openzeppelin's implementation
+        vm.assume(operator != address(0));
         assertEq(erc721Permit.isApprovedForAll(address(this), operator), false);
 
         vm.expectEmit(true, true, true, true, address(erc721Permit));
@@ -38,6 +40,8 @@ contract ERC721PermitForAllTest is Test {
     }
 
     function test_fuzz_setApprovalForAll_revoke(address operator) public {
+        // operator cant be zero in openzeppelin's implementation
+        vm.assume(operator != address(0));
         assertEq(erc721Permit.isApprovedForAll(address(this), operator), false);
         erc721Permit.setApprovalForAll(operator, true);
         assertEq(erc721Permit.isApprovedForAll(address(this), operator), true);
@@ -64,6 +68,8 @@ contract ERC721PermitForAllTest is Test {
 
     /// @dev operator uses alice's signature to approve itself
     function test_fuzz_erc721permitForAll_operator(address operator) public {
+        // operator cant be zero in openzeppelin's implementation
+        vm.assume(operator != address(0));
         vm.assume(operator != alice);
         vm.prank(alice);
         uint256 tokenId = erc721Permit.mint();
@@ -98,6 +104,8 @@ contract ERC721PermitForAllTest is Test {
 
     /// @dev a third party caller uses alice's signature to give `operator` the approval
     function test_fuzz_erc721permitForAll_caller(address caller, address operator) public {
+        // operator cant be zero in openzeppelin's implementation
+        vm.assume(operator != address(0));
         vm.assume(operator != alice);
         vm.prank(alice);
         uint256 tokenId = erc721Permit.mint();

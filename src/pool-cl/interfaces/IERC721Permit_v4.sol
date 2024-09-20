@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
 interface IERC721Permit_v4 {
     error SignatureDeadlineExpired();
     error NoSelfPermit();
-    error Unauthorized();
 
     /// @notice Approve of a specific token ID for spending by spender via signature
     /// @param spender The account that is being approved
