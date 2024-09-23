@@ -9,7 +9,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {CLPositionManager} from "../src/pool-cl/CLPositionManager.sol";
 
 /**
- * forge script script/01_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript -vvv \
+ * forge script --sig 'run(uint256)' script/01_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript <unsubscribeGasLimit> -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \
