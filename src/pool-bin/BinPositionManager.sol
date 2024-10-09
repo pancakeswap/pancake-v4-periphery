@@ -175,8 +175,17 @@ contract BinPositionManager is
     }
 
     function _addLiquidity(IBinPositionManager.BinAddLiquidityParams calldata params) internal {
-        if (params.deltaIds.length != params.distributionX.length) revert InputLengthMismatch();
-        if (params.deltaIds.length != params.distributionY.length) revert InputLengthMismatch();
+        uint256 deltaLen = params.deltaIds.length;
+        uint256 lenX = params.distributionX.length;
+        uint256 lenY = params.distributionY.length;
+        assembly ("memory-safe") {
+            /// @dev revert if deltaLen != lenX || deltaLen != lenY
+            if iszero(and(eq(deltaLen, lenX), eq(deltaLen, lenY))) {
+                mstore(0, 0xaaad13f7) // selector InputLengthMismatch
+                revert(0x1c, 0x04)
+            }
+        }
+
         if (params.activeIdDesired > type(uint24).max || params.idSlippage > type(uint24).max) {
             revert AddLiquidityInputActiveIdMismath();
         }
@@ -187,7 +196,7 @@ contract BinPositionManager is
         if (params.activeIdDesired + params.idSlippage < activeId) revert IdDesiredOverflows(activeId);
         if (params.activeIdDesired - params.idSlippage > activeId) revert IdDesiredOverflows(activeId);
 
-        bytes32[] memory liquidityConfigs = new bytes32[](params.deltaIds.length);
+        bytes32[] memory liquidityConfigs = new bytes32[](deltaLen);
         for (uint256 i; i < liquidityConfigs.length; i++) {
             int256 _id = int256(uint256(activeId)) + params.deltaIds[i];
             if (_id < 0 || uint256(_id) > type(uint24).max) revert IdOverflows(_id);
