@@ -61,8 +61,7 @@ interface IBinPositionManager is IPositionManager {
     /// @notice Initialize a v4 PCS bin pool
     /// @param key the PoolKey of the pool to initialize
     /// @param activeId the active bin id of the pool
-    /// @param hookData the optional data passed to the hook's initialize functions
-    function initializePool(PoolKey memory key, uint24 activeId, bytes calldata hookData) external payable;
+    function initializePool(PoolKey memory key, uint24 activeId) external payable;
 
     /// @notice Return the position information associated with a given tokenId
     /// @dev Revert if non-existent tokenId

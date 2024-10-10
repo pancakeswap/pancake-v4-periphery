@@ -53,7 +53,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
         // This is needed to receive return deltas from modifyLiquidity calls.
         deployPosmHookSavesDelta();
 
-        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
+        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1);
         currency0 = key.currency0;
         currency1 = key.currency1;
 
@@ -98,7 +98,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
 
         key.currency0 = currency0;
         key.currency1 = currency1;
-        manager.initialize(key, SQRT_RATIO_1_1, ZERO_BYTES);
+        manager.initialize(key, SQRT_RATIO_1_1);
 
         // Try to add liquidity at that range, but the token reenters posm
         bytes memory calls = getMintEncoded(key, 0, 60, 1e18, ActionConstants.MSG_SENDER, "");
@@ -844,7 +844,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             poolManager: manager,
             parameters: bytes32(uint256((10 << 16) | 0x0000))
         });
-        lpm.initializePool(key, SQRT_RATIO_1_1, ZERO_BYTES);
+        lpm.initializePool(key, SQRT_RATIO_1_1);
 
         (uint160 sqrtPriceX96, int24 tick, uint24 protocolFee, uint24 lpFee) = manager.getSlot0(key.toId());
         assertEq(sqrtPriceX96, SQRT_RATIO_1_1);
@@ -865,7 +865,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             poolManager: manager,
             parameters: bytes32(uint256((10 << 16) | 0x0000))
         });
-        lpm.initializePool(key, sqrtPrice, ZERO_BYTES);
+        lpm.initializePool(key, sqrtPrice);
 
         (uint160 sqrtPriceX96, int24 tick, uint24 protocolFee, uint24 lpFee) = manager.getSlot0(key.toId());
         assertEq(sqrtPriceX96, sqrtPrice);

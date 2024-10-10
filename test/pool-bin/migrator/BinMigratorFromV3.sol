@@ -162,7 +162,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. initialize the pool
-        poolManager.initialize(poolKey, ACTIVE_BIN_ID, bytes(""));
+        poolManager.initialize(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -354,7 +354,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. initialize the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -442,7 +442,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. initialize the pool
-        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -530,7 +530,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -627,7 +627,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -718,7 +718,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -819,7 +819,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -925,7 +925,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -1033,7 +1033,7 @@ abstract contract BinMigratorFromV3 is
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),

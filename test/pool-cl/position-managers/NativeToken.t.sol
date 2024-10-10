@@ -50,10 +50,10 @@ contract NativeTokenTest is Test, PosmTestSetup, LiquidityFuzzers {
         // This is needed to receive return deltas from modifyLiquidity calls.
         deployPosmHookSavesDelta();
 
-        (vault, manager, nativeKey, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
+        (vault, manager, nativeKey, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1);
         nativeKey.currency0 = CurrencyLibrary.NATIVE;
         poolId = nativeKey.toId();
-        manager.initialize(nativeKey, SQRT_RATIO_1_1, ZERO_BYTES);
+        manager.initialize(nativeKey, SQRT_RATIO_1_1);
         currency0 = nativeKey.currency0;
         currency1 = nativeKey.currency1;
 

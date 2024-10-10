@@ -144,7 +144,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -285,7 +285,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -321,7 +321,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -374,7 +374,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. initialize the pool
-        migrator.initializePool(poolKeyWithoutNativeToken, INIT_SQRT_PRICE, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -426,7 +426,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -489,7 +489,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -557,7 +557,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -633,7 +633,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         int24 tickLower = -100;
         int24 tickUpper = 100;
@@ -742,7 +742,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -803,7 +803,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKeyWithoutNativeToken, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKeyWithoutNativeToken, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),
@@ -864,7 +864,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         v3Nfpm.approve(address(migrator), 1);
 
         // 3. init the pool
-        lpm.initializePool(poolKey, INIT_SQRT_PRICE, bytes(""));
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
             nfp: address(v3Nfpm),

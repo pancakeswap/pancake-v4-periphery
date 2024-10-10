@@ -125,7 +125,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        poolManager.initialize(poolKey, initSqrtPrice, bytes(""));
+        poolManager.initialize(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -267,7 +267,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKey, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -304,7 +304,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKey, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -360,7 +360,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKeyWithoutNativeToken, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2PairWithoutNativeToken),
@@ -412,7 +412,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKey, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -475,7 +475,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKey, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -544,7 +544,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKey, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -622,7 +622,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKey, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKey, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -688,7 +688,7 @@ abstract contract CLMigratorFromV2 is
 
         // 3. initialize the pool
         uint160 initSqrtPrice = 79228162514264337593543950336;
-        migrator.initializePool(poolKeyWithoutNativeToken, initSqrtPrice, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, initSqrtPrice);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2PairWithoutNativeToken),

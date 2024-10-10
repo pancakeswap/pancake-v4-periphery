@@ -38,7 +38,7 @@ contract Permit2ForwarderTest is Test, PosmTestSetup, Permit2SignatureHelpers {
         // This is needed to receive return deltas from modifyLiquidity calls.
         deployPosmHookSavesDelta();
 
-        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
+        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1);
         currency0 = key.currency0;
         currency1 = key.currency1;
 

@@ -56,6 +56,5 @@ interface IBinMigrator is IBaseMigrator {
     /// @dev Call this when the pool does not exist and is not initialized
     /// @param poolKey The pool key
     /// @param activeId The active id of the pool
-    /// @param hookData Hook data for the pool
-    function initializePool(PoolKey memory poolKey, uint24 activeId, bytes calldata hookData) external payable;
+    function initializePool(PoolKey memory poolKey, uint24 activeId) external payable;
 }

@@ -72,7 +72,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
             fee: uint24(3000), // 3000 = 0.3%
             parameters: poolParam.setBinStep(10) // binStep
         });
-        binPm.initializePool(key1, activeId, ZERO_BYTES);
+        binPm.initializePool(key1, activeId);
 
         hook = new BinHookHookData();
         key2 = PoolKey({
@@ -83,7 +83,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
             fee: uint24(3000), // 3000 = 0.3%
             parameters: bytes32(uint256(hook.getHooksRegistrationBitmap())).setBinStep(10) // binStep
         });
-        binPm.initializePool(key2, activeId, ZERO_BYTES);
+        binPm.initializePool(key2, activeId);
 
         // approval
         approveBinPm(address(this), key1, address(binPm), permit2);

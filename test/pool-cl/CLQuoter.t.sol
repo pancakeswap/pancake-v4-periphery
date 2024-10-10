@@ -550,7 +550,7 @@ contract CLQuoterTest is Test, Deployers {
     }
 
     function setupPool(PoolKey memory poolKey) internal {
-        manager.initialize(poolKey, SQRT_RATIO_1_1, ZERO_BYTES);
+        manager.initialize(poolKey, SQRT_RATIO_1_1);
         MockERC20(Currency.unwrap(poolKey.currency0)).approve(address(positionManager), type(uint256).max);
         MockERC20(Currency.unwrap(poolKey.currency1)).approve(address(positionManager), type(uint256).max);
         positionManager.modifyPosition(
@@ -566,7 +566,7 @@ contract CLQuoterTest is Test, Deployers {
     }
 
     function setupPoolMultiplePositions(PoolKey memory poolKey) internal {
-        manager.initialize(poolKey, SQRT_RATIO_1_1, ZERO_BYTES);
+        manager.initialize(poolKey, SQRT_RATIO_1_1);
         MockERC20(Currency.unwrap(poolKey.currency0)).approve(address(positionManager), type(uint256).max);
         MockERC20(Currency.unwrap(poolKey.currency1)).approve(address(positionManager), type(uint256).max);
         positionManager.modifyPosition(
@@ -599,7 +599,7 @@ contract CLQuoterTest is Test, Deployers {
         PoolId poolId = poolKey.toId();
         (uint160 sqrtPriceX96,,,) = manager.getSlot0(poolId);
         if (sqrtPriceX96 == 0) {
-            manager.initialize(poolKey, SQRT_RATIO_1_1, ZERO_BYTES);
+            manager.initialize(poolKey, SQRT_RATIO_1_1);
         }
 
         MockERC20(Currency.unwrap(poolKey.currency0)).approve(address(positionManager), type(uint256).max);
