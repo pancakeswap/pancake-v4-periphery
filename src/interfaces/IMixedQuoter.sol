@@ -54,12 +54,13 @@ interface IMixedQuoter {
     /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
+    /// @return gasEstimate The estimate of the gas that the swap consumes
     function quoteMixedExactInput(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,
         uint256 amountIn
-    ) external returns (uint256 amountOut);
+    ) external returns (uint256 amountOut, uint256 gasEstimate);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleParams`
@@ -82,9 +83,10 @@ interface IMixedQuoter {
     /// tokenOut The token being swapped out
     /// amountIn The desired input amount
     /// @return amountOut The amount of `tokenOut` that would be received
+    /// @return gasEstimate The estimate of the gas that the swap consumes
     function quoteExactInputSingleV2(QuoteExactInputSingleV2Params memory params)
         external
-        returns (uint256 amountOut);
+        returns (uint256 amountOut, uint256 gasEstimate);
 
     /// @notice Returns the amount out received for a given exact input but for a swap of a single Stable pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleStableParams`
@@ -93,9 +95,10 @@ interface IMixedQuoter {
     /// amountIn The desired input amount
     /// flag The token amount in a single Stable pool. 2 for 2pool, 3 for 3pool
     /// @return amountOut The amount of `tokenOut` that would be received
+    /// @return gasEstimate The estimate of the gas that the swap consumes
     function quoteExactInputSingleStable(QuoteExactInputSingleStableParams memory params)
         external
-        returns (uint256 amountOut);
+        returns (uint256 amountOut, uint256 gasEstimate);
 
     /// @dev ExactOutput swaps are not supported by this new Quoter which is specialized for supporting routes
     ///      crossing Stable, V2 liquidity pairs and V3 pools.

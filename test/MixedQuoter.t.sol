@@ -29,6 +29,7 @@ import {Permit2Forwarder} from "../src/base/Permit2Forwarder.sol";
 import {IV3NonfungiblePositionManager} from "../src/interfaces/external/IV3NonfungiblePositionManager.sol";
 import {IMixedQuoter} from "../src/interfaces/IMixedQuoter.sol";
 import {MixedQuoter} from "../src/MixedQuoter.sol";
+import {IQuoter} from "../src/interfaces/IQuoter.sol";
 import {ICLQuoter} from "../src/pool-cl/interfaces/ICLQuoter.sol";
 import {IBinQuoter} from "../src/pool-bin/interfaces/IBinQuoter.sol";
 import {MixedQuoterActions} from "../src/libraries/MixedQuoterActions.sol";
@@ -261,9 +262,11 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 999499143496490285);
+        assertGt(gasEstimate, 40000);
+        assertLt(gasEstimate, 50000);
     }
 
     function testQuoteExactInputSingleV2() public {
@@ -275,9 +278,11 @@ contract MixedQuoterTest is
         actions[0] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
         bytes[] memory params = new bytes[](1);
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 907024323709934075);
+        assertGt(gasEstimate, 10000);
+        assertLt(gasEstimate, 20000);
     }
 
     function testQuoteExactInputSingleV3() public {
@@ -292,9 +297,11 @@ contract MixedQuoterTest is
         uint24 fee = 500;
         params[0] = abi.encode(fee);
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 999002019627632472);
+        assertGt(gasEstimate, 120000);
+        assertLt(gasEstimate, 130000);
     }
 
     function testV4CLquoteExactInputSingle_ZeroForOne() public {
@@ -309,21 +316,22 @@ contract MixedQuoterTest is
         params[0] =
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 996668773744192346);
 
-        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactInputSingle(
-            ICLQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = clQuoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: poolKey,
                 zeroForOne: true,
                 exactAmount: 1 ether,
-                sqrtPriceLimitX96: 0,
                 hookData: ZERO_BYTES
             })
         );
-        assertEq(-deltaAmounts[0], 1 ether);
-        assertEq(uint128(deltaAmounts[1]), amountOut);
+        assertEq(_amountOut, amountOut);
+        assertEq(_gasEstimate, gasEstimate);
+        assertGt(_gasEstimate, 80000);
+        assertLt(_gasEstimate, 90000);
     }
 
     function testV4CLquoteExactInputSingle_OneForZero() public {
@@ -338,21 +346,22 @@ contract MixedQuoterTest is
         params[0] =
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 996668773744192346);
 
-        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactInputSingle(
-            ICLQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = clQuoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: poolKey,
                 zeroForOne: false,
                 exactAmount: 1 ether,
-                sqrtPriceLimitX96: 0,
                 hookData: ZERO_BYTES
             })
         );
-        assertEq(-deltaAmounts[1], 1 ether);
-        assertEq(uint128(deltaAmounts[0]), amountOut);
+        assertEq(_amountOut, amountOut);
+        assertEq(_gasEstimate, gasEstimate);
+        assertGt(_gasEstimate, 80000);
+        assertLt(_gasEstimate, 90000);
     }
 
     function testV4CLquoteExactInputSingle_ZeroForOne_WETHPair() public {
@@ -373,21 +382,22 @@ contract MixedQuoterTest is
             IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKeyWithWETH, hookData: ZERO_BYTES})
         );
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 996006981039903216);
 
-        (int128[] memory deltaAmounts,,) = clQuoter.quoteExactInputSingle(
-            ICLQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = clQuoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: poolKeyWithWETH,
                 zeroForOne: true,
                 exactAmount: 1 ether,
-                sqrtPriceLimitX96: 0,
                 hookData: ZERO_BYTES
             })
         );
-        assertEq(-deltaAmounts[0], 1 ether);
-        assertEq(uint128(deltaAmounts[1]), amountOut);
+        assertEq(_amountOut, amountOut);
+        assertEq(_gasEstimate, gasEstimate);
+        assertGt(_gasEstimate, 80000);
+        assertLt(_gasEstimate, 90000);
     }
 
     function testBinQuoteExactInputSingle_ZeroForOne() public {
@@ -402,20 +412,22 @@ contract MixedQuoterTest is
         params[0] =
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 997000000000000000);
 
-        (int128[] memory deltaAmounts,) = binQuoter.quoteExactInputSingle(
-            IBinQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = binQuoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: binPoolKey,
                 zeroForOne: true,
                 exactAmount: 1 ether,
                 hookData: ZERO_BYTES
             })
         );
-        assertEq(-deltaAmounts[0], 1 ether);
-        assertEq(uint128(deltaAmounts[1]), amountOut);
+        assertEq(_amountOut, amountOut);
+        assertEq(_gasEstimate, gasEstimate);
+        assertGt(_gasEstimate, 40000);
+        assertLt(_gasEstimate, 50000);
     }
 
     function testBinQuoteExactInputSingle_OneForZero() public {
@@ -430,20 +442,22 @@ contract MixedQuoterTest is
         params[0] =
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 997000000000000000);
 
-        (int128[] memory deltaAmounts,) = binQuoter.quoteExactInputSingle(
-            IBinQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = binQuoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: binPoolKey,
                 zeroForOne: false,
                 exactAmount: 1 ether,
                 hookData: ZERO_BYTES
             })
         );
-        assertEq(-deltaAmounts[1], 1 ether);
-        assertEq(uint128(deltaAmounts[0]), amountOut);
+        assertEq(_amountOut, amountOut);
+        assertEq(_gasEstimate, gasEstimate);
+        assertGt(_gasEstimate, 40000);
+        assertLt(_gasEstimate, 50000);
     }
 
     // token0 -> token1 -> token2
@@ -463,9 +477,11 @@ contract MixedQuoterTest is
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         params[1] = new bytes(0);
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 996169927245114903);
+        assertGt(gasEstimate, 130000);
+        assertLt(gasEstimate, 140000);
     }
 
     // token0 -> token1 -> token2 -> WETH
@@ -489,9 +505,11 @@ contract MixedQuoterTest is
         uint24 fee = 500;
         params[2] = abi.encode(fee);
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 995177668263126217);
+        assertGt(gasEstimate, 260000);
+        assertLt(gasEstimate, 270000);
     }
 
     // token0 -> token1 -> token2 -> token3 -> token4
@@ -518,9 +536,11 @@ contract MixedQuoterTest is
         params[3] =
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 901152761185198407);
+        assertGt(gasEstimate, 190000);
+        assertLt(gasEstimate, 200000);
     }
 
     // token2 -> WETH -> token1
@@ -542,9 +562,11 @@ contract MixedQuoterTest is
             IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
         );
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 995013974661415835);
+        assertGt(gasEstimate, 210000);
+        assertLt(gasEstimate, 220000);
     }
 
     // token1 -> address(0) -> token2
@@ -566,9 +588,11 @@ contract MixedQuoterTest is
         uint24 fee = 500;
         params[1] = abi.encode(fee);
 
-        uint256 amountOut = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 995014965144446181);
+        assertGt(gasEstimate, 200000);
+        assertLt(gasEstimate, 210000);
     }
 
     function _mintV3Liquidity(address _token0, address _token1) internal {

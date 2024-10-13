@@ -9,22 +9,21 @@ import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
-import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {IBinQuoter} from "../interfaces/IBinQuoter.sol";
 import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
-import {Quoter} from "../../base/Quoter.sol";
+import {BaseV4Quoter} from "../../base/BaseV4Quoter.sol";
+import {QuoterRevert} from "../../libraries/QuoterRevert.sol";
 
-contract BinQuoter is Quoter, IBinQuoter {
+contract BinQuoter is BaseV4Quoter, IBinQuoter {
+    using QuoterRevert for *;
     using SafeCast for uint128;
     using PathKeyLibrary for PathKey;
+    using PoolIdLibrary for PoolId;
 
     IBinPoolManager public immutable poolManager;
-    uint256 private constant BIN_MINIMUM_VALID_RESPONSE_LENGTH = 160;
 
-    /// @dev min valid reason is 5-words long (160 bytes)
-    /// @dev int128[2] includes 32 bytes for offset, 32 bytes for length, and 32 bytes for each element
-    /// @dev Plus activeIdAfter padded to 32 bytes
-    constructor(address _poolManager) Quoter(_poolManager, BIN_MINIMUM_VALID_RESPONSE_LENGTH) {
+    constructor(address _poolManager) BaseV4Quoter(_poolManager) {
         poolManager = IBinPoolManager(_poolManager);
     }
 
@@ -32,11 +31,14 @@ contract BinQuoter is Quoter, IBinQuoter {
     function quoteExactInputSingle(QuoteExactSingleParams memory params)
         external
         override
-        returns (int128[] memory deltaAmounts, uint24 activeIdAfter)
+        returns (uint256 amountOut, uint256 gasEstimate)
     {
+        uint256 gasBefore = gasleft();
         try vault.lock(abi.encodeCall(this._quoteExactInputSingle, (params))) {}
         catch (bytes memory reason) {
-            return _handleRevertSingle(reason);
+            gasEstimate = gasBefore - gasleft();
+            // Extract the quote from QuoteSwap error, or throw if the quote failed
+            amountOut = reason.parseQuoteAmount();
         }
     }
 
@@ -44,11 +46,14 @@ contract BinQuoter is Quoter, IBinQuoter {
     function quoteExactInput(QuoteExactParams memory params)
         external
         override
-        returns (int128[] memory deltaAmounts, uint24[] memory activeIdAfterList)
+        returns (uint256 amountOut, uint256 gasEstimate)
     {
+        uint256 gasBefore = gasleft();
         try vault.lock(abi.encodeCall(this._quoteExactInput, (params))) {}
         catch (bytes memory reason) {
-            return _handleRevert(reason);
+            gasEstimate = gasBefore - gasleft();
+            // Extract the quote from QuoteSwap error, or throw if the quote failed
+            amountOut = reason.parseQuoteAmount();
         }
     }
 
@@ -56,12 +61,14 @@ contract BinQuoter is Quoter, IBinQuoter {
     function quoteExactOutputSingle(QuoteExactSingleParams memory params)
         external
         override
-        returns (int128[] memory deltaAmounts, uint24 activeIdAfter)
+        returns (uint256 amountIn, uint256 gasEstimate)
     {
+        uint256 gasBefore = gasleft();
         try vault.lock(abi.encodeCall(this._quoteExactOutputSingle, (params))) {}
         catch (bytes memory reason) {
-            delete amountOutCached;
-            return _handleRevertSingle(reason);
+            gasEstimate = gasBefore - gasleft();
+            // Extract the quote from QuoteSwap error, or throw if the quote failed
+            amountIn = reason.parseQuoteAmount();
         }
     }
 
@@ -69,162 +76,92 @@ contract BinQuoter is Quoter, IBinQuoter {
     function quoteExactOutput(QuoteExactParams memory params)
         external
         override
-        returns (int128[] memory deltaAmounts, uint24[] memory activeIdAfterList)
+        returns (uint256 amountIn, uint256 gasEstimate)
     {
+        uint256 gasBefore = gasleft();
         try vault.lock(abi.encodeCall(this._quoteExactOutput, (params))) {}
         catch (bytes memory reason) {
-            return _handleRevert(reason);
+            gasEstimate = gasBefore - gasleft();
+            // Extract the quote from QuoteSwap error, or throw if the quote failed
+            amountIn = reason.parseQuoteAmount();
         }
-    }
-
-    /// @dev parse revert bytes from a single-pool quote
-    function _handleRevertSingle(bytes memory reason)
-        private
-        view
-        returns (int128[] memory deltaAmounts, uint24 activeIdAfter)
-    {
-        reason = validateRevertReason(reason);
-        (deltaAmounts, activeIdAfter) = abi.decode(reason, (int128[], uint24));
-    }
-
-    /// @dev parse revert bytes from a potentially multi-hop quote and return the delta amounts, activeIdAfter
-    function _handleRevert(bytes memory reason)
-        private
-        view
-        returns (int128[] memory deltaAmounts, uint24[] memory activeIdAfterList)
-    {
-        reason = validateRevertReason(reason);
-        (deltaAmounts, activeIdAfterList) = abi.decode(reason, (int128[], uint24[]));
     }
 
     /// @dev quote an ExactInput swap along a path of tokens, then revert with the result
-    function _quoteExactInput(QuoteExactParams memory params) public override selfOnly returns (bytes memory) {
+    function _quoteExactInput(QuoteExactParams calldata params) external selfOnly returns (bytes memory) {
         uint256 pathLength = params.path.length;
-
-        QuoteResult memory result =
-            QuoteResult({deltaAmounts: new int128[](pathLength + 1), activeIdAfterList: new uint24[](pathLength)});
-        QuoteCache memory cache;
+        BalanceDelta swapDelta;
+        uint128 amountIn = params.exactAmount;
+        Currency inputCurrency = params.exactCurrency;
+        PathKey calldata pathKey;
 
         for (uint256 i = 0; i < pathLength; i++) {
-            (PoolKey memory poolKey, bool zeroForOne) =
-                params.path[i].getPoolAndSwapDirection(i == 0 ? params.exactCurrency : cache.prevCurrency);
+            pathKey = params.path[i];
+            (PoolKey memory poolKey, bool zeroForOne) = pathKey.getPoolAndSwapDirection(inputCurrency);
 
-            (cache.curDeltas, cache.activeIdAfter) = _swap(
-                poolKey, zeroForOne, -int128(i == 0 ? params.exactAmount : cache.prevAmount), params.path[i].hookData
-            );
+            swapDelta = _swap(poolKey, zeroForOne, -amountIn.safeInt128(), pathKey.hookData);
 
-            (cache.deltaIn, cache.deltaOut) = zeroForOne
-                ? (cache.curDeltas.amount0(), cache.curDeltas.amount1())
-                : (cache.curDeltas.amount1(), cache.curDeltas.amount0());
-            result.deltaAmounts[i] += cache.deltaIn;
-            result.deltaAmounts[i + 1] += cache.deltaOut;
-            result.activeIdAfterList[i] = cache.activeIdAfter;
-
-            cache.prevAmount = zeroForOne ? uint128(cache.curDeltas.amount1()) : uint128(cache.curDeltas.amount0());
-            cache.prevCurrency = params.path[i].intermediateCurrency;
+            amountIn = zeroForOne ? uint128(swapDelta.amount1()) : uint128(swapDelta.amount0());
+            inputCurrency = pathKey.intermediateCurrency;
         }
-        bytes memory r = abi.encode(result.deltaAmounts, result.activeIdAfterList);
-        assembly ("memory-safe") {
-            revert(add(0x20, r), mload(r))
-        }
+        // amountIn after the loop actually holds the amountOut of the trade
+        amountIn.revertQuote();
     }
 
     /// @dev quote an ExactInput swap on a pool, then revert with the result
-    function _quoteExactInputSingle(QuoteExactSingleParams memory params)
-        public
-        override
-        selfOnly
-        returns (bytes memory)
-    {
-        (BalanceDelta deltas, uint24 activeIdAfter) =
+    function _quoteExactInputSingle(QuoteExactSingleParams calldata params) external selfOnly returns (bytes memory) {
+        BalanceDelta swapDelta =
             _swap(params.poolKey, params.zeroForOne, -(params.exactAmount.safeInt128()), params.hookData);
 
-        int128[] memory deltaAmounts = new int128[](2);
-
-        deltaAmounts[0] = deltas.amount0();
-        deltaAmounts[1] = deltas.amount1();
-
-        bytes memory result = abi.encode(deltaAmounts, activeIdAfter);
-
-        assembly ("memory-safe") {
-            revert(add(0x20, result), mload(result))
-        }
+        // the output delta of a swap is positive
+        uint256 amountOut = params.zeroForOne ? uint128(swapDelta.amount1()) : uint128(swapDelta.amount0());
+        amountOut.revertQuote();
     }
 
     /// @dev quote an ExactOutput swap along a path of tokens, then revert with the result
-    function _quoteExactOutput(QuoteExactParams memory params) public override selfOnly returns (bytes memory) {
+    function _quoteExactOutput(QuoteExactParams calldata params) external selfOnly returns (bytes memory) {
         uint256 pathLength = params.path.length;
-
-        QuoteResult memory result =
-            QuoteResult({deltaAmounts: new int128[](pathLength + 1), activeIdAfterList: new uint24[](pathLength)});
-        QuoteCache memory cache;
-        uint128 curAmountOut;
+        BalanceDelta swapDelta;
+        uint128 amountOut = params.exactAmount;
+        Currency outputCurrency = params.exactCurrency;
+        PathKey calldata pathKey;
 
         for (uint256 i = pathLength; i > 0; i--) {
-            curAmountOut = i == pathLength ? params.exactAmount : cache.prevAmount;
-            amountOutCached = curAmountOut;
+            pathKey = params.path[i - 1];
+            (PoolKey memory poolKey, bool oneForZero) = pathKey.getPoolAndSwapDirection(outputCurrency);
 
-            (PoolKey memory poolKey, bool oneForZero) = PathKeyLibrary.getPoolAndSwapDirection(
-                params.path[i - 1], i == pathLength ? params.exactCurrency : cache.prevCurrency
-            );
+            swapDelta = _swap(poolKey, !oneForZero, amountOut.safeInt128(), pathKey.hookData);
 
-            (cache.curDeltas, cache.activeIdAfter) =
-                _swap(poolKey, !oneForZero, int128(curAmountOut), params.path[i - 1].hookData);
-
-            delete amountOutCached;
-            (cache.deltaIn, cache.deltaOut) = !oneForZero
-                ? (cache.curDeltas.amount0(), cache.curDeltas.amount1())
-                : (cache.curDeltas.amount1(), cache.curDeltas.amount0());
-            result.deltaAmounts[i - 1] += cache.deltaIn;
-            result.deltaAmounts[i] += cache.deltaOut;
-            result.activeIdAfterList[i - 1] = cache.activeIdAfter;
-
-            cache.prevAmount = !oneForZero ? uint128(-cache.curDeltas.amount0()) : uint128(-cache.curDeltas.amount1());
-            cache.prevCurrency = params.path[i - 1].intermediateCurrency;
+            amountOut = oneForZero ? uint128(-swapDelta.amount1()) : uint128(-swapDelta.amount0());
+            outputCurrency = pathKey.intermediateCurrency;
         }
-        bytes memory r = abi.encode(result.deltaAmounts, result.activeIdAfterList);
-        assembly ("memory-safe") {
-            revert(add(0x20, r), mload(r))
-        }
+        // amountOut after the loop exits actually holds the amountIn of the trade
+        amountOut.revertQuote();
     }
 
     /// @dev quote an ExactOutput swap on a pool, then revert with the result
-    function _quoteExactOutputSingle(QuoteExactSingleParams memory params)
-        public
-        override
-        selfOnly
-        returns (bytes memory)
-    {
-        amountOutCached = params.exactAmount;
-
-        (BalanceDelta deltas, uint24 activeIdAfter) =
+    function _quoteExactOutputSingle(QuoteExactSingleParams calldata params) external selfOnly returns (bytes memory) {
+        BalanceDelta swapDelta =
             _swap(params.poolKey, params.zeroForOne, params.exactAmount.safeInt128(), params.hookData);
 
-        if (amountOutCached != 0) delete amountOutCached;
-        int128[] memory deltaAmounts = new int128[](2);
-
-        deltaAmounts[0] = deltas.amount0();
-        deltaAmounts[1] = deltas.amount1();
-
-        bytes memory result = abi.encode(deltaAmounts, activeIdAfter);
-        assembly ("memory-safe") {
-            revert(add(0x20, result), mload(result))
-        }
+        // the input delta of a swap is negative so we must flip it
+        uint256 amountIn = params.zeroForOne ? uint128(-swapDelta.amount0()) : uint128(-swapDelta.amount1());
+        amountIn.revertQuote();
     }
 
-    /// @dev Execute a swap and return the amounts delta, as well as relevant pool state
+    /// @dev Execute a swap and return the balance delta
     /// @notice if amountSpecified < 0, the swap is exactInput, otherwise exactOutput
     function _swap(PoolKey memory poolKey, bool zeroForOne, int128 amountSpecified, bytes memory hookData)
         private
-        returns (BalanceDelta deltas, uint24 activeIdAfter)
+        returns (BalanceDelta deltas)
     {
         deltas = poolManager.swap(poolKey, zeroForOne, amountSpecified, hookData);
 
-        // only exactOut case
-        if (amountOutCached != 0 && amountOutCached != uint128(zeroForOne ? deltas.amount1() : deltas.amount0())) {
-            revert InsufficientAmountOut();
-        }
-
-        (activeIdAfter,,) = poolManager.getSlot0(poolKey.toId());
+        // TODO: confirm we don't need this check in the bin quoter since BinPool will revert if there is not enough liquidity
+        // Check that the pool was not illiquid.
+        // int128 amountSpecifiedActual = (zeroForOne == (amountSpecified < 0)) ? deltas.amount0() : deltas.amount1();
+        // if (amountSpecifiedActual != amountSpecified) {
+        //     revert NotEnoughLiquidity(poolKey.toId());
+        // }
     }
 }

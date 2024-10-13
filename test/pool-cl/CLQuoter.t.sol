@@ -22,6 +22,7 @@ import {CLPoolManagerRouter} from "pancake-v4-core/test/pool-cl/helpers/CLPoolMa
 import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
+import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
 
 contract CLQuoterTest is Test, Deployers {
     using SafeCast for *;
@@ -83,48 +84,42 @@ contract CLQuoterTest is Test, Deployers {
     function testCLQuoter_quoteExactInputSingle_ZeroForOne_MultiplePositions() public {
         uint256 amountIn = 10000;
         uint256 expectedAmountOut = 9871;
-        uint160 expectedSqrtPriceX96After = 78461846509168490764501028180;
 
-        (int128[] memory deltaAmounts, uint160 sqrtPriceX96After, uint32 initializedTicksLoaded) = quoter
-            .quoteExactInputSingle(
-            ICLQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: key02,
                 zeroForOne: true,
                 exactAmount: uint128(amountIn),
-                sqrtPriceLimitX96: 0,
                 hookData: ZERO_BYTES
             })
         );
 
-        assertEq(uint128(deltaAmounts[1]), expectedAmountOut);
-        assertEq(sqrtPriceX96After, expectedSqrtPriceX96After);
-        assertEq(initializedTicksLoaded, 2);
+        assertEq(_amountOut, expectedAmountOut);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactInputSingle_OneForZero_MultiplePositions() public {
         uint256 amountIn = 10000;
         uint256 expectedAmountOut = 9871;
-        uint160 expectedSqrtPriceX96After = 80001962924147897865541384515;
 
-        (int128[] memory deltaAmounts, uint160 sqrtPriceX96After, uint32 initializedTicksLoaded) = quoter
-            .quoteExactInputSingle(
-            ICLQuoter.QuoteExactSingleParams({
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: key02,
                 zeroForOne: false,
                 exactAmount: uint128(amountIn),
-                sqrtPriceLimitX96: 0,
                 hookData: ZERO_BYTES
             })
         );
 
-        assertEq(uint128(deltaAmounts[0]), expectedAmountOut);
-        assertEq(sqrtPriceX96After, expectedSqrtPriceX96After);
-        assertEq(initializedTicksLoaded, 2);
+        assertEq(_amountOut, expectedAmountOut);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     // nested self-call into lockAcquired reverts
     function testCLQuoter_callLockAcquired_reverts() public {
-        vm.expectRevert(IQuoter.LockFailure.selector);
+        vm.expectRevert();
         vm.prank(address(vault));
         quoter.lockAcquired(abi.encodeWithSelector(quoter.lockAcquired.selector, address(this), "0x"));
     }
@@ -134,15 +129,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token2);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 10000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(uint128(deltaAmounts[1]), 9871);
-        assertEq(sqrtPriceX96AfterList[0], 78461846509168490764501028180);
-        assertEq(initializedTicksLoadedList[0], 2);
+        assertEq(_amountOut, 9871);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactInput_0to2_2TicksLoaded_initialiedAfter() public {
@@ -153,15 +144,11 @@ contract CLQuoterTest is Test, Deployers {
         // -120 is an initialized tick for this pool. We check that we don't count it.
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 6200);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(uint128(deltaAmounts[1]), 6143);
-        assertEq(sqrtPriceX96AfterList[0], 78757224507315167622282810783);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountOut, 6143);
+        assertGt(_gasEstimate, 110000);
+        assertLt(_gasEstimate, 120000);
     }
 
     function testCLQuoter_quoteExactInput_0to2_1TickLoaded() public {
@@ -172,15 +159,11 @@ contract CLQuoterTest is Test, Deployers {
         // -60 is an initialized tick for this pool. We check that we don't count it.
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 4000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(uint128(deltaAmounts[1]), 3971);
-        assertEq(sqrtPriceX96AfterList[0], 78926452400586371254602774705);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountOut, 3971);
+        assertGt(_gasEstimate, 110000);
+        assertLt(_gasEstimate, 120000);
     }
 
     function testCLQuoter_quoteExactInput_0to2_0TickLoaded_startingNotInitialized() public {
@@ -188,15 +171,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token2);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 10);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(uint128(deltaAmounts[1]), 8);
-        assertEq(sqrtPriceX96AfterList[0], 79227483487511329217250071027);
-        assertEq(initializedTicksLoadedList[0], 0);
+        assertEq(_amountOut, 8);
+        assertGt(_gasEstimate, 80000);
+        assertLt(_gasEstimate, 90000);
     }
 
     function testCLQuoter_quoteExactInput_0to2_0TickLoaded_startingInitialized() public {
@@ -205,15 +184,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token2);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 10);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(uint128(deltaAmounts[1]), 8);
-        assertEq(sqrtPriceX96AfterList[0], 79227817515327498931091950511);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountOut, 8);
+        assertGt(_gasEstimate, 90000);
+        assertLt(_gasEstimate, 100000);
     }
 
     function testCLQuoter_quoteExactInput_2to0_2TicksLoaded() public {
@@ -221,15 +196,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token0);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 10000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(deltaAmounts[1], 9871);
-        assertEq(sqrtPriceX96AfterList[0], 80001962924147897865541384515);
-        assertEq(initializedTicksLoadedList[0], 2);
+        assertEq(_amountOut, 9871);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactInput_2to0_2TicksLoaded_initialiedAfter() public {
@@ -240,15 +211,11 @@ contract CLQuoterTest is Test, Deployers {
         // 120 is an initialized tick for this pool. We check that we don't count it.
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 6250);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(deltaAmounts[1], 6190);
-        assertEq(sqrtPriceX96AfterList[0], 79705728824507063507279123685);
-        assertEq(initializedTicksLoadedList[0], 2);
+        assertEq(_amountOut, 6190);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactInput_2to0_0TickLoaded_startingInitialized() public {
@@ -257,16 +224,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token0);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 200);
 
-        // Tick 0 initialized. Tick after = 1
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(deltaAmounts[1], 198);
-        assertEq(sqrtPriceX96AfterList[0], 79235729830182478001034429156);
-        assertEq(initializedTicksLoadedList[0], 0);
+        assertEq(_amountOut, 198);
+        assertGt(_gasEstimate, 70000);
+        assertLt(_gasEstimate, 80000);
     }
 
     // 2->0 starting not initialized
@@ -275,15 +237,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token0);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 103);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(deltaAmounts[1], 101);
-        assertEq(sqrtPriceX96AfterList[0], 79235858216754624215638319723);
-        assertEq(initializedTicksLoadedList[0], 0);
+        assertEq(_amountOut, 101);
+        assertGt(_gasEstimate, 70000);
+        assertLt(_gasEstimate, 80000);
     }
 
     function testCLQuoter_quoteExactInput_2to1() public {
@@ -291,14 +249,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token1);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 10000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
-        assertEq(deltaAmounts[1], 9871);
-        assertEq(sqrtPriceX96AfterList[0], 80018067294531553039351583520);
-        assertEq(initializedTicksLoadedList[0], 0);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
+
+        assertEq(_amountOut, 9871);
+        assertGt(_gasEstimate, 70000);
+        assertLt(_gasEstimate, 80000);
     }
 
     function testCLQuoter_quoteExactInput_0to2to1() public {
@@ -307,51 +262,28 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token1);
         ICLQuoter.QuoteExactParams memory params = getExactInputParams(tokenPath, 10000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactInput(params);
+        (uint256 _amountOut, uint256 _gasEstimate) = quoter.quoteExactInput(params);
 
-        assertEq(deltaAmounts[2], 9745);
-        assertEq(sqrtPriceX96AfterList[0], 78461846509168490764501028180);
-        assertEq(sqrtPriceX96AfterList[1], 80007846861567212939802016351);
-        assertEq(initializedTicksLoadedList[0], 2);
-        assertEq(initializedTicksLoadedList[1], 0);
+        assertEq(_amountOut, 9745);
+        assertGt(_gasEstimate, 200000);
+        assertLt(_gasEstimate, 210000);
     }
 
-    function testCLQuoter_quoteExactOutputSingle_0to1() public {
-        (int128[] memory deltaAmounts, uint160 sqrtPriceX96After, uint32 initializedTicksLoaded) = quoter
-            .quoteExactOutputSingle(
-            ICLQuoter.QuoteExactSingleParams({
+    function testCLQuoter_revert_UnexpectedRevertBytes() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                QuoterRevert.UnexpectedRevertBytes.selector,
+                abi.encodeWithSelector(ICLQuoter.NotEnoughLiquidity.selector, key01.toId())
+            )
+        );
+        quoter.quoteExactOutputSingle(
+            IQuoter.QuoteExactSingleParams({
                 poolKey: key01,
                 zeroForOne: true,
                 exactAmount: type(uint128).max,
-                sqrtPriceLimitX96: SQRT_RATIO_100_102,
                 hookData: ZERO_BYTES
             })
         );
-
-        assertEq(-deltaAmounts[0], 9981);
-        assertEq(sqrtPriceX96After, SQRT_RATIO_100_102);
-        assertEq(initializedTicksLoaded, 0);
-    }
-
-    function testCLQuoter_quoteExactOutputSingle_1to0() public {
-        (int128[] memory deltaAmounts, uint160 sqrtPriceX96After, uint32 initializedTicksLoaded) = quoter
-            .quoteExactOutputSingle(
-            ICLQuoter.QuoteExactSingleParams({
-                poolKey: key01,
-                zeroForOne: false,
-                exactAmount: type(uint128).max,
-                sqrtPriceLimitX96: SQRT_RATIO_102_100,
-                hookData: ZERO_BYTES
-            })
-        );
-
-        assertEq(-deltaAmounts[1], 9981);
-        assertEq(sqrtPriceX96After, SQRT_RATIO_102_100);
-        assertEq(initializedTicksLoaded, 0);
     }
 
     function testCLQuoter_quoteExactOutput_0to2_2TicksLoaded() public {
@@ -359,15 +291,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token2);
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 15000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 15273);
-        assertEq(sqrtPriceX96AfterList[0], 78055527257643669242286029831);
-        assertEq(initializedTicksLoadedList[0], 2);
+        assertEq(_amountIn, 15273);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactOutput_0to2_1TickLoaded_initialiedAfter() public {
@@ -376,15 +304,11 @@ contract CLQuoterTest is Test, Deployers {
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 6143);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 6200);
-        assertEq(sqrtPriceX96AfterList[0], 78757225449310403327341205211);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountIn, 6200);
+        assertGt(_gasEstimate, 110000);
+        assertLt(_gasEstimate, 120000);
     }
 
     function testCLQuoter_quoteExactOutput_0to2_1TickLoaded() public {
@@ -393,15 +317,11 @@ contract CLQuoterTest is Test, Deployers {
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 4000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 4029);
-        assertEq(sqrtPriceX96AfterList[0], 78924219757724709840818372098);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountIn, 4029);
+        assertGt(_gasEstimate, 110000);
+        assertLt(_gasEstimate, 120000);
     }
 
     function testCLQuoter_quoteExactOutput_0to2_0TickLoaded_startingInitialized() public {
@@ -411,16 +331,11 @@ contract CLQuoterTest is Test, Deployers {
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 100);
 
-        // Tick 0 initialized. Tick after = 1
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 102);
-        assertEq(sqrtPriceX96AfterList[0], 79224329176051641448521403903);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountIn, 102);
+        assertGt(_gasEstimate, 90000);
+        assertLt(_gasEstimate, 100000);
     }
 
     function testCLQuoter_quoteExactOutput_0to2_0TickLoaded_startingNotInitialized() public {
@@ -429,15 +344,11 @@ contract CLQuoterTest is Test, Deployers {
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 10);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 12);
-        assertEq(sqrtPriceX96AfterList[0], 79227408033628034983534698435);
-        assertEq(initializedTicksLoadedList[0], 0);
+        assertEq(_amountIn, 12);
+        assertGt(_gasEstimate, 80000);
+        assertLt(_gasEstimate, 90000);
     }
 
     function testCLQuoter_quoteExactOutput_2to0_2TicksLoaded() public {
@@ -445,16 +356,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token0);
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 15000);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 15273);
-        assertEq(sqrtPriceX96AfterList[0], 80418414376567919517220409857);
-        assertEq(initializedTicksLoadedList.length, 1);
-        assertEq(initializedTicksLoadedList[0], 2);
+        assertEq(_amountIn, 15273);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactOutput_2to0_2TicksLoaded_initialiedAfter() public {
@@ -463,16 +369,11 @@ contract CLQuoterTest is Test, Deployers {
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 6223);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 6283);
-        assertEq(sqrtPriceX96AfterList[0], 79708304437530892332449657932);
-        assertEq(initializedTicksLoadedList.length, 1);
-        assertEq(initializedTicksLoadedList[0], 2);
+        assertEq(_amountIn, 6283);
+        assertGt(_gasEstimate, 140000);
+        assertLt(_gasEstimate, 150000);
     }
 
     function testCLQuoter_quoteExactOutput_2to0_1TickLoaded() public {
@@ -480,16 +381,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token0);
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 6000);
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        assertEq(-deltaAmounts[0], 6055);
-        assertEq(sqrtPriceX96AfterList[0], 79690640184021170956740081887);
-        assertEq(initializedTicksLoadedList.length, 1);
-        assertEq(initializedTicksLoadedList[0], 1);
+        assertEq(_amountIn, 6055);
+        assertGt(_gasEstimate, 110000);
+        assertLt(_gasEstimate, 120000);
     }
 
     function testCLQuoter_quoteExactOutput_2to1() public {
@@ -497,17 +393,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token1);
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 9871);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
-
-        assertEq(-deltaAmounts[0], 10000);
-        assertEq(sqrtPriceX96AfterList[0], 80018020393569259756601362385);
-        assertEq(initializedTicksLoadedList.length, 1);
-        assertEq(initializedTicksLoadedList[0], 0);
+        assertEq(_amountIn, 10000);
+        assertGt(_gasEstimate, 70000);
+        assertLt(_gasEstimate, 80000);
     }
 
     function testCLQuoter_quoteExactOutput_0to2to1() public {
@@ -516,21 +406,11 @@ contract CLQuoterTest is Test, Deployers {
         tokenPath.push(token1);
 
         ICLQuoter.QuoteExactParams memory params = getExactOutputParams(tokenPath, 9745);
+        (uint256 _amountIn, uint256 _gasEstimate) = quoter.quoteExactOutput(params);
 
-        (
-            int128[] memory deltaAmounts,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksLoadedList
-        ) = quoter.quoteExactOutput(params);
-
-        assertEq(-deltaAmounts[0], 10000);
-        assertEq(deltaAmounts[1], 0);
-        assertEq(-deltaAmounts[2], -9745);
-        assertEq(sqrtPriceX96AfterList[0], 78461888503179331029803316753);
-        assertEq(sqrtPriceX96AfterList[1], 80007838904387594703933785072);
-        assertEq(initializedTicksLoadedList.length, 2);
-        assertEq(initializedTicksLoadedList[0], 2);
-        assertEq(initializedTicksLoadedList[1], 0);
+        assertEq(_amountIn, 10000);
+        assertGt(_gasEstimate, 205000);
+        assertLt(_gasEstimate, 215000);
     }
 
     function createPoolKey(MockERC20 tokenA, MockERC20 tokenB, address hookAddr)
