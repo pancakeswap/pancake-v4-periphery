@@ -72,7 +72,7 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         });
         // price 100
         uint160 sqrtPriceX96_100 = uint160(10 * FixedPoint96.Q96);
-        poolManager.initialize(poolKey0, sqrtPriceX96_100, new bytes(0));
+        poolManager.initialize(poolKey0, sqrtPriceX96_100);
 
         positionManager.modifyPosition(
             poolKey0,
@@ -97,7 +97,7 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         });
         // price 1
         uint160 sqrtPriceX96_1 = uint160(1 * FixedPoint96.Q96);
-        poolManager.initialize(poolKey1, sqrtPriceX96_1, new bytes(0));
+        poolManager.initialize(poolKey1, sqrtPriceX96_1);
 
         positionManager.modifyPosition(
             poolKey1,
@@ -124,7 +124,7 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         // price 1
         uint160 sqrtPriceX96_2 = uint160(1 * FixedPoint96.Q96);
 
-        poolManager.initialize(poolKey2, sqrtPriceX96_2, new bytes(0));
+        poolManager.initialize(poolKey2, sqrtPriceX96_2);
 
         positionManager.modifyPosition{value: 25 ether}(
             poolKey2,

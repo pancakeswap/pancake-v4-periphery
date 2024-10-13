@@ -108,9 +108,9 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
             parameters: poolParam.setBinStep(10) // binStep
         });
 
-        poolManager.initialize(key, activeId, ZERO_BYTES);
-        poolManager.initialize(key2, activeId, ZERO_BYTES);
-        poolManager.initialize(key3, activeId, ZERO_BYTES);
+        poolManager.initialize(key, activeId);
+        poolManager.initialize(key2, activeId);
+        poolManager.initialize(key3, activeId);
 
         approveBinPmForCurrency(alice, Currency.wrap(address(token0)), address(binPm), permit2);
         approveBinPmForCurrency(alice, Currency.wrap(address(token1)), address(binPm), permit2);

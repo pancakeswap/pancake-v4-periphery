@@ -42,7 +42,7 @@ contract PermitTest is Test, PosmTestSetup {
         (alice, alicePK) = makeAddrAndKey("ALICE");
         (bob, bobPK) = makeAddrAndKey("BOB");
 
-        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
+        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1);
         currency0 = key.currency0;
         currency1 = key.currency1;
 

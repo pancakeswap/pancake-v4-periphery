@@ -68,21 +68,11 @@ contract HookSavesDelta is BaseCLTestHook {
         delete deltas;
     }
 
-    function beforeInitialize(address, PoolKey calldata, uint160, bytes calldata)
-        external
-        virtual
-        override
-        returns (bytes4)
-    {
+    function beforeInitialize(address, PoolKey calldata, uint160) external virtual override returns (bytes4) {
         return this.beforeInitialize.selector;
     }
 
-    function afterInitialize(address, PoolKey calldata, uint160, int24, bytes calldata)
-        external
-        virtual
-        override
-        returns (bytes4)
-    {
+    function afterInitialize(address, PoolKey calldata, uint160, int24) external virtual override returns (bytes4) {
         return this.afterInitialize.selector;
     }
 

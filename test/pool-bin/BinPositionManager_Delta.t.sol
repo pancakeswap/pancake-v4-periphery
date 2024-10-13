@@ -70,7 +70,7 @@ contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenF
             fee: uint24(3000), // 3000 = 0.3%
             parameters: poolParam.setBinStep(10) // binStep
         });
-        binPm.initializePool(key1, activeId, ZERO_BYTES);
+        binPm.initializePool(key1, activeId);
 
         // approval
         approveBinPm(address(this), key1, address(binPm), permit2);

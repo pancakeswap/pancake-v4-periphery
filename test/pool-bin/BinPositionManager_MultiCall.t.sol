@@ -92,7 +92,7 @@ contract BinPositionManager_MultiCallTest is
             fee: uint24(3000), // 3000 = 0.3%
             parameters: poolParam.setBinStep(10) // binStep
         });
-        binPm.initializePool(key1, activeId, ZERO_BYTES);
+        binPm.initializePool(key1, activeId);
 
         (alice, alicePK) = makeAddrAndKey("ALICE");
         (bob, bobPK) = makeAddrAndKey("BOB");

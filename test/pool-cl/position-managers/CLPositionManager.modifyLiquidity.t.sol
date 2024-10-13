@@ -72,7 +72,7 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
             bytes32(uint256(((3000 / 100 * 2) << 16) | 0x00ff))
         );
         poolId = key.toId();
-        manager.initialize(key, SQRT_RATIO_1_1, ZERO_BYTES);
+        manager.initialize(key, SQRT_RATIO_1_1);
 
         seedBalance(alice);
         approvePosmFor(alice);

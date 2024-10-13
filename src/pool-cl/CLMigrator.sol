@@ -171,13 +171,13 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
 
     /// @inheritdoc ICLMigrator
     /// @notice Planned to be batched with migration operations through multicall to save gas
-    function initializePool(PoolKey memory poolKey, uint160 sqrtPriceX96, bytes calldata hookData)
+    function initializePool(PoolKey memory poolKey, uint160 sqrtPriceX96)
         external
         payable
         override
         returns (int24 tick)
     {
-        return clPositionManager.initializePool(poolKey, sqrtPriceX96, hookData);
+        return clPositionManager.initializePool(poolKey, sqrtPriceX96);
     }
 
     receive() external payable {

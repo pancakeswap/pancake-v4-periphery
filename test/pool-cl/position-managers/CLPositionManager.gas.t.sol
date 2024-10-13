@@ -61,7 +61,7 @@ contract CLPositionManagerGasTest is Test, PosmTestSetup, GasSnapshot {
         // This is needed to receive return deltas from modifyLiquidity calls.
         deployPosmHookSavesDelta();
 
-        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
+        (vault, manager, key, poolId) = createFreshPool(IHooks(address(hook)), 3000, SQRT_RATIO_1_1);
         currency0 = key.currency0;
         currency1 = key.currency1;
 
@@ -69,7 +69,7 @@ contract CLPositionManagerGasTest is Test, PosmTestSetup, GasSnapshot {
 
         nativeKey = key;
         nativeKey.currency0 = CurrencyLibrary.NATIVE;
-        manager.initialize(nativeKey, SQRT_RATIO_1_1, ZERO_BYTES);
+        manager.initialize(nativeKey, SQRT_RATIO_1_1);
 
         // (nativeKey,) = initPool(CurrencyLibrary.NATIVE, currency1, IHooks(hook), 3000, SQRT_RATIO_1_1, ZERO_BYTES);
         FEE_WAD = uint256(key.fee).mulDivDown(FixedPointMathLib.WAD, 1_000_000);

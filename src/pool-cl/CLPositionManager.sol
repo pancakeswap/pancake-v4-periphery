@@ -83,13 +83,8 @@ contract CLPositionManager is
     }
 
     /// @inheritdoc ICLPositionManager
-    function initializePool(PoolKey calldata key, uint160 sqrtPriceX96, bytes calldata hookData)
-        external
-        payable
-        override
-        returns (int24)
-    {
-        return clPoolManager.initialize(key, sqrtPriceX96, hookData);
+    function initializePool(PoolKey calldata key, uint160 sqrtPriceX96) external payable override returns (int24) {
+        return clPoolManager.initialize(key, sqrtPriceX96);
     }
 
     /// @inheritdoc IPositionManager

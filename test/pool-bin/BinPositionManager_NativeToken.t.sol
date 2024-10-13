@@ -66,7 +66,7 @@ contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, 
             fee: uint24(3000), // 3000 = 0.3%
             parameters: poolParam.setBinStep(10) // binStep
         });
-        binPm.initializePool(key1, activeId, ZERO_BYTES);
+        binPm.initializePool(key1, activeId);
 
         // approval - only currency1 required
         IERC20(Currency.unwrap(key1.currency1)).approve(address(permit2), type(uint256).max);

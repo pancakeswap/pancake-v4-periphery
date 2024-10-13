@@ -135,7 +135,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        poolManager.initialize(poolKey, ACTIVE_BIN_ID, bytes(""));
+        poolManager.initialize(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -323,7 +323,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -413,7 +413,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2PairWithoutNativeToken),
@@ -499,7 +499,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -595,7 +595,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -694,7 +694,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2Pair),
@@ -803,7 +803,7 @@ abstract contract BinMigratorFromV2 is
         );
 
         // 3. initialize the pool
-        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID, bytes(""));
+        migrator.initializePool(poolKeyWithoutNativeToken, ACTIVE_BIN_ID);
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
             pair: address(v2PairWithoutNativeToken),

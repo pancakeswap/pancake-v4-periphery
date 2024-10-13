@@ -66,21 +66,11 @@ contract BinHookSavesDelta is BaseBinTestHook {
         delete deltas;
     }
 
-    function beforeInitialize(address, PoolKey calldata, uint24, bytes calldata)
-        external
-        virtual
-        override
-        returns (bytes4)
-    {
+    function beforeInitialize(address, PoolKey calldata, uint24) external virtual override returns (bytes4) {
         return this.beforeInitialize.selector;
     }
 
-    function afterInitialize(address, PoolKey calldata, uint24, bytes calldata)
-        external
-        virtual
-        override
-        returns (bytes4)
-    {
+    function afterInitialize(address, PoolKey calldata, uint24) external virtual override returns (bytes4) {
         return this.afterInitialize.selector;
     }
 
