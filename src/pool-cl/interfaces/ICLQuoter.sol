@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import {IQuoter} from "../../interfaces/IQuoter.sol";
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 
 /// @title ICLQuoter Interface
 /// @notice Supports quoting the delta amounts for exact input or exact output swaps.
@@ -10,8 +9,6 @@ import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
 interface ICLQuoter is IQuoter {
-    error NotEnoughLiquidity(PoolId poolId);
-
     /// @notice Returns the delta amounts for a given exact input swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactSingleParams`
     /// poolKey The key for identifying a V4 pool

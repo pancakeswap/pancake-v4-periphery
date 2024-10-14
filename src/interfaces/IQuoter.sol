@@ -5,12 +5,14 @@ pragma solidity ^0.8.24;
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {PathKey} from "../libraries/PathKey.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 
 /// @title IQuoter Interface
 /// @notice Supports quoting the delta amounts from exact input or exact output swaps.
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
 interface IQuoter {
+    error NotEnoughLiquidity(PoolId poolId);
     error NotSelf();
     error UnexpectedCallSuccess();
 

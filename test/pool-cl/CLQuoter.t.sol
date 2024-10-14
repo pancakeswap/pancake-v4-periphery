@@ -273,7 +273,7 @@ contract CLQuoterTest is Test, Deployers {
         vm.expectRevert(
             abi.encodeWithSelector(
                 QuoterRevert.UnexpectedRevertBytes.selector,
-                abi.encodeWithSelector(ICLQuoter.NotEnoughLiquidity.selector, key01.toId())
+                abi.encodeWithSelector(IQuoter.NotEnoughLiquidity.selector, key01.toId())
             )
         );
         quoter.quoteExactOutputSingle(

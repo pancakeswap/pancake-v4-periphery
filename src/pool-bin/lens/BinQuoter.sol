@@ -157,11 +157,12 @@ contract BinQuoter is BaseV4Quoter, IBinQuoter {
     {
         deltas = poolManager.swap(poolKey, zeroForOne, amountSpecified, hookData);
 
-        // TODO: confirm we don't need this check in the bin quoter since BinPool will revert if there is not enough liquidity
-        // Check that the pool was not illiquid.
-        // int128 amountSpecifiedActual = (zeroForOne == (amountSpecified < 0)) ? deltas.amount0() : deltas.amount1();
-        // if (amountSpecifiedActual != amountSpecified) {
-        //     revert NotEnoughLiquidity(poolKey.toId());
-        // }
+        /// @dev Check that the pool was not illiquid
+        /// even BinPool will emit BinPool__OutOfLiquidity when the pool is illiquid
+        /// We still need to apply the check in case hook contract manipulates the delta
+        int128 amountSpecifiedActual = (zeroForOne == (amountSpecified < 0)) ? deltas.amount0() : deltas.amount1();
+        if (amountSpecifiedActual != amountSpecified) {
+            revert NotEnoughLiquidity(poolKey.toId());
+        }
     }
 }
