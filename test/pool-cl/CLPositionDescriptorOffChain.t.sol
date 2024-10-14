@@ -6,6 +6,18 @@ import {CLPositionDescriptorOffChain} from "../../src/pool-cl/CLPositionDescript
 import {ICLPositionManager} from "../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ICLPositionDescriptor} from "../../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
+
+contract FakeTokenURIContract is ICLPositionDescriptor {
+    function tokenURI(ICLPositionManager positionManager, uint256 tokenId)
+        external
+        pure
+        override
+        returns (string memory)
+    {
+        return string.concat(Strings.toString(uint160(address(positionManager))), "/", Strings.toString(tokenId));
+    }
+}
 
 contract CLPositionDescriptorOffChainTest is Test {
     CLPositionDescriptorOffChain clPositionDescriptorOffChain;
@@ -30,6 +42,14 @@ contract CLPositionDescriptorOffChainTest is Test {
         // positionManager is not used
         tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0x01)), 1);
         assertEq(tokenURI, "https://pancakeswap.finance/v4/pool-cl/positions/1");
+    }
+
+    function testTokenURI_generateByTokenURIContract() public {
+        clPositionDescriptorOffChain.setTokenURIContract(new FakeTokenURIContract());
+
+        // tokenId=1
+        string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0x1234)), 1);
+        assertEq(tokenURI, "4660/1");
     }
 
     function testTokenURIFuzz(uint256 tokenId) public view {
@@ -58,5 +78,12 @@ contract CLPositionDescriptorOffChainTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, msgSender));
         vm.prank(msgSender);
         clPositionDescriptorOffChain.setBaseTokenURI("whatever");
+    }
+
+    function testSetTokenURIContract_NotOwner(address msgSender) public {
+        vm.assume(msgSender != address(this));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, msgSender));
+        vm.prank(msgSender);
+        clPositionDescriptorOffChain.setTokenURIContract(ICLPositionDescriptor(address(0x01)));
     }
 }
