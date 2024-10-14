@@ -9,13 +9,14 @@ import {IV3NonfungiblePositionManager} from "../interfaces/external/IV3Nonfungib
 import {IWETH9} from "../interfaces/external/IWETH9.sol";
 import {Multicall_v4} from "./Multicall_v4.sol";
 import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
+import {Owner} from "pancake-v4-core/src/Owner.sol";
 import {SelfPermitERC721} from "./SelfPermitERC721.sol";
 import {IBaseMigrator} from "../interfaces/IBaseMigrator.sol";
 import {IPositionManagerPermit2} from "../interfaces/IPositionManagerPermit2.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2Forwarder} from "./Permit2Forwarder.sol";
 
-contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPermitERC721 {
+contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPermitERC721, Owner {
     using SafeCast for uint256;
     using SafeTransferLib for ERC20;
 

@@ -31,6 +31,7 @@ import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath
 import {LiquidityAmounts} from "../../../src/pool-cl/libraries/LiquidityAmounts.sol";
 import {BalanceDelta, BalanceDeltaLibrary, toBalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
@@ -125,6 +126,47 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         weth.approve(address(v3Nfpm), type(uint256).max);
         token0.approve(address(v3Nfpm), type(uint256).max);
         token1.approve(address(v3Nfpm), type(uint256).max);
+    }
+
+    function testCLMigrateFromV3_WhenPaused() public {
+        // 1. mint some liquidity to the v3 pool
+        _mintV3Liquidity(address(weth), address(token0));
+        assertEq(v3Nfpm.ownerOf(1), address(this));
+        (,,,,,,, uint128 liquidityFromV3Before,,,,) = v3Nfpm.positions(1);
+        assertGt(liquidityFromV3Before, 0);
+
+        // 2. make sure migrator can transfer user's v3 lp token
+        v3Nfpm.approve(address(migrator), 1);
+
+        // 3. init the pool
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
+
+        IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
+            nfp: address(v3Nfpm),
+            tokenId: 1,
+            liquidity: liquidityFromV3Before,
+            amount0Min: 9.9 ether,
+            amount1Min: 9.9 ether,
+            collectFee: false,
+            deadline: block.timestamp + 100
+        });
+
+        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+            poolKey: poolKey,
+            tickLower: -100,
+            tickUpper: 100,
+            liquidityMin: 0,
+            recipient: address(this),
+            deadline: block.timestamp + 100
+        });
+
+        // pre-req: pause
+        CLMigrator _migrator = CLMigrator(payable(address(migrator)));
+        _migrator.pause();
+
+        // 4. migrateFromV3 directly given pool has been initialized
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
     }
 
     function testCLMigrateFromV3ReentrancyLockRevert() public {

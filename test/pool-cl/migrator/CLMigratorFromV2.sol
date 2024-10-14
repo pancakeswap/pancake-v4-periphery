@@ -26,6 +26,7 @@ import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2SignatureHelpers} from "../../shared/Permit2SignatureHelpers.sol";
 import {Permit2Forwarder} from "../../../src/base/Permit2Forwarder.sol";
+import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
 
 interface IPancakeV2LikePairFactory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
@@ -103,6 +104,68 @@ abstract contract CLMigratorFromV2 is
 
         tickLower = -100;
         tickUpper = 100;
+    }
+
+    function test_Owner() public {
+        // casted as owner/transferOwnership not in ICLMigrator interface
+        CLMigrator _migrator = CLMigrator(payable(address(migrator)));
+        assertEq(_migrator.owner(), address(this));
+
+        address alice = makeAddr("alice");
+        _migrator.transferOwnership(alice);
+
+        assertEq(_migrator.owner(), alice);
+    }
+
+    function testCLMigrateFromV2_WhenPaused_InitializePool() public {
+        // pre-req: pause
+        CLMigrator _migrator = CLMigrator(payable(address(migrator)));
+        _migrator.pause();
+
+        // 3. initialize the pool
+        uint160 initSqrtPrice = 79228162514264337593543950336;
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        migrator.initializePool(poolKey, initSqrtPrice);
+    }
+
+    function testCLMigrateFromV2_WhenPaused() public {
+        // 1. mint some liquidity to the v2 pair
+        _mintV2Liquidity(v2Pair);
+        uint256 lpTokenBefore = v2Pair.balanceOf(address(this));
+
+        // 2. make sure migrator can transfer user's v2 lp token
+        permit2ApproveWithSpecificAllowance(
+            address(this), permit2, address(v2Pair), address(migrator), lpTokenBefore, uint160(lpTokenBefore)
+        );
+
+        // 3. initialize the pool
+        uint160 initSqrtPrice = 79228162514264337593543950336;
+        migrator.initializePool(poolKey, initSqrtPrice);
+
+        IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
+            pair: address(v2Pair),
+            migrateAmount: lpTokenBefore,
+            // minor precision loss is acceptable
+            amount0Min: 9.999 ether,
+            amount1Min: 9.999 ether
+        });
+
+        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+            poolKey: poolKey,
+            tickLower: -100,
+            tickUpper: 100,
+            liquidityMin: 0,
+            recipient: address(this),
+            deadline: block.timestamp + 100
+        });
+
+        // pre-req: pause
+        CLMigrator _migrator = CLMigrator(payable(address(migrator)));
+        _migrator.pause();
+
+        // 4. migrate from v2 to v4
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
     }
 
     function testCLMigrateFromV2ReentrancyLockRevert() public {
