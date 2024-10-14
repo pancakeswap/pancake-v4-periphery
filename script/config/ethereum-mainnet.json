@@ -4,6 +4,7 @@
   "vault": "0x",
   "clPoolManager": "0x",
   "binPoolManager": "0x",
+  "clPositionDescriptor": "0x",
   "clPositionManager": "0x",
   "binPositionManager": "0x",
   "clQuoter:": "0x",

@@ -13,12 +13,14 @@ import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {Actions} from "../../../src/libraries/Actions.sol";
 import {Planner, Plan} from "../../../src/libraries/Planner.sol";
 import {HookSavesDelta} from "./HookSavesDelta.sol";
+import {ICLPositionDescriptor} from "../../../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
 
 abstract contract CLLiquidityOperations is CommonBase {
     using Planner for Plan;
     using SafeCastTemp for uint256;
 
     CLPositionManager lpm;
+    ICLPositionDescriptor positionDescriptor;
 
     uint256 _deadline = block.timestamp + 1;
 

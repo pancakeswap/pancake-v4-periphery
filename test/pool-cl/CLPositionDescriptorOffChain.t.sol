@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {CLPositionDescriptorOffChain} from "../../src/pool-cl/CLPositionDescriptorOffChain.sol";
+import {ICLPositionManager} from "../../src/pool-cl/interfaces/ICLPositionManager.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+contract CLPositionDescriptorOffChainTest is Test {
+    CLPositionDescriptorOffChain clPositionDescriptorOffChain;
+
+    function setUp() public {
+        clPositionDescriptorOffChain =
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+    }
+
+    function testTokenURI() public view {
+        // tokenId=1
+        string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 1);
+        assertEq(tokenURI, "https://pancakeswap.finance/v4/pool-cl/positions/1");
+
+        // tokenId=uint.max
+        tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), type(uint256).max);
+        assertEq(
+            tokenURI,
+            "https://pancakeswap.finance/v4/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
+        );
+
+        // positionManager is not used
+        tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0x01)), 1);
+        assertEq(tokenURI, "https://pancakeswap.finance/v4/pool-cl/positions/1");
+    }
+
+    function testTokenURIFuzz(uint256 tokenId) public view {
+        string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), tokenId);
+        assertEq(
+            tokenURI, string.concat("https://pancakeswap.finance/v4/pool-cl/positions/", Strings.toString(tokenId))
+        );
+    }
+
+    function testSetBaseTokenURI() public {
+        clPositionDescriptorOffChain.setBaseTokenURI("https://pancakeswap.finance/swap/v4/pool-cl/positions/");
+        string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 1);
+        assertEq(tokenURI, "https://pancakeswap.finance/swap/v4/pool-cl/positions/1");
+
+        clPositionDescriptorOffChain.setBaseTokenURI("https://pancakeswap.finance/");
+        tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 2);
+        assertEq(tokenURI, "https://pancakeswap.finance/2");
+
+        clPositionDescriptorOffChain.setBaseTokenURI("");
+        tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 3);
+        assertEq(tokenURI, "");
+    }
+
+    function testSetBaseTokenURI_NotOwner(address msgSender) public {
+        vm.assume(msgSender != address(this));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, msgSender));
+        vm.prank(msgSender);
+        clPositionDescriptorOffChain.setBaseTokenURI("whatever");
+    }
+}

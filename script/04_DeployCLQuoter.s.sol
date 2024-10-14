@@ -6,7 +6,7 @@ import {BaseScript} from "./BaseScript.sol";
 import {CLQuoter} from "../src/pool-cl/lens/CLQuoter.sol";
 
 /**
- * forge script script/03_DeployCLQuoter.s.sol:DeployCLQuoterScript -vvv \
+ * forge script script/04_DeployCLQuoter.s.sol:DeployCLQuoterScript -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \

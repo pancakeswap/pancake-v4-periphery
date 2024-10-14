@@ -27,6 +27,7 @@ import {Multicall_v4} from "../base/Multicall_v4.sol";
 import {CLNotifier} from "./base/CLNotifier.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "./libraries/CLPositionInfoLibrary.sol";
 import {ICLSubscriber} from "./interfaces/ICLSubscriber.sol";
+import {ICLPositionDescriptor} from "./interfaces/ICLPositionDescriptor.sol";
 
 /// @title CLPositionManager
 /// @notice Contract for modifying liquidity for PCS v4 CL pools
@@ -52,16 +53,25 @@ contract CLPositionManager is
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 public nextTokenId = 1;
 
+    ICLPositionDescriptor public immutable tokenDescriptor;
+
     mapping(uint256 tokenId => CLPositionInfo info) public positionInfo;
     mapping(bytes25 poolId => PoolKey poolKey) public poolKeys;
 
-    constructor(IVault _vault, ICLPoolManager _clPoolManager, IAllowanceTransfer _permit2, uint256 _unsubscribeGasLimit)
+    constructor(
+        IVault _vault,
+        ICLPoolManager _clPoolManager,
+        IAllowanceTransfer _permit2,
+        uint256 _unsubscribeGasLimit,
+        ICLPositionDescriptor _tokenDescriptor
+    )
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
         ERC721Permit_v4("Pancakeswap V4 Positions NFT", "PCS-V4-POSM")
         CLNotifier(_unsubscribeGasLimit)
     {
         clPoolManager = _clPoolManager;
+        tokenDescriptor = _tokenDescriptor;
     }
 
     /// @dev <wip> might be refactored to BasePositionManager later
@@ -80,6 +90,10 @@ contract CLPositionManager is
     modifier onlyIfApproved(address caller, uint256 tokenId) override {
         if (!_isApprovedOrOwner(caller, tokenId)) revert NotApproved(caller);
         _;
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        return ICLPositionDescriptor(tokenDescriptor).tokenURI(this, tokenId);
     }
 
     /// @inheritdoc ICLPositionManager
