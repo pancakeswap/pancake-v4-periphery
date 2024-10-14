@@ -6,7 +6,7 @@ import {BaseScript} from "./BaseScript.sol";
 import {CLPositionDescriptorOffChain} from "../src/pool-cl/CLPositionDescriptorOffChain.sol";
 
 /**
- * forge script --sig 'run(uint256)' script/01_DeployCLPositionDescriptor.s.sol:DeployCLPositionDescriptorOffChainScript <baseTokenURI> -vvv \
+ * forge script --sig 'run(string)' script/01_DeployCLPositionDescriptorOffchain.s.sol:DeployCLPositionDescriptorOffChainScript <baseTokenURI> -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \

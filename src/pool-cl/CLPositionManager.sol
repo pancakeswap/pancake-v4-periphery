@@ -93,7 +93,7 @@ contract CLPositionManager is
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        return ICLPositionDescriptor(tokenDescriptor).tokenURI(this, tokenId);
+        return tokenDescriptor.tokenURI(this, tokenId);
     }
 
     /// @inheritdoc ICLPositionManager
