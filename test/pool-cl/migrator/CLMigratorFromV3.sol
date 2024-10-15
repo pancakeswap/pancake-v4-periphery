@@ -32,6 +32,7 @@ import {LiquidityAmounts} from "../../../src/pool-cl/libraries/LiquidityAmounts.
 import {BalanceDelta, BalanceDeltaLibrary, toBalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
+import {MockCLMigratorHook} from "./mocks/MockCLMigratorHook.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
@@ -52,6 +53,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
     ICLMigrator migrator;
     PoolKey poolKey;
     PoolKey poolKeyWithoutNativeToken;
+    MockCLMigratorHook clMigratorHook;
 
     IPancakeV3LikePairFactory v3Factory;
     IV3NonfungiblePositionManager v3Nfpm;
@@ -71,20 +73,27 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         (vault, poolManager) = createFreshManager();
         deployPosm(vault, poolManager);
         migrator = new CLMigrator(address(weth), address(lpm), permit2);
+        clMigratorHook = new MockCLMigratorHook();
 
+        // also include hook
         poolKey = PoolKey({
             // WETH after migration will be native token
             currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(address(token0)),
+            hooks: IHooks(address(clMigratorHook)),
+            poolManager: poolManager,
+            fee: 0,
+            parameters: bytes32(uint256(clMigratorHook.getHooksRegistrationBitmap())).setTickSpacing(10)
+        });
+
+        poolKeyWithoutNativeToken = PoolKey({
+            currency0: Currency.wrap(address(token0)),
+            currency1: Currency.wrap(address(token1)),
             hooks: IHooks(address(0)),
             poolManager: poolManager,
             fee: 0,
             parameters: bytes32(0).setTickSpacing(10)
         });
-
-        poolKeyWithoutNativeToken = poolKey;
-        poolKeyWithoutNativeToken.currency0 = Currency.wrap(address(token0));
-        poolKeyWithoutNativeToken.currency1 = Currency.wrap(address(token1));
 
         // make sure the contract has enough balance
         // WETH: 100 ether
@@ -157,7 +166,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // pre-req: pause
@@ -167,6 +177,45 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         // 4. migrateFromV3 directly given pool has been initialized
         vm.expectRevert(Pausable.EnforcedPause.selector);
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
+    }
+
+    function testCLMigrateFromV3_HookData() public {
+        // 1. mint some liquidity to the v3 pool
+        _mintV3Liquidity(address(weth), address(token0));
+        (,,,,,,, uint128 liquidityFromV3Before,,,,) = v3Nfpm.positions(1);
+
+        // 2. make sure migrator can transfer user's v3 lp token
+        v3Nfpm.approve(address(migrator), 1);
+
+        // 3. init the pool
+        lpm.initializePool(poolKey, INIT_SQRT_PRICE);
+
+        IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
+            nfp: address(v3Nfpm),
+            tokenId: 1,
+            liquidity: liquidityFromV3Before,
+            amount0Min: 9.9 ether,
+            amount1Min: 9.9 ether,
+            collectFee: false,
+            deadline: block.timestamp + 100
+        });
+
+        bytes memory hookData = abi.encode(32);
+        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+            poolKey: poolKey,
+            tickLower: -100,
+            tickUpper: 100,
+            liquidityMin: 0,
+            recipient: address(this),
+            deadline: block.timestamp + 100,
+            hookData: hookData
+        });
+
+        // 4. migrateFromV3 directly given pool has been initialized
+        migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
+
+        // assert hookData flown to hook
+        assertEq(clMigratorHook.hookData(), hookData);
     }
 
     function testCLMigrateFromV3ReentrancyLockRevert() public {
@@ -204,7 +253,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         vm.expectRevert(ReentrancyLock.ContractLocked.selector);
@@ -237,7 +287,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine initialize and migrateFromV3
@@ -292,7 +343,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine initialize and migrateFromV3
@@ -345,7 +397,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 2005104164790028032678, // minted liquidity + 1
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         vm.expectRevert(ICLMigrator.INSUFFICIENT_LIQUIDITY.selector);
@@ -381,7 +434,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 4. migrateFromV3 directly given pool has been initialized
@@ -434,7 +488,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 4. migrate from v3 to v4
@@ -486,7 +541,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -549,7 +605,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -617,7 +674,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -695,7 +753,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: tickUpper,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         permit2ApproveWithSpecificAllowance(
@@ -802,7 +861,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -863,7 +923,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = token0.balanceOf(address(this));
@@ -925,7 +986,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 4. migrate half
@@ -979,7 +1041,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine selfPermitERC721, initialize and migrateFromV3
@@ -1043,7 +1106,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // make the guy rich

@@ -56,7 +56,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
             distributionX: v4PoolParams.distributionX,
             distributionY: v4PoolParams.distributionY,
             to: v4PoolParams.to,
-            hookData: new bytes(0)
+            hookData: v4PoolParams.hookData
         });
 
         (uint256 amount0Consumed, uint256 amount1Consumed) =
@@ -104,7 +104,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
             distributionX: v4PoolParams.distributionX,
             distributionY: v4PoolParams.distributionY,
             to: v4PoolParams.to,
-            hookData: new bytes(0)
+            hookData: v4PoolParams.hookData
         });
         (uint256 amount0Consumed, uint256 amount1Consumed) =
             _addLiquidityToTargetPool(addLiquidityParams, v4PoolParams.deadline);

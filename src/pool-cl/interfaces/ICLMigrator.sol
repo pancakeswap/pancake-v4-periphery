@@ -18,6 +18,7 @@ interface ICLMigrator is IBaseMigrator {
         uint256 liquidityMin;
         address recipient;
         uint256 deadline;
+        bytes hookData;
     }
 
     struct MintParams {
@@ -28,6 +29,7 @@ interface ICLMigrator is IBaseMigrator {
         uint128 amount1In;
         uint256 liquidityMin;
         address recipient;
+        bytes hookData;
     }
 
     /// @notice Migrate liquidity from v2 to v4

@@ -96,7 +96,8 @@ contract MockReentrantPositionManager is Test {
             distributionX: new uint256[](0),
             distributionY: new uint256[](0),
             to: address(0),
-            deadline: 0
+            deadline: 0,
+            hookData: new bytes(0)
         });
     }
 
@@ -107,7 +108,8 @@ contract MockReentrantPositionManager is Test {
             tickUpper: 0,
             liquidityMin: 0,
             recipient: address(0),
-            deadline: 0
+            deadline: 0,
+            hookData: new bytes(0)
         });
     }
 

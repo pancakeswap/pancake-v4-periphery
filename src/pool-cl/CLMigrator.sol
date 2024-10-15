@@ -55,7 +55,8 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
             amount0In: uint128(amount0In),
             amount1In: uint128(amount1In),
             liquidityMin: v4PoolParams.liquidityMin,
-            recipient: v4PoolParams.recipient
+            recipient: v4PoolParams.recipient,
+            hookData: v4PoolParams.hookData
         });
         (uint256 amount0Consumed, uint256 amount1Consumed) =
             _addLiquidityToTargetPool(mintParams, v4PoolParams.deadline);
@@ -97,7 +98,8 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
             amount0In: uint128(amount0In),
             amount1In: uint128(amount1In),
             liquidityMin: v4PoolParams.liquidityMin,
-            recipient: v4PoolParams.recipient
+            recipient: v4PoolParams.recipient,
+            hookData: v4PoolParams.hookData
         });
         (uint256 amount0Consumed, uint256 amount1Consumed) =
             _addLiquidityToTargetPool(mintParams, v4PoolParams.deadline);
@@ -161,7 +163,7 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
                 params.amount0In,
                 params.amount1In,
                 params.recipient,
-                new bytes(0)
+                params.hookData
             )
         );
         bytes memory lockData = planner.finalizeModifyLiquidityWithSettlePair(params.poolKey);

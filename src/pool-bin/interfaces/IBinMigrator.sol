@@ -20,6 +20,7 @@ interface IBinMigrator is IBaseMigrator {
         uint256[] distributionY;
         address to;
         uint256 deadline;
+        bytes hookData;
     }
 
     /// @notice Migrate liquidity from v2 to v4
