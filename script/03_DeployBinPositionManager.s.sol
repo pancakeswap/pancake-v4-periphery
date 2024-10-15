@@ -9,7 +9,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {BinPositionManager} from "../src/pool-bin/BinPositionManager.sol";
 
 /**
- * forge script script/02_DeployBinPositionManager.s.sol:DeployBinPositionManagerScript -vvv \
+ * forge script script/03_DeployBinPositionManager.s.sol:DeployBinPositionManagerScript -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \

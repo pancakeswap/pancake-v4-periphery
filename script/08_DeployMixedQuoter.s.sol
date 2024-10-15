@@ -8,7 +8,7 @@ import {ICLQuoter} from "../src/pool-cl/interfaces/ICLQuoter.sol";
 import {MixedQuoter} from "../src/MixedQuoter.sol";
 
 /**
- * forge script script/07_DeployMixedQuoter.s.sol:DeployMixedQuoterScript -vvv \
+ * forge script script/08_DeployMixedQuoter.s.sol:DeployMixedQuoterScript -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \

@@ -6,7 +6,7 @@ import {BaseScript} from "./BaseScript.sol";
 import {BinQuoter} from "../src/pool-bin/lens/BinQuoter.sol";
 
 /**
- * forge script script/04_DeployBinQuoter.s.sol:DeployBinQuoterScript -vvv \
+ * forge script script/05_DeployBinQuoter.s.sol:DeployBinQuoterScript -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \

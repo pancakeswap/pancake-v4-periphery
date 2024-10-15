@@ -7,9 +7,10 @@ import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {CLPositionManager} from "../src/pool-cl/CLPositionManager.sol";
+import {ICLPositionDescriptor} from "../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
 
 /**
- * forge script --sig 'run(uint256)' script/01_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript <unsubscribeGasLimit> -vvv \
+ * forge script --sig 'run(uint256)' script/02_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript <unsubscribeGasLimit> -vvv \
  *     --rpc-url $RPC_URL \
  *     --broadcast \
  *     --slow \
@@ -29,8 +30,15 @@ contract DeployCLPositionManagerScript is BaseScript {
         address permit2 = getAddressFromConfig("permit2");
         emit log_named_address("Permit2", permit2);
 
+        address clPositionDescriptor = getAddressFromConfig("clPositionDescriptor");
+        emit log_named_address("CLPositionDescriptor", clPositionDescriptor);
+
         CLPositionManager clPositionManager = new CLPositionManager(
-            IVault(vault), ICLPoolManager(clPoolManager), IAllowanceTransfer(permit2), unsubscribeGasLimit
+            IVault(vault),
+            ICLPoolManager(clPoolManager),
+            IAllowanceTransfer(permit2),
+            unsubscribeGasLimit,
+            ICLPositionDescriptor(clPositionDescriptor)
         );
         emit log_named_address("CLPositionManager", address(clPositionManager));
 

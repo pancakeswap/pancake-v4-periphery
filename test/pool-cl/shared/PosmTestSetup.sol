@@ -18,6 +18,8 @@ import {HookSavesDelta} from "./HookSavesDelta.sol";
 import {HookModifyLiquidities} from "./HookModifyLiquidities.sol";
 import {ERC721PermitHash} from "../../../src/pool-cl/libraries/ERC721PermitHash.sol";
 import {CLPoolManagerRouter} from "pancake-v4-core/test/pool-cl/helpers/CLPoolManagerRouter.sol";
+import {ICLPositionDescriptor} from "../../../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
+import {CLPositionDescriptorOffChain} from "../../../src/pool-cl/CLPositionDescriptorOffChain.sol";
 
 /// @notice A shared test contract that wraps the v4-core deployers contract and exposes basic liquidity operations on posm.
 contract PosmTestSetup is Test, Deployers, DeployPermit2, CLLiquidityOperations {
@@ -60,7 +62,8 @@ contract PosmTestSetup is Test, Deployers, DeployPermit2, CLLiquidityOperations 
     function deployPosm(IVault vault, ICLPoolManager poolManager) internal {
         // We use deployPermit2() to prevent having to use via-ir in this repository.
         permit2 = IAllowanceTransfer(deployPermit2());
-        lpm = new CLPositionManager(vault, poolManager, permit2, 100_000);
+        positionDescriptor = new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+        lpm = new CLPositionManager(vault, poolManager, permit2, 100_000, positionDescriptor);
     }
 
     function seedBalance(address to) internal {
