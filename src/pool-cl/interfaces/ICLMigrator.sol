@@ -5,7 +5,6 @@ pragma solidity ^0.8.24;
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {IBaseMigrator} from "../../interfaces/IBaseMigrator.sol";
 import {IV3NonfungiblePositionManager} from "../../interfaces/external/IV3NonfungiblePositionManager.sol";
-// import {INonfungiblePositionManager} from "./INonfungiblePositionManager.sol";
 
 interface ICLMigrator is IBaseMigrator {
     error INSUFFICIENT_LIQUIDITY();

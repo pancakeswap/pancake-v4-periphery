@@ -35,6 +35,7 @@ import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {Permit2SignatureHelpers} from "../../shared/Permit2SignatureHelpers.sol";
 import {Permit2Forwarder} from "../../../src/base/Permit2Forwarder.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
+import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
 
 interface IPancakeV2LikePairFactory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
@@ -117,6 +118,63 @@ abstract contract BinMigratorFromV2 is
         v2Factory = IPancakeV2LikePairFactory(createContractThroughBytecode(_getBytecodePath()));
         v2Pair = IPancakePair(v2Factory.createPair(address(weth), address(token0)));
         v2PairWithoutNativeToken = IPancakePair(v2Factory.createPair(address(token0), address(token1)));
+    }
+
+    function testMigrateFromV2_Owner() public {
+        // casted as owner/transferOwnership not in IBinMigrator interface
+        BinMigrator _migrator = BinMigrator(payable(address(migrator)));
+        assertEq(_migrator.owner(), address(this));
+
+        address alice = makeAddr("alice");
+        _migrator.transferOwnership(alice);
+
+        assertEq(_migrator.owner(), alice);
+    }
+
+    function testMigrateFromV2_WhenPaused() public {
+        // 1. mint some liquidity to the v2 pair
+        _mintV2Liquidity(v2Pair);
+        uint256 lpTokenBefore = v2Pair.balanceOf(address(this));
+
+        // 2. make sure migrator can transfer user's v2 lp token
+        permit2ApproveWithSpecificAllowance(
+            address(this), permit2, address(v2Pair), address(migrator), lpTokenBefore, uint160(lpTokenBefore)
+        );
+
+        // 3. initialize the pool
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
+
+        IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
+            pair: address(v2Pair),
+            migrateAmount: lpTokenBefore,
+            // minor precision loss is acceptable
+            amount0Min: 9.999 ether,
+            amount1Min: 9.999 ether
+        });
+
+        IBinPositionManager.BinAddLiquidityParams memory params =
+            _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
+
+        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+            poolKey: params.poolKey,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
+            activeIdDesired: params.activeIdDesired,
+            idSlippage: params.idSlippage,
+            deltaIds: params.deltaIds,
+            distributionX: params.distributionX,
+            distributionY: params.distributionY,
+            to: params.to,
+            deadline: block.timestamp + 1
+        });
+
+        // pre-req: pause
+        BinMigrator _migrator = BinMigrator(payable(address(migrator)));
+        _migrator.pause();
+
+        // 4. migrateFromV2
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
     }
 
     function testMigrateFromV2ReentrancyLockRevert() public {

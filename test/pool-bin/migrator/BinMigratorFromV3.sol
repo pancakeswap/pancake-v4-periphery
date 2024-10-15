@@ -36,6 +36,7 @@ import {MockReentrantPositionManager} from "../../mocks/MockReentrantPositionMan
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
 import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
+import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
@@ -145,6 +146,52 @@ abstract contract BinMigratorFromV3 is
         weth.approve(address(v3Nfpm), type(uint256).max);
         token0.approve(address(v3Nfpm), type(uint256).max);
         token1.approve(address(v3Nfpm), type(uint256).max);
+    }
+
+    function testMigrateFromV3_WhenPaused() public {
+        // 1. mint some liquidity to the v3 pool
+        _mintV3Liquidity(address(weth), address(token0));
+        (,,,,,,, uint128 liquidityFromV3Before,,,,) = v3Nfpm.positions(1);
+
+        // 2. make sure migrator can transfer user's v3 lp token
+        v3Nfpm.approve(address(migrator), 1);
+
+        // 3. initialize the pool
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
+
+        IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
+            nfp: address(v3Nfpm),
+            tokenId: 1,
+            liquidity: liquidityFromV3Before,
+            amount0Min: 9.9 ether,
+            amount1Min: 9.9 ether,
+            collectFee: false,
+            deadline: block.timestamp + 100
+        });
+
+        IBinPositionManager.BinAddLiquidityParams memory params =
+            _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
+
+        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+            poolKey: params.poolKey,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
+            activeIdDesired: params.activeIdDesired,
+            idSlippage: params.idSlippage,
+            deltaIds: params.deltaIds,
+            distributionX: params.distributionX,
+            distributionY: params.distributionY,
+            to: params.to,
+            deadline: block.timestamp + 1
+        });
+
+        // pre-req: pause
+        BinMigrator _migrator = BinMigrator(payable(address(migrator)));
+        _migrator.pause();
+
+        // 4. migrateFromV3 directly given pool has been initialized
+        vm.expectRevert(Pausable.EnforcedPause.selector);
+        migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
     }
 
     function testMigrateFromV3ReentrancyLockRevert() public {

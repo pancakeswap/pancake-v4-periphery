@@ -31,7 +31,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
         V4BinPoolParams calldata v4PoolParams,
         uint256 extraAmount0,
         uint256 extraAmount1
-    ) external payable override isNotLocked {
+    ) external payable override isNotLocked whenNotPaused {
         bool shouldReversePair = checkTokensOrderAndMatchFromV2(
             v2PoolParams.pair, v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1
         );
@@ -79,7 +79,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
         V4BinPoolParams calldata v4PoolParams,
         uint256 extraAmount0,
         uint256 extraAmount1
-    ) external payable override isNotLocked {
+    ) external payable override isNotLocked whenNotPaused {
         bool shouldReversePair = checkTokensOrderAndMatchFromV3(
             v3PoolParams.nfp, v3PoolParams.tokenId, v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1
         );
