@@ -20,6 +20,7 @@ interface IBinMigrator is IBaseMigrator {
         uint256[] distributionY;
         address to;
         uint256 deadline;
+        // hookData will flow to hook's beforeMint/ afterMint
         bytes hookData;
     }
 

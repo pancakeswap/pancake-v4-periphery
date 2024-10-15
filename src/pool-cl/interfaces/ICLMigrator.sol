@@ -18,6 +18,7 @@ interface ICLMigrator is IBaseMigrator {
         uint256 liquidityMin;
         address recipient;
         uint256 deadline;
+        // hookData will flow to hook's beforeAddLiquidity/ afterAddLiquidity
         bytes hookData;
     }
 
