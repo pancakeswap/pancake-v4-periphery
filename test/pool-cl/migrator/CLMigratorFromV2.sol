@@ -117,17 +117,6 @@ abstract contract CLMigratorFromV2 is
         assertEq(_migrator.owner(), alice);
     }
 
-    function testCLMigrateFromV2_WhenPaused_InitializePool() public {
-        // pre-req: pause
-        CLMigrator _migrator = CLMigrator(payable(address(migrator)));
-        _migrator.pause();
-
-        // 3. initialize the pool
-        uint160 initSqrtPrice = 79228162514264337593543950336;
-        vm.expectRevert(Pausable.EnforcedPause.selector);
-        migrator.initializePool(poolKey, initSqrtPrice);
-    }
-
     function testCLMigrateFromV2_WhenPaused() public {
         // 1. mint some liquidity to the v2 pair
         _mintV2Liquidity(v2Pair);

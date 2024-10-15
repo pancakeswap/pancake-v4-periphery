@@ -131,16 +131,6 @@ abstract contract BinMigratorFromV2 is
         assertEq(_migrator.owner(), alice);
     }
 
-    function testMigrateFromV2_WhenPaused_InitializePool() public {
-        // pre-req: pause
-        BinMigrator _migrator = BinMigrator(payable(address(migrator)));
-        _migrator.pause();
-
-        // 3. initialize the pool
-        vm.expectRevert(Pausable.EnforcedPause.selector);
-        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
-    }
-
     function testMigrateFromV2_WhenPaused() public {
         // 1. mint some liquidity to the v2 pair
         _mintV2Liquidity(v2Pair);

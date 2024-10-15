@@ -175,7 +175,6 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
         external
         payable
         override
-        whenNotPaused
         returns (int24 tick)
     {
         return clPositionManager.initializePool(poolKey, sqrtPriceX96);

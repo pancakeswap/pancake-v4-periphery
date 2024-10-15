@@ -165,7 +165,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
 
     /// @inheritdoc IBinMigrator
     /// @notice Planned to be batched with migration operations through multicall to save gas
-    function initializePool(PoolKey memory poolKey, uint24 activeId) external payable override whenNotPaused {
+    function initializePool(PoolKey memory poolKey, uint24 activeId) external payable override {
         return binPositionManager.initializePool(poolKey, activeId);
     }
 
