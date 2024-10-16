@@ -31,7 +31,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 _getFullCredit(params.zeroForOne ? params.poolKey.currency0 : params.poolKey.currency1).toUint128();
         }
         uint128 amountOut = _swapExactPrivate(
-            params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.sqrtPriceLimitX96, params.hookData
+            params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.hookData
         ).toUint128();
         if (amountOut < params.amountOutMinimum) {
             revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
@@ -53,7 +53,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 (PoolKey memory poolKey, bool zeroForOne) = pathKey.getPoolAndSwapDirection(currencyIn);
                 // The output delta will always be positive, except for when interacting with certain hook pools
                 amountOut =
-                    _swapExactPrivate(poolKey, zeroForOne, -int256(uint256(amountIn)), 0, pathKey.hookData).toUint128();
+                    _swapExactPrivate(poolKey, zeroForOne, -int256(uint256(amountIn)), pathKey.hookData).toUint128();
 
                 amountIn = amountOut;
                 currencyIn = pathKey.intermediateCurrency;
@@ -72,9 +72,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 _getFullDebt(params.zeroForOne ? params.poolKey.currency1 : params.poolKey.currency0).toUint128();
         }
         uint128 amountIn = (
-            -_swapExactPrivate(
-                params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.sqrtPriceLimitX96, params.hookData
-            )
+            -_swapExactPrivate(params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.hookData)
         ).toUint128();
         if (amountIn > params.amountInMaximum) {
             revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
@@ -100,7 +98,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 // The output delta will always be negative, except for when interacting with certain hook pools
                 amountIn = (
                     uint256(
-                        -int256(_swapExactPrivate(poolKey, !oneForZero, int256(uint256(amountOut)), 0, pathKey.hookData))
+                        -int256(_swapExactPrivate(poolKey, !oneForZero, int256(uint256(amountOut)), pathKey.hookData))
                     )
                 ).toUint128();
 
@@ -116,21 +114,14 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
     /// @return reciprocalAmount The amount of the reciprocal token
     //      If exactInput token0 for token1, the reciprocalAmount is the amount of token1.
     //      If exactOutput token0 for token1, the reciprocalAmount is the amount of token0.
-    function _swapExactPrivate(
-        PoolKey memory poolKey,
-        bool zeroForOne,
-        int256 amountSpecified,
-        uint160 sqrtPriceLimitX96,
-        bytes calldata hookData
-    ) private returns (int128 reciprocalAmount) {
+    function _swapExactPrivate(PoolKey memory poolKey, bool zeroForOne, int256 amountSpecified, bytes calldata hookData)
+        private
+        returns (int128 reciprocalAmount)
+    {
         BalanceDelta delta = clPoolManager.swap(
             poolKey,
             ICLPoolManager.SwapParams(
-                zeroForOne,
-                amountSpecified,
-                sqrtPriceLimitX96 == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
-                    : sqrtPriceLimitX96
+                zeroForOne, amountSpecified, zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1
             ),
             hookData
         );
