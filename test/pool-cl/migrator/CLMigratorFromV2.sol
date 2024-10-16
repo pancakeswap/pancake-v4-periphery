@@ -27,6 +27,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {Permit2SignatureHelpers} from "../../shared/Permit2SignatureHelpers.sol";
 import {Permit2Forwarder} from "../../../src/base/Permit2Forwarder.sol";
 import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
+import {MockCLMigratorHook} from "./mocks/MockCLMigratorHook.sol";
 
 interface IPancakeV2LikePairFactory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
@@ -55,6 +56,7 @@ abstract contract CLMigratorFromV2 is
     IPancakeV2LikePairFactory v2Factory;
     IPancakePair v2Pair;
     IPancakePair v2PairWithoutNativeToken;
+    MockCLMigratorHook clMigratorHook;
     bytes32 PERMIT2_DOMAIN_SEPARATOR;
 
     int24 tickLower;
@@ -72,6 +74,7 @@ abstract contract CLMigratorFromV2 is
         (vault, poolManager) = createFreshManager();
         deployPosm(vault, poolManager);
         migrator = new CLMigrator(address(weth), address(lpm), permit2);
+        clMigratorHook = new MockCLMigratorHook();
 
         PERMIT2_DOMAIN_SEPARATOR = permit2.DOMAIN_SEPARATOR();
 
@@ -79,10 +82,11 @@ abstract contract CLMigratorFromV2 is
             // WETH after migration will be native token
             currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(address(token0)),
-            hooks: IHooks(address(0)),
+            /// @dev hook only present in migrate from v2, so migrate from v3 test pool w/o hooks
+            hooks: IHooks(address(clMigratorHook)),
             poolManager: poolManager,
             fee: 0,
-            parameters: bytes32(0).setTickSpacing(10)
+            parameters: bytes32(uint256(clMigratorHook.getHooksRegistrationBitmap())).setTickSpacing(10)
         });
 
         poolKeyWithoutNativeToken = poolKey;
@@ -145,7 +149,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // pre-req: pause
@@ -155,6 +160,45 @@ abstract contract CLMigratorFromV2 is
         // 4. migrate from v2 to v4
         vm.expectRevert(Pausable.EnforcedPause.selector);
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+    }
+
+    function testCLMigrateFromV2_HookData() public {
+        // 1. mint some liquidity to the v2 pair
+        _mintV2Liquidity(v2Pair);
+        uint256 lpTokenBefore = v2Pair.balanceOf(address(this));
+
+        // 2. make sure migrator can transfer user's v2 lp token
+        permit2ApproveWithSpecificAllowance(
+            address(this), permit2, address(v2Pair), address(migrator), lpTokenBefore, uint160(lpTokenBefore)
+        );
+
+        // 3. initialize the pool
+        uint160 initSqrtPrice = 79228162514264337593543950336;
+        migrator.initializePool(poolKey, initSqrtPrice);
+
+        IBaseMigrator.V2PoolParams memory v2PoolParams = IBaseMigrator.V2PoolParams({
+            pair: address(v2Pair),
+            migrateAmount: lpTokenBefore,
+            // minor precision loss is acceptable
+            amount0Min: 9.999 ether,
+            amount1Min: 9.999 ether
+        });
+
+        bytes memory hookData = abi.encode(32);
+        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+            poolKey: poolKey,
+            tickLower: -100,
+            tickUpper: 100,
+            liquidityMin: 0,
+            recipient: address(this),
+            deadline: block.timestamp + 100,
+            hookData: hookData
+        });
+
+        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+
+        // assert hookData flown to hook
+        assertEq(clMigratorHook.hookData(), hookData);
     }
 
     function testCLMigrateFromV2ReentrancyLockRevert() public {
@@ -193,7 +237,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         vm.expectRevert(ReentrancyLock.ContractLocked.selector);
@@ -226,7 +271,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine initialize and migrateFromV2
@@ -279,7 +325,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine initialize and migrateFromV2
@@ -335,7 +382,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 2005104164790027832368, // minted liquidity + 1
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         vm.expectRevert(ICLMigrator.INSUFFICIENT_LIQUIDITY.selector);
@@ -372,7 +420,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 4. migrate from v2 to v4
@@ -428,7 +477,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         // 4. migrate from v2 to v4
@@ -480,7 +530,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -543,7 +594,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -612,7 +664,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -691,7 +744,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -757,7 +811,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: block.timestamp + 100
+            deadline: block.timestamp + 100,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = token0.balanceOf(address(this));
@@ -838,7 +893,8 @@ abstract contract CLMigratorFromV2 is
             tickUpper: 100,
             liquidityMin: 0,
             recipient: address(this),
-            deadline: ddl
+            deadline: ddl,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine permit2.permit, initialize and migrateFromV2

@@ -37,6 +37,7 @@ import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
 import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
+import {MockBinMigratorHook} from "./mocks/MockBinMigratorHook.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
@@ -68,6 +69,7 @@ abstract contract BinMigratorFromV3 is
     IBinMigrator migrator;
     PoolKey poolKey;
     PoolKey poolKeyWithoutNativeToken;
+    MockBinMigratorHook binMigratorHook;
 
     IPancakeV3LikePairFactory v3Factory;
     IV3NonfungiblePositionManager v3Nfpm;
@@ -91,20 +93,26 @@ abstract contract BinMigratorFromV3 is
         permit2 = IAllowanceTransfer(deployPermit2());
         binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
         migrator = new BinMigrator(address(weth), address(binPm), permit2);
+        binMigratorHook = new MockBinMigratorHook();
 
         poolKey = PoolKey({
             // WETH after migration will be native token
             currency0: Currency.wrap(address(0)),
             currency1: Currency.wrap(address(token0)),
+            hooks: IHooks(address(binMigratorHook)),
+            poolManager: poolManager,
+            fee: 0,
+            parameters: bytes32(uint256(binMigratorHook.getHooksRegistrationBitmap())).setBinStep(1)
+        });
+
+        poolKeyWithoutNativeToken = PoolKey({
+            currency0: Currency.wrap(address(token0)),
+            currency1: Currency.wrap(address(token1)),
             hooks: IHooks(address(0)),
             poolManager: poolManager,
             fee: 0,
             parameters: bytes32(0).setBinStep(1)
         });
-
-        poolKeyWithoutNativeToken = poolKey;
-        poolKeyWithoutNativeToken.currency0 = Currency.wrap(address(token0));
-        poolKeyWithoutNativeToken.currency1 = Currency.wrap(address(token1));
 
         // make sure the contract has enough balance
         // WETH: 100 ether
@@ -182,7 +190,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // pre-req: pause
@@ -192,6 +201,52 @@ abstract contract BinMigratorFromV3 is
         // 4. migrateFromV3 directly given pool has been initialized
         vm.expectRevert(Pausable.EnforcedPause.selector);
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
+    }
+
+    function testMigrateFromV3_HookData() public {
+        // 1. mint some liquidity to the v3 pool
+        _mintV3Liquidity(address(weth), address(token0));
+        (,,,,,,, uint128 liquidityFromV3Before,,,,) = v3Nfpm.positions(1);
+
+        // 2. make sure migrator can transfer user's v3 lp token
+        v3Nfpm.approve(address(migrator), 1);
+
+        // 3. initialize the pool
+        migrator.initializePool(poolKey, ACTIVE_BIN_ID);
+
+        IBaseMigrator.V3PoolParams memory v3PoolParams = IBaseMigrator.V3PoolParams({
+            nfp: address(v3Nfpm),
+            tokenId: 1,
+            liquidity: liquidityFromV3Before,
+            amount0Min: 9.9 ether,
+            amount1Min: 9.9 ether,
+            collectFee: false,
+            deadline: block.timestamp + 100
+        });
+
+        IBinPositionManager.BinAddLiquidityParams memory params =
+            _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
+
+        bytes memory hookData = abi.encode(32);
+        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+            poolKey: params.poolKey,
+            amount0Max: params.amount0Max,
+            amount1Max: params.amount1Max,
+            activeIdDesired: params.activeIdDesired,
+            idSlippage: params.idSlippage,
+            deltaIds: params.deltaIds,
+            distributionX: params.distributionX,
+            distributionY: params.distributionY,
+            to: params.to,
+            deadline: block.timestamp + 1,
+            hookData: hookData
+        });
+
+        // 4. migrateFromV3 directly given pool has been initialized
+        migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
+
+        // assert hookData flown to hook
+        assertEq(binMigratorHook.hookData(), hookData);
     }
 
     function testMigrateFromV3ReentrancyLockRevert() public {
@@ -234,7 +289,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         vm.expectRevert(ReentrancyLock.ContractLocked.selector);
@@ -274,7 +330,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine initialize and migrateFromV3
@@ -365,7 +422,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine initialize and migrateFromV3
@@ -426,7 +484,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // 4. migrateFromV3 directly given pool has been initialized
@@ -515,7 +574,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // 4. migrate from v3 to v4
@@ -602,7 +662,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -699,7 +760,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         uint256 nativeBlanceBefore = address(this).balance;
@@ -790,7 +852,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -907,7 +970,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: distributionX,
             distributionY: distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = address(this).balance;
@@ -1014,7 +1078,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: distributionX,
             distributionY: distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         uint256 balance0Before = token0.balanceOf(address(this));
@@ -1121,7 +1186,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: distributionX,
             distributionY: distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // 4. migrate half
@@ -1182,7 +1248,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // 3. multicall, combine selfPermitERC721, initialize and migrateFromV3
@@ -1281,7 +1348,8 @@ abstract contract BinMigratorFromV3 is
             distributionX: params.distributionX,
             distributionY: params.distributionY,
             to: params.to,
-            deadline: block.timestamp + 1
+            deadline: block.timestamp + 1,
+            hookData: new bytes(0)
         });
 
         // make the guy rich
