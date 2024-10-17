@@ -5,8 +5,9 @@ pragma solidity ^0.8.24;
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {PathKey} from "../../libraries/PathKey.sol";
+import {IImmutableState} from "../../interfaces/IImmutableState.sol";
 
-interface ICLRouterBase {
+interface ICLRouterBase is IImmutableState {
     /// @notice Parameters for a single-hop exact-input swap
     struct CLSwapExactInputSingleParams {
         PoolKey poolKey;
