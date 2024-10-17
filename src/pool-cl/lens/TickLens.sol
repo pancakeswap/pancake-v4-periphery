@@ -27,22 +27,20 @@ contract TickLens is ITickLens {
         override
         returns (PopulatedTick[] memory populatedTicks)
     {
-        PoolId id = key.toId();
-        int24 tickSpacing = key.parameters.getTickSpacing();
-        return getPopulatedTicksInWord(id, tickSpacing, tickBitmapIndex);
+        return getPopulatedTicksInWord(key.toId(), tickBitmapIndex);
     }
 
     /// @inheritdoc ITickLens
-    function getPopulatedTicksInWord(PoolId id, int24 tickSpacing, int16 tickBitmapIndex)
+    function getPopulatedTicksInWord(PoolId id, int16 tickBitmapIndex)
         public
         view
         override
         returns (PopulatedTick[] memory populatedTicks)
     {
-        // check tick spacing
-        if (tickSpacing < TickMath.MIN_TICK_SPACING || tickSpacing > TickMath.MAX_TICK_SPACING) {
-            revert InvalidTickSpacing();
-        }
+        // retrieve tickSpacing
+        (,,,,, bytes32 poolParams) = poolManager.poolIdToPoolKey(id);
+        int24 tickSpacing = poolParams.getTickSpacing();
+
         // check if pool is initialized
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(id);
         if (sqrtPriceX96 == 0) revert PoolNotInitialized();

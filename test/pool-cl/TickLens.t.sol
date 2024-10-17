@@ -111,9 +111,8 @@ contract TickLensTest is TokenFixture, Test {
 
     function test_getPopulatedTicksInWord_with_poolId_and_tickSpacing() public view {
         PoolId id = poolKey0.toId();
-        int24 tickSpacing = poolKey0.parameters.getTickSpacing();
         (int16 wordPos,) = TickBitmap.position(-300);
-        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(id, tickSpacing, wordPos);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(id, wordPos);
         assertEq(populatedTicks.length, 1);
         assertEq(populatedTicks[0].tick, -300);
         assertEq(populatedTicks[0].liquidityNet, 10 ether);
@@ -223,16 +222,6 @@ contract TickLensTest is TokenFixture, Test {
         (int16 wordPos,) = TickBitmap.position(-300);
         vm.expectRevert(ITickLens.PoolNotInitialized.selector);
         tickLens.getPopulatedTicksInWord(poolKey0, wordPos);
-    }
-
-    function test_getPopulatedTicksInWord_revert_InvalidTickSpacing() public {
-        PoolId id = poolKey0.toId();
-        (int16 wordPos,) = TickBitmap.position(-300);
-        vm.expectRevert(ITickLens.InvalidTickSpacing.selector);
-        tickLens.getPopulatedTicksInWord(id, TickMath.MAX_TICK_SPACING + 1, wordPos);
-
-        vm.expectRevert(ITickLens.InvalidTickSpacing.selector);
-        tickLens.getPopulatedTicksInWord(id, TickMath.MIN_TICK_SPACING - 1, wordPos);
     }
 
     // allow refund of ETH
