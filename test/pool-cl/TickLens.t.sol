@@ -158,6 +158,38 @@ contract TickLensTest is TokenFixture, Test {
         assertEq(populatedTicks[2].liquidityGross, 11 ether);
     }
 
+    function testFuzz_getPopulatedTicksInWord_different_tickSpacing(int16 randomTickSpacing) public {
+        vm.assume(randomTickSpacing != 0);
+        int24 tickSpacing = int24(randomTickSpacing);
+        if (tickSpacing < 0) tickSpacing = -tickSpacing;
+        vm.assume(tickSpacing <= TickMath.MAX_TICK_SPACING);
+        PoolKey memory poolKey2 = poolKey0;
+        poolKey2.fee = uint24(500);
+        poolKey2.parameters = poolKey2.parameters.setTickSpacing(tickSpacing);
+        uint160 sqrtPriceX96_100 = uint160(10 * FixedPoint96.Q96);
+        poolManager.initialize(poolKey2, sqrtPriceX96_100);
+        int24 tickLower = -tickSpacing;
+        int24 tickUpper = tickSpacing;
+
+        positionManager.modifyPosition(
+            poolKey2,
+            ICLPoolManager.ModifyLiquidityParams({
+                tickLower: tickLower,
+                tickUpper: tickUpper,
+                liquidityDelta: 10 ether,
+                salt: bytes32(0)
+            }),
+            new bytes(0)
+        );
+
+        int16 tickBitmapIndex = getTickBitmapIndex(tickLower, tickSpacing);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey0, tickBitmapIndex);
+        assertEq(populatedTicks.length, 1);
+        assertEq(populatedTicks[0].tick, -300);
+        assertEq(populatedTicks[0].liquidityNet, 10 ether);
+        assertEq(populatedTicks[0].liquidityGross, 10 ether);
+    }
+
     function testFuzz_getPopulatedTicksInWord_single_tick(uint24 tick, bool isNegative) public {
         tick = uint24(bound(tick, 0, uint256(int256(TickMath.MAX_TICK - 256))));
         int24 tickLower = isNegative ? -int24(tick) : int24(tick);
