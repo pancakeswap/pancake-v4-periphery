@@ -183,7 +183,7 @@ contract TickLensTest is TokenFixture, Test {
 
     function testFuzz_getPopulatedTicksInWord_multiple_ticks(uint24 tick, bool isNegative, uint8 numbers) public {
         vm.assume(numbers > 0);
-        tick = uint24(bound(tick, 0, uint256(int256(TickMath.MAX_TICK - 256))));
+        tick = uint24(bound(tick, 0, uint256(int256(TickMath.MAX_TICK - 512))));
         int24 tickLower = isNegative ? -int24(tick) : int24(tick);
         (int16 wordPos,) = TickBitmap.position(tickLower);
 
