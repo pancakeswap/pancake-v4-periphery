@@ -6,7 +6,6 @@ import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
 import {Tick} from "pancake-v4-core/src/pool-cl/libraries/Tick.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {ITickLens} from "../interfaces/ITickLens.sol";
 
 /// @title Tick Lens contract
