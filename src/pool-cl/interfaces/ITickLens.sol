@@ -16,7 +16,6 @@ interface ITickLens {
     }
 
     error PoolNotInitialized();
-    error InvalidTickSpacing();
 
     /// @notice Get all the tick data for the populated ticks from a word of the tick bitmap of a pool
     /// @param key The PoolKey of the pool for which to fetch populated tick data
