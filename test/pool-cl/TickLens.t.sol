@@ -65,8 +65,8 @@ contract TickLensTest is TokenFixture, Test {
             poolManager: poolManager,
             fee: uint24(3000),
             // 0 ~ 15  hookRegistrationMap = nil
-            // 16 ~ 24 tickSpacing = 1
-            parameters: bytes32(uint256(0x10000))
+            // 16 ~ 24 tickSpacing = 10
+            parameters: bytes32(uint256(0xa0000))
         });
         // price 100
         uint160 sqrtPriceX96_100 = uint160(10 * FixedPoint96.Q96);
@@ -101,8 +101,8 @@ contract TickLensTest is TokenFixture, Test {
     }
 
     function test_getPopulatedTicksInWord_with_poolKey() public view {
-        (int16 wordPos,) = TickBitmap.position(-300);
-        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey0, wordPos);
+        int16 tickBitmapIndex = getTickBitmapIndex(-300, 10);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey0, tickBitmapIndex);
         assertEq(populatedTicks.length, 1);
         assertEq(populatedTicks[0].tick, -300);
         assertEq(populatedTicks[0].liquidityNet, 10 ether);
@@ -111,8 +111,8 @@ contract TickLensTest is TokenFixture, Test {
 
     function test_getPopulatedTicksInWord_with_poolId_and_tickSpacing() public view {
         PoolId id = poolKey0.toId();
-        (int16 wordPos,) = TickBitmap.position(-300);
-        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(id, wordPos);
+        int16 tickBitmapIndex = getTickBitmapIndex(-300, 10);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(id, tickBitmapIndex);
         assertEq(populatedTicks.length, 1);
         assertEq(populatedTicks[0].tick, -300);
         assertEq(populatedTicks[0].liquidityNet, 10 ether);
@@ -144,8 +144,8 @@ contract TickLensTest is TokenFixture, Test {
             new bytes(0)
         );
 
-        (int16 wordPos,) = TickBitmap.position(-300);
-        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey0, wordPos);
+        int16 tickBitmapIndex = getTickBitmapIndex(-300, 10);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey0, tickBitmapIndex);
         assertEq(populatedTicks.length, 3);
         assertEq(populatedTicks[0].tick, -260);
         assertEq(populatedTicks[1].tick, -300);
@@ -173,8 +173,8 @@ contract TickLensTest is TokenFixture, Test {
             }),
             new bytes(0)
         );
-        (int16 wordPos,) = TickBitmap.position(tickLower);
-        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey1, wordPos);
+        int16 tickBitmapIndex = getTickBitmapIndex(tickLower, 1);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey1, tickBitmapIndex);
         assertEq(populatedTicks.length, 1);
         assertEq(populatedTicks[0].tick, tickLower);
         assertEq(populatedTicks[0].liquidityNet, 1 ether);
@@ -185,7 +185,7 @@ contract TickLensTest is TokenFixture, Test {
         vm.assume(numbers > 0);
         tick = uint24(bound(tick, 0, uint256(int256(TickMath.MAX_TICK - 512))));
         int24 tickLower = isNegative ? -int24(tick) : int24(tick);
-        (int16 wordPos,) = TickBitmap.position(tickLower);
+        int16 tickBitmapIndex = getTickBitmapIndex(tickLower, 1);
 
         int24[] memory tickLowerList = new int24[](numbers);
         uint256 tick_length_in_same_word = isNegative ? (tick % 256) : (256 - tick % 256);
@@ -208,7 +208,7 @@ contract TickLensTest is TokenFixture, Test {
             tickLower += 1;
         }
 
-        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey1, wordPos);
+        ITickLens.PopulatedTick[] memory populatedTicks = tickLens.getPopulatedTicksInWord(poolKey1, tickBitmapIndex);
         assertEq(populatedTicks.length, tick_length_in_same_word);
         for (uint8 j = 0; j < tick_length_in_same_word; j++) {
             assertEq(populatedTicks[j].tick, tickLowerList[tick_length_in_same_word - j - 1]);
@@ -219,9 +219,15 @@ contract TickLensTest is TokenFixture, Test {
 
     function test_getPopulatedTicksInWord_revert_PoolNotInitialized() public {
         poolKey0.poolManager = ICLPoolManager(address(0));
-        (int16 wordPos,) = TickBitmap.position(-300);
+        int16 tickBitmapIndex = getTickBitmapIndex(-300, 1);
         vm.expectRevert(ITickLens.PoolNotInitialized.selector);
-        tickLens.getPopulatedTicksInWord(poolKey0, wordPos);
+        tickLens.getPopulatedTicksInWord(poolKey0, tickBitmapIndex);
+    }
+
+    function getTickBitmapIndex(int24 tick, int24 tickSpacing) internal pure returns (int16) {
+        int24 intermediate = tick / tickSpacing;
+        int24 tickBitmapIndex = intermediate < 0 ? ((intermediate + 1) / 256 - 1) : intermediate / 256;
+        return int16(tickBitmapIndex);
     }
 
     // allow refund of ETH
