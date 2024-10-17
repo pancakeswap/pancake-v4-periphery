@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-interface IPositionManager {
+import {IImmutableState} from "./IImmutableState.sol";
+
+interface IPositionManager is IImmutableState {
     /// @notice Thrown when the block.timestamp exceeds the user-provided deadline
     error DeadlinePassed(uint256 deadline);
 
