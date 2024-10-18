@@ -3,7 +3,7 @@
 pragma solidity 0.8.26;
 
 import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
@@ -28,6 +28,8 @@ import {CLNotifier} from "./base/CLNotifier.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "./libraries/CLPositionInfoLibrary.sol";
 import {ICLSubscriber} from "./interfaces/ICLSubscriber.sol";
 import {ICLPositionDescriptor} from "./interfaces/ICLPositionDescriptor.sol";
+import {NativeWrapper} from "../base/NativeWrapper.sol";
+import {IWETH9} from "../interfaces/external/IWETH9.sol";
 
 /// @title CLPositionManager
 /// @notice Contract for modifying liquidity for PCS v4 CL pools
@@ -39,7 +41,8 @@ contract CLPositionManager is
     ReentrancyLock,
     BaseActionsRouter,
     CLNotifier,
-    Permit2Forwarder
+    Permit2Forwarder,
+    NativeWrapper
 {
     using CalldataDecoder for bytes;
     using CLCalldataDecoder for bytes;
@@ -63,12 +66,14 @@ contract CLPositionManager is
         ICLPoolManager _clPoolManager,
         IAllowanceTransfer _permit2,
         uint256 _unsubscribeGasLimit,
-        ICLPositionDescriptor _tokenDescriptor
+        ICLPositionDescriptor _tokenDescriptor,
+        IWETH9 _weth9
     )
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
         ERC721Permit_v4("Pancakeswap V4 Positions NFT", "PCS-V4-POSM")
         CLNotifier(_unsubscribeGasLimit)
+        NativeWrapper(_weth9)
     {
         clPoolManager = _clPoolManager;
         tokenDescriptor = _tokenDescriptor;
@@ -187,6 +192,14 @@ contract CLPositionManager is
             } else if (action == Actions.SWEEP) {
                 (Currency currency, address to) = params.decodeCurrencyAndAddress();
                 _sweep(currency, _mapRecipient(to));
+                return;
+            } else if (action == Actions.WRAP) {
+                uint256 amount = params.decodeUint256();
+                _wrap(_mapWrapUnwrapAmount(CurrencyLibrary.NATIVE, amount, Currency.wrap(address(WETH9))));
+                return;
+            } else if (action == Actions.UNWRAP) {
+                uint256 amount = params.decodeUint256();
+                _unwrap(_mapWrapUnwrapAmount(Currency.wrap(address(WETH9)), amount, CurrencyLibrary.NATIVE));
                 return;
             }
         }

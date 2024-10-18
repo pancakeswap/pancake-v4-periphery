@@ -132,7 +132,7 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
         manager.initialize(key, SQRT_RATIO_1_1);
 
         // Try to add liquidity at that range, but the token reenters posm
-        bytes memory calls = getMintEncoded(key, 0, 60, 1e18, ActionConstants.MSG_SENDER, "");
+        bytes memory calls = getMintEncoded(key, -60, 60, 1e18, ActionConstants.MSG_SENDER, "");
 
         // Permit2.transferFrom does not bubble the ContractLocked error and instead reverts with its own error
         vm.expectRevert("TRANSFER_FROM_FAILED");

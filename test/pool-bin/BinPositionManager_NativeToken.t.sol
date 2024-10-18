@@ -28,6 +28,7 @@ import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 // test on the native token pair etc..
 contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, DeployPermit2 {
@@ -55,7 +56,9 @@ contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, 
         vault.registerApp(address(poolManager));
         permit2 = IAllowanceTransfer(deployPermit2());
 
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
 
         token1 = new MockERC20("TestA", "A", 18);
         key1 = PoolKey({

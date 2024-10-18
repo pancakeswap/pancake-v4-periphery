@@ -38,6 +38,7 @@ import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
 import {MockBinMigratorHook} from "./mocks/MockBinMigratorHook.sol";
+import {IWETH9} from "../../../src/interfaces/external/IWETH9.sol";
 
 interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
@@ -91,7 +92,9 @@ abstract contract BinMigratorFromV3 is
         poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
         permit2 = IAllowanceTransfer(deployPermit2());
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
         migrator = new BinMigrator(address(weth), address(binPm), permit2);
         binMigratorHook = new MockBinMigratorHook();
 

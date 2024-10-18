@@ -33,20 +33,22 @@ library Actions {
     uint256 constant CLOSE_CURRENCY = 0x17;
     uint256 constant CLEAR_OR_TAKE = 0x18;
     uint256 constant SWEEP = 0x19;
+    uint256 constant WRAP = 0x20;
+    uint256 constant UNWRAP = 0x21;
 
     // minting/burning 6909s to close deltas
-    uint256 constant MINT_6909 = 0x20;
-    uint256 constant BURN_6909 = 0x21;
+    uint256 constant MINT_6909 = 0x22;
+    uint256 constant BURN_6909 = 0x23;
 
     // bin-pool actions
     // liquidity actions
-    uint256 constant BIN_ADD_LIQUIDITY = 0x22;
-    uint256 constant BIN_REMOVE_LIQUIDITY = 0x23;
+    uint256 constant BIN_ADD_LIQUIDITY = 0x24;
+    uint256 constant BIN_REMOVE_LIQUIDITY = 0x25;
     // swapping
-    uint256 constant BIN_SWAP_EXACT_IN_SINGLE = 0x24;
-    uint256 constant BIN_SWAP_EXACT_IN = 0x25;
-    uint256 constant BIN_SWAP_EXACT_OUT_SINGLE = 0x26;
-    uint256 constant BIN_SWAP_EXACT_OUT = 0x27;
+    uint256 constant BIN_SWAP_EXACT_IN_SINGLE = 0x26;
+    uint256 constant BIN_SWAP_EXACT_IN = 0x27;
+    uint256 constant BIN_SWAP_EXACT_OUT_SINGLE = 0x28;
+    uint256 constant BIN_SWAP_EXACT_OUT = 0x29;
     // donate
-    uint256 constant BIN_DONATE = 0x28;
+    uint256 constant BIN_DONATE = 0x30;
 }

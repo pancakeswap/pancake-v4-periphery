@@ -9,7 +9,7 @@ import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
 import {Vault} from "pancake-v4-core/src/Vault.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
 import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
@@ -20,6 +20,7 @@ import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {PackedUint128Math} from "pancake-v4-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
 import {TokenFixture} from "pancake-v4-core/test/helpers/TokenFixture.sol";
 
+import {DeltaResolver} from "../../src/base/DeltaResolver.sol";
 import {IPositionManager} from "../../src/interfaces/IPositionManager.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {BinPositionManager} from "../../src/pool-bin/BinPositionManager.sol";
@@ -31,6 +32,10 @@ import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {SlippageCheck} from "../../src/libraries/SlippageCheck.sol";
 import {BinHookHookData} from "./shared/BinHookHookData.sol";
+import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
+import {WETH} from "solmate/src/tokens/WETH.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
     using Planner for Plan;
@@ -38,11 +43,16 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;
 
+    IWETH9 public _WETH9 = IWETH9(address(new WETH()));
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
 
     PoolKey key1;
     PoolKey key2; // with hookData hook
+
+    PoolKey nativeKey;
+    PoolKey wethKey;
+
     BinHookHookData hook;
     Vault vault;
     BinPoolManager poolManager;
@@ -63,7 +73,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         initializeTokens();
         (token0, token1) = (MockERC20(Currency.unwrap(currency0)), MockERC20(Currency.unwrap(currency1)));
 
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, _WETH9);
         key1 = PoolKey({
             currency0: currency0,
             currency1: currency1,
@@ -85,9 +95,34 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         });
         binPm.initializePool(key2, activeId);
 
+        nativeKey = PoolKey({
+            currency0: CurrencyLibrary.NATIVE,
+            currency1: currency1,
+            hooks: IHooks(address(0)),
+            poolManager: IBinPoolManager(address(poolManager)),
+            fee: uint24(3000), // 3000 = 0.3%
+            parameters: poolParam.setBinStep(10) // binStep
+        });
+        binPm.initializePool(nativeKey, activeId);
+
+        wethKey = PoolKey({
+            currency0: Currency.wrap(address(_WETH9)),
+            currency1: currency1,
+            hooks: IHooks(address(0)),
+            poolManager: IBinPoolManager(address(poolManager)),
+            fee: uint24(3000), // 3000 = 0.3%
+            parameters: poolParam.setBinStep(10) // binStep
+        });
+        binPm.initializePool(wethKey, activeId);
+
         // approval
         approveBinPm(address(this), key1, address(binPm), permit2);
         approveBinPm(alice, key1, address(binPm), permit2);
+        approveBinPm(address(this), wethKey, address(binPm), permit2);
+
+        // sufficient eth/weth
+        vm.deal(address(this), 2000 ether);
+        _WETH9.deposit{value: 1000 ether}();
     }
 
     function test_modifyLiquidity_beforeDeadline() public {
@@ -481,4 +516,257 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         assertEq(hook.beforeBurnHookData(), param.hookData);
         assertEq(hook.afterBurnHookData(), param.hookData);
     }
+
+    function test_wrap_mint_usingContractBalance() public {
+        // weth-currency1 pool initialized as wethKey
+        // input: eth, currency1
+        // modifyLiquidities call to mint liquidity weth and currency1
+        // 1 _wrap with contract balance
+        // 2 _mint
+        // 3 _settle weth where the payer is the contract
+        // 4 _close currency1, payer is caller
+        // 5 _sweep weth since eth was entirely wrapped
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(wethKey, binIds, 1 ether, 1 ether, activeId, address(this));
+        Plan memory planner = Planner.init();
+
+        planner.add(Actions.WRAP, abi.encode(ActionConstants.CONTRACT_BALANCE));
+        planner.add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        // weth9 payer is the contract
+        planner.add(Actions.SETTLE, abi.encode(address(_WETH9), ActionConstants.OPEN_DELTA, false));
+        // other currency can close normally
+        planner.add(Actions.CLOSE_CURRENCY, abi.encode(currency1));
+        // we wrapped the full contract balance so we sweep back in the wrapped currency
+        planner.add(Actions.SWEEP, abi.encode(address(_WETH9), ActionConstants.MSG_SENDER));
+        bytes memory actions = planner.encode();
+
+        uint256 balanceEthBefore = address(this).balance;
+        uint256 balance1Before = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        binPm.modifyLiquidities{value: 1 ether}(actions, _deadline);
+
+        uint256 balanceEthAfter = address(this).balance;
+        uint256 balance1After = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        // The full eth amount was "spent" because some was wrapped into weth and refunded.
+        assertApproxEqAbs(balanceEthBefore - balanceEthAfter, 1 ether, 1 wei);
+        assertApproxEqAbs(balance1Before - balance1After, 1 ether, 1 wei);
+
+        // no eth/weth left in the contract
+        assertEq(_WETH9.balanceOf(address(binPm)), 0);
+        assertEq(address(binPm).balance, 0);
+    }
+
+    function test_wrap_mint_openDelta() public {
+        // weth-currency1 pool initialized as wethKey
+        // input: eth, currency1
+        // modifyLiquidities call to mint liquidity weth and currency1
+        // 1 _mint
+        // 2 _wrap with open delta
+        // 3 _settle weth where the payer is the contract
+        // 4 _close currency1, payer is caller
+        // 5 _sweep eth since only the open delta amount was wrapped
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(wethKey, binIds, 1 ether, 1 ether, activeId, address(this));
+        Plan memory planner = Planner.init();
+
+        planner.add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        planner.add(Actions.WRAP, abi.encode(ActionConstants.OPEN_DELTA));
+        // weth9 payer is the contract
+        planner.add(Actions.SETTLE, abi.encode(address(_WETH9), ActionConstants.OPEN_DELTA, false));
+        // other currency can close normally
+        planner.add(Actions.CLOSE_CURRENCY, abi.encode(currency1));
+        // we wrapped the full contract balance so we sweep back in the wrapped currency
+        planner.add(Actions.SWEEP, abi.encode(address(_WETH9), ActionConstants.MSG_SENDER));
+        bytes memory actions = planner.encode();
+
+        uint256 balanceEthBefore = address(this).balance;
+        uint256 balance1Before = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        binPm.modifyLiquidities{value: 1 ether}(actions, _deadline);
+
+        uint256 balanceEthAfter = address(this).balance;
+        uint256 balance1After = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        // The full eth amount was "spent" because some was wrapped into weth and refunded.
+        assertApproxEqAbs(balanceEthBefore - balanceEthAfter, 1 ether, 1 wei);
+        assertApproxEqAbs(balance1Before - balance1After, 1 ether, 1 wei);
+
+        // no eth/weth left in the contract
+        assertEq(_WETH9.balanceOf(address(binPm)), 0);
+        assertEq(address(binPm).balance, 0);
+    }
+
+    function test_wrap_mint_usingExactAmount() public {
+        // weth-currency1 pool initialized as wethKey
+        // input: eth, currency1
+        // modifyLiquidities call to mint liquidity weth and currency1
+        // 1 _wrap with an amount
+        // 2 _mint
+        // 3 _settle weth where the payer is the contract
+        // 4 _close currency1, payer is caller
+        // 5 _sweep weth since eth was entirely wrapped
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        Plan memory planner = Planner.init();
+
+        planner.add(Actions.WRAP, abi.encode(1 ether));
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(wethKey, binIds, 1 ether, 1 ether, activeId, address(this));
+        planner.add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        // weth9 payer is the contract
+        planner.add(Actions.SETTLE, abi.encode(address(_WETH9), ActionConstants.OPEN_DELTA, false));
+        // other currency can close normally
+        planner.add(Actions.CLOSE_CURRENCY, abi.encode(currency1));
+        // we wrapped the full contract balance so we sweep back in the wrapped currency
+        planner.add(Actions.SWEEP, abi.encode(address(_WETH9), ActionConstants.MSG_SENDER));
+        bytes memory actions = planner.encode();
+
+        uint256 balanceEthBefore = address(this).balance;
+        uint256 balance1Before = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        binPm.modifyLiquidities{value: 1 ether}(actions, _deadline);
+
+        uint256 balanceEthAfter = address(this).balance;
+        uint256 balance1After = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        // The full eth amount was "spent" because some was wrapped into weth and refunded.
+        assertApproxEqAbs(balanceEthBefore - balanceEthAfter, 1 ether, 1 wei);
+        assertApproxEqAbs(balance1Before - balance1After, 1 ether, 1 wei);
+
+        // no eth/weth left in the contract
+        assertEq(_WETH9.balanceOf(address(binPm)), 0);
+        assertEq(address(binPm).balance, 0);
+    }
+
+    function test_wrap_mint_revertsInsufficientBalance() public {
+        // 1 _wrap with more eth than is sent in
+
+        Plan memory planner = Planner.init();
+        // Wrap more eth than what is sent in.
+        planner.add(Actions.WRAP, abi.encode(101 ether));
+
+        bytes memory actions = planner.encode();
+
+        vm.expectRevert(DeltaResolver.InsufficientBalance.selector);
+        binPm.modifyLiquidities{value: 100 ether}(actions, _deadline);
+    }
+
+    function test_unwrap_usingContractBalance() public {
+        // weth-currency1 pool
+        // output: eth, currency1
+        // modifyLiquidities call to mint liquidity weth and currency1
+        // 1 _burn
+        // 2 _take where the weth is sent to the lpm contract
+        // 3 _take where currency1 is sent to the msg sender
+        // 4 _unwrap using contract balance
+        // 5 _sweep where eth is sent to msg sender
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, wethKey, binIds, activeId);
+
+        Plan memory planner = Planner.init();
+        IBinPositionManager.BinRemoveLiquidityParams memory param =
+            _getRemoveParams(wethKey, binIds, liquidityMinted, address(this));
+        planner.add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
+        // take the weth to the position manager to be unwrapped
+        planner.add(Actions.TAKE, abi.encode(address(_WETH9), ActionConstants.ADDRESS_THIS, ActionConstants.OPEN_DELTA));
+        planner.add(
+            Actions.TAKE,
+            abi.encode(address(Currency.unwrap(currency1)), ActionConstants.MSG_SENDER, ActionConstants.OPEN_DELTA)
+        );
+        planner.add(Actions.UNWRAP, abi.encode(ActionConstants.CONTRACT_BALANCE));
+        planner.add(Actions.SWEEP, abi.encode(CurrencyLibrary.NATIVE, ActionConstants.MSG_SENDER));
+
+        bytes memory actions = planner.encode();
+
+        uint256 balanceEthBefore = address(this).balance;
+        uint256 balance1Before = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        binPm.modifyLiquidities(actions, _deadline);
+
+        uint256 balanceEthAfter = address(this).balance;
+        uint256 balance1After = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        assertApproxEqAbs(balanceEthAfter - balanceEthBefore, 1 ether, 1 wei);
+        assertApproxEqAbs(balance1After - balance1Before, 1 ether, 1 wei);
+
+        // no eth/weth left in the contract
+        assertEq(_WETH9.balanceOf(address(binPm)), 0);
+        assertEq(address(binPm).balance, 0);
+    }
+
+    function test_unwrap_openDelta_reinvest() public {
+        // weth-currency1 pool rolls half to eth-currency1 pool
+        // output: eth, currency1
+        // modifyLiquidities call to mint liquidity weth and currency1
+        // 1 _burn (weth-currency1)
+        // 2 _take where the weth is sent to the lpm contract
+        // 4 _mint to an eth pool
+        // 4 _unwrap using open delta (pool managers ETH balance)
+        // 3 _take where leftover currency1 is sent to the msg sender
+        // 5 _settle eth open delta
+        // 5 _sweep leftover weth
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, wethKey, binIds, activeId);
+
+        Plan memory planner = Planner.init();
+        IBinPositionManager.BinRemoveLiquidityParams memory param =
+            _getRemoveParams(wethKey, binIds, liquidityMinted, address(this));
+        planner.add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
+        // take the weth to the position manager to be unwrapped
+        planner.add(Actions.TAKE, abi.encode(address(_WETH9), ActionConstants.ADDRESS_THIS, ActionConstants.OPEN_DELTA));
+
+        IBinPositionManager.BinAddLiquidityParams memory param2 =
+            _getAddParams(nativeKey, binIds, 0.5 ether, 0.5 ether, activeId, address(this));
+        planner.add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param2));
+
+        planner.add(Actions.UNWRAP, abi.encode(ActionConstants.OPEN_DELTA));
+        // pay the eth
+        planner.add(Actions.SETTLE, abi.encode(CurrencyLibrary.NATIVE, ActionConstants.OPEN_DELTA, false));
+        // take the leftover currency1
+        planner.add(
+            Actions.TAKE,
+            abi.encode(address(Currency.unwrap(currency1)), ActionConstants.MSG_SENDER, ActionConstants.OPEN_DELTA)
+        );
+        planner.add(Actions.SWEEP, abi.encode(address(_WETH9), ActionConstants.MSG_SENDER));
+
+        bytes memory actions = planner.encode();
+
+        uint256 balanceWethBefore = _WETH9.balanceOf(address(this));
+        uint256 balance1Before = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        binPm.modifyLiquidities(actions, _deadline);
+
+        uint256 balanceWethAfter = _WETH9.balanceOf(address(this));
+        uint256 balance1After = IERC20(Currency.unwrap(currency1)).balanceOf(address(this));
+
+        assertApproxEqAbs(balanceWethAfter - balanceWethBefore, 0.5 ether, 1 wei);
+        assertApproxEqAbs(balance1After - balance1Before, 0.5 ether, 1 wei);
+
+        // no eth/weth left in the contract
+        assertEq(_WETH9.balanceOf(address(binPm)), 0);
+        assertEq(address(binPm).balance, 0);
+    }
+
+    function test_unwrap_revertsInsufficientBalance() public {
+        // 1 _unwrap with more than is in the contract
+
+        Plan memory planner = Planner.init();
+        // unwraps more eth than what is in the contract
+        planner.add(Actions.UNWRAP, abi.encode(101 ether));
+
+        bytes memory actions = planner.encode();
+
+        vm.expectRevert(DeltaResolver.InsufficientBalance.selector);
+        binPm.modifyLiquidities(actions, _deadline);
+    }
+
+    // to receive refunds of spare eth from test helpers
+    receive() external payable {}
 }
