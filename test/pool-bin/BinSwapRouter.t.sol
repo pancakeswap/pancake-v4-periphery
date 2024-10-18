@@ -28,6 +28,7 @@ import {SafeCallback} from "../../src/base/SafeCallback.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
@@ -65,7 +66,9 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());
 
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
 
         token0 = new MockERC20("TestA", "A", 18);
         token1 = new MockERC20("TestB", "B", 18);

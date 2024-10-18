@@ -31,6 +31,7 @@ import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {IQuoter} from "../../src/interfaces/IQuoter.sol";
 import {IBinQuoter, BinQuoter} from "../../src/pool-bin/lens/BinQuoter.sol";
 import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
@@ -69,7 +70,9 @@ contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
         vault.registerApp(address(poolManager));
         router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
         quoter = new BinQuoter(address(poolManager));
 
         token0 = new MockERC20("TestA", "A", 18);

@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {OldVersionHelper} from "./helpers/OldVersionHelper.sol";
 import {IPancakePair} from "../src/interfaces/external/IPancakePair.sol";
-import {WETH} from "solmate/src/tokens/WETH.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CLPositionManager} from "../src/pool-cl/CLPositionManager.sol";
@@ -47,6 +46,7 @@ import {Actions} from "../src/libraries/Actions.sol";
 import {DeployStableSwapHelper} from "./helpers/DeployStableSwapHelper.sol";
 import {IStableSwapFactory} from "../src/interfaces/external/IStableSwapFactory.sol";
 import {IStableSwap} from "../src/interfaces/external/IStableSwap.sol";
+import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
 
 contract MixedQuoterTest is
     Test,
@@ -65,7 +65,7 @@ contract MixedQuoterTest is
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
     uint24 activeId = 2 ** 23; // where token0 and token1 price is the same
 
-    WETH weth;
+    IWETH9 weth;
     MockERC20 token0;
     MockERC20 token1;
     MockERC20 token2;
@@ -103,7 +103,7 @@ contract MixedQuoterTest is
     PoolKey binPoolKey;
 
     function setUp() public {
-        weth = new WETH();
+        weth = _WETH9;
         token2 = new MockERC20("Token0", "TKN2", 18);
         token3 = new MockERC20("Token1", "TKN3", 18);
         token4 = new MockERC20("Token2", "TKN4", 18);
@@ -122,7 +122,7 @@ contract MixedQuoterTest is
         token1 = MockERC20(Currency.unwrap(currency1));
         deployAndApprovePosm(vault, clPoolManager);
 
-        binPm = new BinPositionManager(vault, binPoolManager, permit2);
+        binPm = new BinPositionManager(vault, binPoolManager, permit2, IWETH9(_WETH9));
 
         clQuoter = new CLQuoter(address(clPoolManager));
         binQuoter = new BinQuoter(address(binPoolManager));

@@ -34,6 +34,7 @@ import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {BinHookModifyLiquidities} from "./shared/BinHookModifyLiquidities.sol";
 import {MockV4Router} from "../mocks/MockV4Router.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinPositionManager_ModifyLiquidityWithoutLockTest is
     BinLiquidityHelper,
@@ -71,7 +72,9 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
         initializeTokens();
         (token0, token1) = (MockERC20(Currency.unwrap(currency0)), MockERC20(Currency.unwrap(currency1)));
 
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
 
         // create hook and seed with 1000 ether of token0/token1
         hookModifyLiquidities = new BinHookModifyLiquidities();

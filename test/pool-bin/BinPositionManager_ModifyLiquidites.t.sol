@@ -31,6 +31,7 @@ import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {SlippageCheck} from "../../src/libraries/SlippageCheck.sol";
 import {BinHookHookData} from "./shared/BinHookHookData.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
     using Planner for Plan;
@@ -63,7 +64,9 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         initializeTokens();
         (token0, token1) = (MockERC20(Currency.unwrap(currency0)), MockERC20(Currency.unwrap(currency1)));
 
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
         key1 = PoolKey({
             currency0: currency0,
             currency1: currency1,
