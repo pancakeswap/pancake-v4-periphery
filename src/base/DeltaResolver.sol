@@ -27,10 +27,10 @@ abstract contract DeltaResolver is ImmutableState {
     /// @param payer Address of the payer
     /// @param amount Amount to send
     function _settle(Currency currency, address payer, uint256 amount) internal {
-        vault.sync(currency);
         if (currency.isNative()) {
             vault.settle{value: amount}();
         } else {
+            vault.sync(currency);
             _pay(currency, payer, amount);
             vault.settle();
         }
