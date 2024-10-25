@@ -19,7 +19,9 @@ abstract contract DeltaResolver is ImmutableState {
     /// @param currency Currency to take
     /// @param recipient Address to receive the currency
     /// @param amount Amount to take
+    /// @dev Returns early if the amount is 0
     function _take(Currency currency, address recipient, uint256 amount) internal {
+        if (amount == 0) return;
         vault.take(currency, recipient, amount);
     }
 
@@ -28,7 +30,9 @@ abstract contract DeltaResolver is ImmutableState {
     /// @param currency Currency to settle
     /// @param payer Address of the payer
     /// @param amount Amount to send
+    /// @dev Returns early if the amount is 0
     function _settle(Currency currency, address payer, uint256 amount) internal {
+        if (amount == 0) return;
         if (currency.isNative()) {
             vault.settle{value: amount}();
         } else {

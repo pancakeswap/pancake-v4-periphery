@@ -294,7 +294,7 @@ contract BinPositionManager is
         address caller = msgSender();
         if (currencyDelta < 0) {
             _settle(currency, caller, uint256(-currencyDelta));
-        } else if (currencyDelta > 0) {
+        } else {
             _take(currency, caller, uint256(currencyDelta));
         }
     }
