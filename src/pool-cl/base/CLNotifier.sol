@@ -29,6 +29,9 @@ abstract contract CLNotifier is ICLNotifier {
     /// @param tokenId the tokenId of the position
     modifier onlyIfApproved(address caller, uint256 tokenId) virtual;
 
+    /// @notice Enforces that the Vault is unlocked.
+    modifier onlyIfVaultUnlocked() virtual;
+
     function _setUnsubscribed(uint256 tokenId) internal virtual;
     function _setSubscribed(uint256 tokenId) internal virtual;
 
@@ -36,6 +39,7 @@ abstract contract CLNotifier is ICLNotifier {
     function subscribe(uint256 tokenId, address newSubscriber, bytes calldata data)
         external
         payable
+        onlyIfVaultUnlocked
         onlyIfApproved(msg.sender, tokenId)
     {
         ICLSubscriber _subscriber = subscriber[tokenId];
@@ -55,7 +59,7 @@ abstract contract CLNotifier is ICLNotifier {
     }
 
     /// @inheritdoc ICLNotifier
-    function unsubscribe(uint256 tokenId) external payable onlyIfApproved(msg.sender, tokenId) {
+    function unsubscribe(uint256 tokenId) external payable onlyIfVaultUnlocked onlyIfApproved(msg.sender, tokenId) {
         _unsubscribe(tokenId);
     }
 
