@@ -28,6 +28,8 @@ import {BinFungibleToken} from "./BinFungibleToken.sol";
 import {BinTokenLibrary} from "./libraries/BinTokenLibrary.sol";
 import {Multicall_v4} from "../base/Multicall_v4.sol";
 import {SlippageCheck} from "../libraries/SlippageCheck.sol";
+import {NativeWrapper} from "../base/NativeWrapper.sol";
+import {IWETH9} from "../interfaces/external/IWETH9.sol";
 
 /// @title BinPositionManager
 /// @notice Contract for modifying liquidity for PCS v4 Bin pools
@@ -38,7 +40,8 @@ contract BinPositionManager is
     ReentrancyLock,
     BaseActionsRouter,
     Permit2Forwarder,
-    Multicall_v4
+    Multicall_v4,
+    NativeWrapper
 {
     using CalldataDecoder for bytes;
     using PackedUint128Math for uint128;
@@ -60,9 +63,10 @@ contract BinPositionManager is
     /// @dev poolId => poolKey
     mapping(bytes32 => PoolKey) private _poolIdToPoolKey;
 
-    constructor(IVault _vault, IBinPoolManager _binPoolManager, IAllowanceTransfer _permit2)
+    constructor(IVault _vault, IBinPoolManager _binPoolManager, IAllowanceTransfer _permit2, IWETH9 _weth9)
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
+        NativeWrapper(_weth9)
     {
         binPoolManager = _binPoolManager;
     }
@@ -159,6 +163,14 @@ contract BinPositionManager is
             } else if (action == Actions.SWEEP) {
                 (Currency currency, address to) = params.decodeCurrencyAndAddress();
                 _sweep(currency, _mapRecipient(to));
+                return;
+            } else if (action == Actions.WRAP) {
+                uint256 amount = params.decodeUint256();
+                _wrap(_mapWrapUnwrapAmount(CurrencyLibrary.NATIVE, amount, Currency.wrap(address(WETH9))));
+                return;
+            } else if (action == Actions.UNWRAP) {
+                uint256 amount = params.decodeUint256();
+                _unwrap(_mapWrapUnwrapAmount(Currency.wrap(address(WETH9)), amount, CurrencyLibrary.NATIVE));
                 return;
             }
         }
@@ -282,7 +294,7 @@ contract BinPositionManager is
         address caller = msgSender();
         if (currencyDelta < 0) {
             _settle(currency, caller, uint256(-currencyDelta));
-        } else if (currencyDelta > 0) {
+        } else {
             _take(currency, caller, uint256(currencyDelta));
         }
     }

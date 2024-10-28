@@ -20,12 +20,15 @@ import {ERC721PermitHash} from "../../../src/pool-cl/libraries/ERC721PermitHash.
 import {CLPoolManagerRouter} from "pancake-v4-core/test/pool-cl/helpers/CLPoolManagerRouter.sol";
 import {ICLPositionDescriptor} from "../../../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
 import {CLPositionDescriptorOffChain} from "../../../src/pool-cl/CLPositionDescriptorOffChain.sol";
+import {IWETH9} from "../../../src/interfaces/external/IWETH9.sol";
+import {WETH} from "solmate/src/tokens/WETH.sol";
 
 /// @notice A shared test contract that wraps the v4-core deployers contract and exposes basic liquidity operations on posm.
 contract PosmTestSetup is Test, Deployers, DeployPermit2, CLLiquidityOperations {
     CLPoolManagerRouter router;
     Currency currency0;
     Currency currency1;
+    IWETH9 public _WETH9 = IWETH9(address(new WETH()));
 
     uint256 constant STARTING_USER_BALANCE = 10_000_000 ether;
 
@@ -63,12 +66,18 @@ contract PosmTestSetup is Test, Deployers, DeployPermit2, CLLiquidityOperations 
         // We use deployPermit2() to prevent having to use via-ir in this repository.
         permit2 = IAllowanceTransfer(deployPermit2());
         positionDescriptor = new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
-        lpm = new CLPositionManager(vault, poolManager, permit2, 100_000, positionDescriptor);
+        lpm = new CLPositionManager(vault, poolManager, permit2, 100_000, positionDescriptor, IWETH9(_WETH9));
     }
 
     function seedBalance(address to) internal {
         IERC20(Currency.unwrap(currency0)).transfer(to, STARTING_USER_BALANCE);
         IERC20(Currency.unwrap(currency1)).transfer(to, STARTING_USER_BALANCE);
+    }
+
+    function seedWeth(address to) internal {
+        vm.deal(address(this), STARTING_USER_BALANCE);
+        _WETH9.deposit{value: STARTING_USER_BALANCE}();
+        _WETH9.transfer(to, STARTING_USER_BALANCE);
     }
 
     function approvePosm() internal {

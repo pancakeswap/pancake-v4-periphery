@@ -30,6 +30,7 @@ import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
+import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 // test on the various way to perform delta resolver
 contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
@@ -61,7 +62,9 @@ contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenF
         initializeTokens();
         (token0, token1) = (MockERC20(Currency.unwrap(currency0)), MockERC20(Currency.unwrap(currency1)));
 
-        binPm = new BinPositionManager(IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2);
+        binPm = new BinPositionManager(
+            IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))
+        );
         key1 = PoolKey({
             currency0: currency0,
             currency1: currency1,
