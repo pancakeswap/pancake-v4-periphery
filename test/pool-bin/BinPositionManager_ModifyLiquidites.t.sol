@@ -200,26 +200,33 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         bytes memory payload;
 
         // overwrite amount0Max
-        param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
+        param = _getAddParams(key1, binIds, 1 ether, 0.5 ether, activeId, alice);
         param.amount0Max = 0.9 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
         vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
-        // overwrite amount0Max
-        param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Max = 0.9 ether;
+        // overwrite amount1Max
+        param = _getAddParams(key1, binIds, 0.5 ether, 1 ether, activeId, alice);
+        param.amount1Max = 0.8 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
+        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.8 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
-        // overwrite to 1 eth (expected to not fail)
-        param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Max = 0.9 ether;
-        param.amount0Max = 0.9 ether;
+        // overwrite to within limit - case 1
+        param = _getAddParams(key1, binIds, 2 ether, 3 ether, activeId, alice);
+        param.amount0Max = 2 ether;
+        param.amount1Max = 3 ether;
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         payload = planner.finalizeModifyLiquidityWithClose(key1);
-        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
+        binPm.modifyLiquidities(payload, _deadline);
+
+        // overwrite to within limit - case 2
+        param = _getAddParams(key1, binIds, 3 ether, 2 ether, activeId, alice);
+        param.amount0Max = 3 ether;
+        param.amount1Max = 2 ether;
+        planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        payload = planner.finalizeModifyLiquidityWithClose(key1);
         binPm.modifyLiquidities(payload, _deadline);
     }
 

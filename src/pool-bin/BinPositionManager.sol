@@ -227,7 +227,7 @@ contract BinPositionManager is
 
         /// Slippage checks, similar to CL type. However, this is different from TJ, in PCS v4,
         /// as hooks can impact delta (take extra token), user need to be protected with amountMax instead
-        delta.validateMaxIn(params.amount0Max, params.amount0Max);
+        delta.validateMaxIn(params.amount0Max, params.amount1Max);
 
         // mint
         PoolId poolId = cachePoolKey(params.poolKey);
