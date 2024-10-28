@@ -206,20 +206,19 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
-        // overwrite amount0Max
+        // overwrite amount1Max
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Max = 0.9 ether;
+        param.amount1Max = 0.9 ether;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
         vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
 
         // overwrite to 1 eth (expected to not fail)
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
-        param.amount0Max = 0.9 ether;
-        param.amount0Max = 0.9 ether;
+        param.amount0Max = 1 ether;
+        param.amount1Max = 1 ether;
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         payload = planner.finalizeModifyLiquidityWithClose(key1);
-        vm.expectRevert(abi.encodeWithSelector(SlippageCheck.MaximumAmountExceeded.selector, 0.9 ether, 1 ether));
         binPm.modifyLiquidities(payload, _deadline);
     }
 
