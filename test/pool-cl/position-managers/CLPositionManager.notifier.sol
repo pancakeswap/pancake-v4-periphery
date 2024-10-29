@@ -12,6 +12,7 @@ import {BalanceDelta, toBalanceDelta} from "pancake-v4-core/src/types/BalanceDel
 import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 
+import {Hooks} from "pancake-v4-core/src/libraries/Hooks.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
 import {MockCLSubscriber} from "../mocks/MockCLSubscriber.sol";
@@ -22,6 +23,7 @@ import {Actions} from "../../../src/libraries/Actions.sol";
 import {ICLNotifier} from "../../../src/pool-cl/interfaces/ICLNotifier.sol";
 import {MockCLReturnDataSubscriber, MockCLRevertSubscriber} from "../mocks/MockCLBadSubscribers.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
+import {MockCLReenterHook} from "../mocks/MockCLReenterHook.sol";
 
 contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
     using Planner for Plan;
@@ -32,10 +34,12 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
     PoolId poolId;
     PoolKey key;
+    PoolKey reenterKey;
 
     MockCLSubscriber sub;
     MockCLReturnDataSubscriber badSubscriber;
     MockCLRevertSubscriber revertSubscriber;
+    MockCLReenterHook reenterHook;
 
     address alice = makeAddr("ALICE");
     address bob = makeAddr("BOB");
@@ -56,6 +60,20 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         sub = new MockCLSubscriber(lpm);
         badSubscriber = new MockCLReturnDataSubscriber(lpm);
         revertSubscriber = new MockCLRevertSubscriber(lpm);
+
+        // set the reenter hook
+        reenterHook = new MockCLReenterHook();
+        reenterHook.setPosm(lpm);
+
+        reenterKey = PoolKey(
+            currency0,
+            currency1,
+            reenterHook,
+            manager,
+            3000,
+            bytes32(uint256((60 << 16) | reenterHook.getHooksRegistrationBitmap()))
+        );
+        manager.initialize(reenterKey, SQRT_RATIO_1_1);
     }
 
     function test_subscribe_revertsWithEmptyPositionConfig() public {
@@ -625,5 +643,70 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
             lpm.unsubscribe{gas: gasLimit}(tokenId);
             assertEq(sub.notifyUnsubscribeCount(), beforeUnsubCount + 1);
         }
+    }
+
+    function test_unsubscribe_reverts_VaultMustBeUnlocked() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(reenterKey, -60, 60, 10e18, address(this), ZERO_BYTES);
+
+        bytes memory hookData = abi.encode(lpm.unsubscribe.selector, address(this), tokenId);
+        bytes memory actions = getMintEncoded(reenterKey, -60, 60, 10e18, address(this), hookData);
+
+        // approve hook as it should not revert because it does not have permissions
+        lpm.approve(address(reenterHook), tokenId);
+        // subscribe as it should not revert because there is no subscriber
+        lpm.subscribe(tokenId, address(sub), ZERO_BYTES);
+
+        // should revert since the vault is locked
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Hooks.Wrap__FailedHookCall.selector,
+                address(reenterHook),
+                abi.encodeWithSelector(ICLPositionManager.VaultMustBeUnlocked.selector)
+            )
+        );
+        lpm.modifyLiquidities(actions, _deadline);
+    }
+
+    function test_subscribe_reverts_VaultMustBeUnlocked() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(reenterKey, -60, 60, 10e18, address(this), ZERO_BYTES);
+
+        bytes memory hookData = abi.encode(lpm.subscribe.selector, address(this), tokenId);
+        bytes memory actions = getMintEncoded(reenterKey, -60, 60, 10e18, address(this), hookData);
+
+        // approve hook as it should not revert because it does not have permissions
+        lpm.approve(address(reenterHook), tokenId);
+
+        // should revert since the vault is locked
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Hooks.Wrap__FailedHookCall.selector,
+                address(reenterHook),
+                abi.encodeWithSelector(ICLPositionManager.VaultMustBeUnlocked.selector)
+            )
+        );
+        lpm.modifyLiquidities(actions, _deadline);
+    }
+
+    function test_transferFrom_reverts_VaultMustBeUnlocked() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(reenterKey, -60, 60, 10e18, address(this), ZERO_BYTES);
+
+        bytes memory hookData = abi.encode(lpm.transferFrom.selector, address(this), tokenId);
+        bytes memory actions = getMintEncoded(reenterKey, -60, 60, 10e18, address(this), hookData);
+
+        // approve hook as it should not revert because it does not have permissions
+        lpm.approve(address(reenterHook), tokenId);
+
+        // should revert since the vault is locked
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Hooks.Wrap__FailedHookCall.selector,
+                address(reenterHook),
+                abi.encodeWithSelector(ICLPositionManager.VaultMustBeUnlocked.selector)
+            )
+        );
+        lpm.modifyLiquidities(actions, _deadline);
     }
 }

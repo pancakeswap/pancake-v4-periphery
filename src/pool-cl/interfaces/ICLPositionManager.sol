@@ -12,6 +12,10 @@ interface ICLPositionManager is IPositionManager {
     /// @notice Thrown when the caller is not approved to modify a position
     error NotApproved(address caller);
 
+    /// @notice Thrown when calling transfer, subscribe, or unsubscribe when the vault is locked.
+    /// @dev This is to prevent hooks from being able to trigger notifications at the same time the position is being modified.
+    error VaultMustBeUnlocked();
+
     /// @notice Emitted when a new liquidity position is minted
     event MintPosition(uint256 indexed tokenId);
 

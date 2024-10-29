@@ -97,6 +97,12 @@ contract CLPositionManager is
         _;
     }
 
+    /// @notice Enforces that the vault is unlocked.
+    modifier onlyIfVaultUnlocked() override {
+        if (vault.getLocker() != address(0)) revert VaultMustBeUnlocked();
+        _;
+    }
+
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         return tokenDescriptor.tokenURI(this, tokenId);
     }
@@ -393,7 +399,8 @@ contract CLPositionManager is
     }
 
     /// @dev overrides solmate transferFrom in case a notification to subscribers is needed
-    function transferFrom(address from, address to, uint256 id) public virtual override {
+    /// @dev will revert if vault is locked
+    function transferFrom(address from, address to, uint256 id) public virtual override onlyIfVaultUnlocked {
         super.transferFrom(from, to, id);
         if (positionInfo[id].hasSubscriber()) _notifyTransfer(id, from, to);
     }
