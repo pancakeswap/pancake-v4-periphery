@@ -79,6 +79,27 @@ contract BinPositionManager is
         _;
     }
 
+    function positionsV2(uint256 tokenId)
+        external
+        view
+        returns (
+            PoolKey memory poolKey,
+            uint24 binId,
+            uint128 binReserveX,
+            uint128 binReserveY,
+            uint256 binLiquidity,
+            uint256 totalShares
+        )
+    {
+        TokenPosition memory position = _positions[tokenId];
+
+        if (PoolId.unwrap(position.poolId) == 0) revert InvalidTokenID();
+        poolKey = _poolIdToPoolKey[PoolId.unwrap(position.poolId)];
+        binId = position.binId;
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = binPoolManager.getBin(position.poolId, position.binId);
+    }
+
     function positions(uint256 tokenId)
         external
         view
