@@ -26,4 +26,26 @@ abstract contract BaseScript is Test {
 
         return decodedData;
     }
+
+    function getStringFromConfig(string memory key) public view returns (string memory decodedData) {
+        string memory json = vm.readFile(path);
+        bytes memory data = vm.parseJson(json, string.concat(".", key));
+
+        decodedData = abi.decode(data, (string));
+        require(bytes(decodedData).length > 0, "String not set");
+
+        return decodedData;
+    }
+
+    function getUint256FromConfig(string memory key) public view returns (uint256 decodedData) {
+        string memory json = vm.readFile(path);
+        bytes memory data = vm.parseJson(json, string.concat(".", key));
+
+        decodedData = abi.decode(data, (uint256));
+        return decodedData;
+    }
+
+    /// @notice must be implemented by the inheriting contract to make sure eth deployment salt is unique
+    /// since the deployment salt will be the only factor to decide the address of the newly deployed contract
+    function getDeploymentSalt() public view virtual returns (bytes32);
 }

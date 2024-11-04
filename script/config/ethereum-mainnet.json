@@ -1,4 +1,6 @@
 {
+  "create3Factory": "0x38Ab3f2CE00973A51d3A2A04d634C9bcbf20e4e1",
+  "owner": "0x42571B8414c68B63A2729146CE93F23639d25399",
   "permit2": "0x",
   "weth": "0x",
   "vault": "0x",
