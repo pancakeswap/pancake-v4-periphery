@@ -7,6 +7,11 @@ interface IPositionManager is IImmutableState {
     /// @notice Thrown when the block.timestamp exceeds the user-provided deadline
     error DeadlinePassed(uint256 deadline);
 
+    /// @notice Thrown when calling transfer, subscribe, or unsubscribe on CLPositionManager
+    /// or batchTransferFrom on BinPositionManager when the vault is locked.
+    /// @dev This is to prevent hooks from being able to trigger actions or notifications at the same time the position is being modified.
+    error VaultMustBeUnlocked();
+
     /// @notice Thrown when the token ID is bind to an unexisting pool
     error InvalidTokenID();
 
