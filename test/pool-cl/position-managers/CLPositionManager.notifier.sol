@@ -662,7 +662,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
             abi.encodeWithSelector(
                 Hooks.Wrap__FailedHookCall.selector,
                 address(reenterHook),
-                abi.encodeWithSelector(ICLPositionManager.VaultMustBeUnlocked.selector)
+                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector)
             )
         );
         lpm.modifyLiquidities(actions, _deadline);
@@ -683,7 +683,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
             abi.encodeWithSelector(
                 Hooks.Wrap__FailedHookCall.selector,
                 address(reenterHook),
-                abi.encodeWithSelector(ICLPositionManager.VaultMustBeUnlocked.selector)
+                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector)
             )
         );
         lpm.modifyLiquidities(actions, _deadline);
@@ -704,7 +704,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
             abi.encodeWithSelector(
                 Hooks.Wrap__FailedHookCall.selector,
                 address(reenterHook),
-                abi.encodeWithSelector(ICLPositionManager.VaultMustBeUnlocked.selector)
+                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector)
             )
         );
         lpm.modifyLiquidities(actions, _deadline);

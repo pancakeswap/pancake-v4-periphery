@@ -78,6 +78,12 @@ contract BinPositionManager is
         _;
     }
 
+    /// @notice Enforces that the vault is unlocked.
+    modifier onlyIfVaultUnlocked() override {
+        if (vault.getLocker() != address(0)) revert VaultMustBeUnlocked();
+        _;
+    }
+
     /// @inheritdoc IBinPositionManager
     function positions(uint256 tokenId) external view returns (PoolKey memory poolKey, uint24 binId) {
         TokenPosition memory position = _positions[tokenId];
