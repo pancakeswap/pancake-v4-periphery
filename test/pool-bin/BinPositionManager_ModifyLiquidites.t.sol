@@ -778,6 +778,71 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(actions, _deadline);
     }
 
+    function test_transferLiquidityToken() public {
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, address(this));
+        Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
+        binPm.modifyLiquidities(payload, _deadline);
+
+        uint256 tokenId = key1.toId().toTokenId(binIds[0]);
+        uint256 tokenBalance = binPm.balanceOf(address(this), tokenId);
+        assertGt(tokenBalance, 0);
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = tokenBalance;
+        binPm.batchTransferFrom(address(this), makeAddr("someone"), ids, amounts);
+
+        // verify transfer successful
+        assertEq(binPm.balanceOf(address(this), tokenId), 0);
+        assertEq(binPm.balanceOf(makeAddr("someone"), tokenId), tokenBalance);
+    }
+
+    function test_transferLiquidityToken_revertIfVaultLocked() public {
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, address(this));
+        Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
+        binPm.modifyLiquidities(payload, _deadline);
+
+        uint256 tokenId = key1.toId().toTokenId(binIds[0]);
+        uint256 tokenBalance = binPm.balanceOf(address(this), tokenId);
+        assertGt(tokenBalance, 0);
+
+        uint256[] memory ids = new uint256[](1);
+        ids[0] = tokenId;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = tokenBalance;
+        // lock the vault so that the transfer fails
+        vault.lock(
+            abi.encodeCall(
+                BinPositionManager_ModifyLiquidityTest._test_transferLiquidityToken_revertIfVaultLocked, (ids, amounts)
+            )
+        );
+    }
+
+    function _test_transferLiquidityToken_revertIfVaultLocked(uint256[] memory ids, uint256[] memory amounts)
+        external
+    {
+        vm.expectRevert(IPositionManager.VaultMustBeUnlocked.selector);
+        binPm.batchTransferFrom(address(this), makeAddr("someone"), ids, amounts);
+    }
+
+    function lockAcquired(bytes calldata data) external returns (bytes memory result) {
+        // forward the call and bubble up the error if revert
+        bool success;
+        (success, result) = address(this).call(data);
+        if (!success) {
+            assembly ("memory-safe") {
+                revert(add(result, 0x20), mload(result))
+            }
+        }
+    }
+
     // to receive refunds of spare eth from test helpers
     receive() external payable {}
 }
