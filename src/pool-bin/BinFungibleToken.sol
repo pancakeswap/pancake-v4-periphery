@@ -29,6 +29,9 @@ abstract contract BinFungibleToken is IBinFungibleToken {
         _;
     }
 
+    /// @notice Enforces that the Vault is unlocked.
+    modifier onlyIfVaultUnlocked() virtual;
+
     /*//////////////////////////////////////////////////////////////
                              LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -73,6 +76,7 @@ abstract contract BinFungibleToken is IBinFungibleToken {
         public
         virtual
         override
+        onlyIfVaultUnlocked
     {
         if (ids.length != amounts.length) revert BinFungibleToken_InvalidLength();
         if (to == address(0) || to == address(this)) revert BinFungibleToken_AddressThisOrZero();
