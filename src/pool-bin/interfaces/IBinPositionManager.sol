@@ -9,7 +9,7 @@ import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 
 interface IBinPositionManager is IPositionManager {
     error IdOverflows(int256);
-    error IdSlippageCaught(uint256, uint256, uint24);
+    error IdSlippageCaught(uint256 activeIdDesired, uint256 idSlippage, uint24 activeId);
     error AddLiquidityInputActiveIdMismath();
 
     /// @notice BinAddLiquidityParams
