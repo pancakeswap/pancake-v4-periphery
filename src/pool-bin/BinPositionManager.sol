@@ -211,8 +211,12 @@ contract BinPositionManager is
         /// @dev Checks if the activeId is within slippage before calling mint. If user mint to activeId and there
         //       was a swap in hook.beforeMint() which changes the activeId, user txn will fail
         (uint24 activeId,,) = binPoolManager.getSlot0(params.poolKey.toId());
-        if (params.activeIdDesired + params.idSlippage < activeId) revert IdDesiredOverflows(activeId);
-        if (params.activeIdDesired - params.idSlippage > activeId) revert IdDesiredOverflows(activeId);
+        if (params.activeIdDesired + params.idSlippage < activeId) {
+            revert IdSlippageCaught(params.activeIdDesired, params.idSlippage, activeId);
+        }
+        if (params.activeIdDesired - params.idSlippage > activeId) {
+            revert IdSlippageCaught(params.activeIdDesired, params.idSlippage, activeId);
+        }
 
         bytes32[] memory liquidityConfigs = new bytes32[](deltaLen);
         for (uint256 i; i < liquidityConfigs.length; i++) {
