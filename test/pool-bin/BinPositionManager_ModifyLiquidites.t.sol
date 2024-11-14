@@ -334,11 +334,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         for (uint256 i; i < binIds.length; i++) {
             uint256 tokenId = calculateTokenId(key1.toId(), binIds[i]);
 
-            (PoolId poolId, Currency curr0, Currency curr1, uint24 fee, uint24 binId) = binPm.positions(tokenId);
-            assertEq(PoolId.unwrap(poolId), PoolId.unwrap(key1.toId()));
-            assertEq(Currency.unwrap(curr0), Currency.unwrap(key1.currency0));
-            assertEq(Currency.unwrap(curr1), Currency.unwrap(key1.currency1));
-            assertEq(fee, key1.fee);
+            (PoolKey memory _poolKey, uint24 binId) = binPm.positions(tokenId);
+            assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(key1.toId()));
             assertEq(binId, binIds[i]);
         }
     }

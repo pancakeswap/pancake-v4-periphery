@@ -71,7 +71,6 @@ contract BinPositionManager is
         binPoolManager = _binPoolManager;
     }
 
-    /// @dev <wip> might be refactored to BasePositionManager later
     /// @notice Reverts if the deadline has passed
     /// @param deadline The timestamp at which the call is no longer valid, passed in by the caller
     modifier checkDeadline(uint256 deadline) {
@@ -85,17 +84,14 @@ contract BinPositionManager is
         _;
     }
 
-    function positions(uint256 tokenId)
-        external
-        view
-        returns (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId)
-    {
+    /// @inheritdoc IBinPositionManager
+    function positions(uint256 tokenId) external view returns (PoolKey memory poolKey, uint24 binId) {
         TokenPosition memory position = _positions[tokenId];
 
         if (PoolId.unwrap(position.poolId) == 0) revert InvalidTokenID();
         PoolKey memory poolKey = _poolIdToPoolKey[PoolId.unwrap(position.poolId)];
 
-        return (position.poolId, poolKey.currency0, poolKey.currency1, poolKey.fee, position.binId);
+        return (poolKey, position.binId);
     }
 
     /// @inheritdoc IPositionManager

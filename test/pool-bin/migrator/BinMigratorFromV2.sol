@@ -343,29 +343,29 @@ abstract contract BinMigratorFromV2 is
         assertGt(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId2);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID + 1);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2TokenMismatch() public {
@@ -491,29 +491,29 @@ abstract contract BinMigratorFromV2 is
         assertGt(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId2);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID + 1);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2WithoutNativeToken() public {
@@ -583,29 +583,29 @@ abstract contract BinMigratorFromV2 is
         assertGt(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
-        assertEq(Currency.unwrap(currency0), address(token0));
-        assertEq(Currency.unwrap(currency1), address(token1));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(token0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token1));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
-        assertEq(Currency.unwrap(currency0), address(token0));
-        assertEq(Currency.unwrap(currency1), address(token1));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(token0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token1));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
-        assertEq(Currency.unwrap(currency0), address(token0));
-        assertEq(Currency.unwrap(currency1), address(token1));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId2);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(token0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token1));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID + 1);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2AddExtraAmount() public {
@@ -679,29 +679,29 @@ abstract contract BinMigratorFromV2 is
         assertGt(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId2);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID + 1);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2AddExtraAmountThroughWETH() public {
@@ -780,29 +780,29 @@ abstract contract BinMigratorFromV2 is
         assertGt(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId2);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID + 1);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2Refund() public {
@@ -889,25 +889,25 @@ abstract contract BinMigratorFromV2 is
         assertEq(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
+        binPm.positions(positionId2);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2RefundNonNativeToken() public {
@@ -1001,25 +1001,25 @@ abstract contract BinMigratorFromV2 is
         assertEq(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
-        assertEq(Currency.unwrap(currency0), address(token0));
-        assertEq(Currency.unwrap(currency1), address(token1));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(token0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token1));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
-        assertEq(Currency.unwrap(currency0), address(token0));
-        assertEq(Currency.unwrap(currency1), address(token1));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKeyWithoutNativeToken.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(token0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token1));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
+        binPm.positions(positionId2);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function testMigrateFromV2ThroughOffchainSign() public {
@@ -1109,29 +1109,29 @@ abstract contract BinMigratorFromV2 is
         assertGt(binPm.balanceOf(address(this), positionId2), 0);
         assertEq(binPm.balanceOf(address(this), positionId3), 0);
 
-        (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId) = binPm.positions(positionId0);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (PoolKey memory _poolKey, uint24 binId) = binPm.positions(positionId0);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID - 1);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId1);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId1);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID);
 
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId2);
-        assertEq(PoolId.unwrap(poolId), PoolId.unwrap(poolKey.toId()));
-        assertEq(Currency.unwrap(currency0), address(0));
-        assertEq(Currency.unwrap(currency1), address(token0));
-        assertEq(fee, 0);
+        (_poolKey, binId) = binPm.positions(positionId2);
+        assertEq(PoolId.unwrap(_poolKey.toId()), PoolId.unwrap(poolKey.toId()));
+        assertEq(Currency.unwrap(_poolKey.currency0), address(0));
+        assertEq(Currency.unwrap(_poolKey.currency1), address(token0));
+        assertEq(_poolKey.fee, 0);
         assertEq(binId, ACTIVE_BIN_ID + 1);
 
         vm.expectRevert(IPositionManager.InvalidTokenID.selector);
-        (poolId, currency0, currency1, fee, binId) = binPm.positions(positionId3);
+        binPm.positions(positionId3);
     }
 
     function _mintV2Liquidity(IPancakePair pair) public {
