@@ -190,7 +190,11 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
             _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
         param.activeIdDesired = activeId - 1;
         bytes memory payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.IdDesiredOverflows.selector, activeId));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBinPositionManager.IdSlippageCaught.selector, param.activeIdDesired, param.idSlippage, activeId
+            )
+        );
         binPm.modifyLiquidities(payload, _deadline);
     }
 
