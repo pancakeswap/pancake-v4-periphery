@@ -85,7 +85,7 @@ contract BinPositionManager is
     }
 
     /// @inheritdoc IBinPositionManager
-    function positions(uint256 tokenId) external view returns (PoolKey memory poolKey, uint24 binId) {
+    function positions(uint256 tokenId) external view returns (PoolKey memory, uint24) {
         TokenPosition memory position = _positions[tokenId];
 
         if (PoolId.unwrap(position.poolId) == 0) revert InvalidTokenID();
