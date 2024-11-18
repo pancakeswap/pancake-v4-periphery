@@ -16,11 +16,11 @@ import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
  *
  * Step 2: Verify
  * forge verify-contract <address> TickLens --watch \
- *      --chain <chainId> --constructor-args $(cast abi-encode "constructor(address)" <tickLens>)
+ *      --chain <chainId> --constructor-args $(cast abi-encode "constructor(address)" <clPoolManager>)
  */
 contract DeployCLTickLensScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/TickLens/0.01");
+        return keccak256("PANCAKE-V4-PERIPHERY/TickLens/0.90");
     }
 
     function run() public {
