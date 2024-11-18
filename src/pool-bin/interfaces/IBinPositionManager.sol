@@ -9,7 +9,7 @@ import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 
 interface IBinPositionManager is IPositionManager {
     error IdOverflows(int256);
-    error IdDesiredOverflows(uint24);
+    error IdSlippageCaught(uint256 activeIdDesired, uint256 idSlippage, uint24 activeId);
     error AddLiquidityInputActiveIdMismath();
 
     /// @notice BinAddLiquidityParams
@@ -66,8 +66,7 @@ interface IBinPositionManager is IPositionManager {
     /// @notice Return the position information associated with a given tokenId
     /// @dev Revert if non-existent tokenId
     /// @param tokenId Id of the token that represent position
-    function positions(uint256 tokenId)
-        external
-        view
-        returns (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId);
+    /// @return poolKey the pool key of the position
+    /// @return binId the binId of the position
+    function positions(uint256 tokenId) external view returns (PoolKey memory poolKey, uint24 binId);
 }

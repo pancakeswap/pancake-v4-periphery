@@ -71,7 +71,6 @@ contract BinPositionManager is
         binPoolManager = _binPoolManager;
     }
 
-    /// @dev <wip> might be refactored to BasePositionManager later
     /// @notice Reverts if the deadline has passed
     /// @param deadline The timestamp at which the call is no longer valid, passed in by the caller
     modifier checkDeadline(uint256 deadline) {
@@ -79,17 +78,20 @@ contract BinPositionManager is
         _;
     }
 
-    function positions(uint256 tokenId)
-        external
-        view
-        returns (PoolId poolId, Currency currency0, Currency currency1, uint24 fee, uint24 binId)
-    {
+    /// @notice Enforces that the vault is unlocked.
+    modifier onlyIfVaultUnlocked() override {
+        if (vault.getLocker() != address(0)) revert VaultMustBeUnlocked();
+        _;
+    }
+
+    /// @inheritdoc IBinPositionManager
+    function positions(uint256 tokenId) external view returns (PoolKey memory, uint24) {
         TokenPosition memory position = _positions[tokenId];
 
         if (PoolId.unwrap(position.poolId) == 0) revert InvalidTokenID();
         PoolKey memory poolKey = _poolIdToPoolKey[PoolId.unwrap(position.poolId)];
 
-        return (position.poolId, poolKey.currency0, poolKey.currency1, poolKey.fee, position.binId);
+        return (poolKey, position.binId);
     }
 
     /// @inheritdoc IPositionManager
@@ -205,8 +207,12 @@ contract BinPositionManager is
         /// @dev Checks if the activeId is within slippage before calling mint. If user mint to activeId and there
         //       was a swap in hook.beforeMint() which changes the activeId, user txn will fail
         (uint24 activeId,,) = binPoolManager.getSlot0(params.poolKey.toId());
-        if (params.activeIdDesired + params.idSlippage < activeId) revert IdDesiredOverflows(activeId);
-        if (params.activeIdDesired - params.idSlippage > activeId) revert IdDesiredOverflows(activeId);
+        if (params.activeIdDesired + params.idSlippage < activeId) {
+            revert IdSlippageCaught(params.activeIdDesired, params.idSlippage, activeId);
+        }
+        if (params.activeIdDesired - params.idSlippage > activeId) {
+            revert IdSlippageCaught(params.activeIdDesired, params.idSlippage, activeId);
+        }
 
         bytes32[] memory liquidityConfigs = new bytes32[](deltaLen);
         for (uint256 i; i < liquidityConfigs.length; i++) {

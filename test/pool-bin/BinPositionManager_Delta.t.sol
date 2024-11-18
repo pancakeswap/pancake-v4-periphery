@@ -31,6 +31,7 @@ import {Actions} from "../../src/libraries/Actions.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
+import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 // test on the various way to perform delta resolver
 contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
@@ -139,9 +140,30 @@ contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenF
         planner.add(Actions.TAKE_PAIR, abi.encode(currency0, currency1, address(alice)));
         binPm.modifyLiquidities(planner.encode(), _deadline);
 
-        // after
-        assertEq(token0.balanceOf(alice), 1 ether);
-        assertEq(token1.balanceOf(alice), 1 ether);
+        // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
+        // 3 bins, left with (0, 1) (1, 1) (1, 0)
+        assertEq(token0.balanceOf(alice), 1 ether - 2);
+        assertEq(token1.balanceOf(alice), 1 ether - 2);
+
+        // check reserve of each bin
+        (uint128 binReserveX, uint128 binReserveY, uint256 binLiquidity, uint256 totalShares) =
+            poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, 0);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[1]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[2]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 0);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
     }
 
     function test_take() public {
@@ -162,9 +184,30 @@ contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenF
         planner.add(Actions.TAKE, abi.encode(currency1, ActionConstants.ADDRESS_THIS, ActionConstants.OPEN_DELTA));
         binPm.modifyLiquidities(planner.encode(), _deadline);
 
-        // after
-        assertEq(token0.balanceOf(address(this)), 1000 ether);
-        assertEq(token1.balanceOf(address(binPm)), 1 ether);
+        // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
+        // 3 bins, left with (0, 1) (1, 1) (1, 0)
+        assertEq(token0.balanceOf(address(this)), 1000 ether - 2);
+        assertEq(token1.balanceOf(address(binPm)), 1 ether - 2);
+
+        // check reserve of each bin
+        (uint128 binReserveX, uint128 binReserveY, uint256 binLiquidity, uint256 totalShares) =
+            poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, 0);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[1]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[2]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 0);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
     }
 
     function test_take_toAlice() public {
@@ -185,9 +228,30 @@ contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenF
         planner.add(Actions.TAKE, abi.encode(currency1, alice, ActionConstants.OPEN_DELTA));
         binPm.modifyLiquidities(planner.encode(), _deadline);
 
-        // after
-        assertEq(token0.balanceOf(address(alice)), 1 ether);
-        assertEq(token1.balanceOf(address(alice)), 1 ether);
+        // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
+        // 3 bins, left with (0, 1) (1, 1) (1, 0)
+        assertEq(token0.balanceOf(address(alice)), 1 ether - 2);
+        assertEq(token1.balanceOf(address(alice)), 1 ether - 2);
+
+        // check reserve of each bin
+        (uint128 binReserveX, uint128 binReserveY, uint256 binLiquidity, uint256 totalShares) =
+            poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, 0);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[1]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[2]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 0);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
     }
 
     function test_clearOrTake() public {
@@ -205,11 +269,13 @@ contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenF
         Plan memory planner = Planner.init();
         planner.add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param));
         planner.add(Actions.CLEAR_OR_TAKE, abi.encode(currency0, 2 ether));
-        planner.add(Actions.CLEAR_OR_TAKE, abi.encode(currency1, 1 ether - 1));
+        // it must be "1 ether - 3" to avoid clear since the debt for token0 is 1 ether - 2
+        // i.e. there will be 2 dust locked
+        planner.add(Actions.CLEAR_OR_TAKE, abi.encode(currency1, 1 ether - 3));
         binPm.modifyLiquidities(planner.encode(), _deadline);
 
-        // after, as currency1 min amount is 2 ether, clear the debg instead
+        // after, as currency1 min amount is 2 ether, clear the debt instead
         assertEq(token0.balanceOf(address(this)), 999 ether);
-        assertEq(token1.balanceOf(address(this)), 1000 ether);
+        assertEq(token1.balanceOf(address(this)), 1000 ether - 2);
     }
 }
