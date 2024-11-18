@@ -9,7 +9,7 @@ import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 
 /// @notice Notifier is used to opt in to sending updates to external contracts about position modifications or transfers
 abstract contract CLNotifier is ICLNotifier {
-    using CustomRevert for bytes4;
+    using CustomRevert for address;
 
     ICLSubscriber private constant NO_SUBSCRIBER = ICLSubscriber(address(0));
 
@@ -52,7 +52,7 @@ abstract contract CLNotifier is ICLNotifier {
         bool success = _call(newSubscriber, abi.encodeCall(ICLSubscriber.notifySubscribe, (tokenId, data)));
 
         if (!success) {
-            Wrap__SubscriptionReverted.selector.bubbleUpAndRevertWith(newSubscriber);
+            newSubscriber.bubbleUpAndRevertWith(ICLSubscriber.notifySubscribe.selector, SubscriptionReverted.selector);
         }
 
         emit Subscription(tokenId, newSubscriber);
@@ -90,7 +90,9 @@ abstract contract CLNotifier is ICLNotifier {
         );
 
         if (!success) {
-            Wrap__ModifyLiquidityNotificationReverted.selector.bubbleUpAndRevertWith(address(_subscriber));
+            address(_subscriber).bubbleUpAndRevertWith(
+                ICLSubscriber.notifyModifyLiquidity.selector, ModifyLiquidityNotificationReverted.selector
+            );
         }
     }
 
@@ -102,7 +104,9 @@ abstract contract CLNotifier is ICLNotifier {
         );
 
         if (!success) {
-            Wrap__TransferNotificationReverted.selector.bubbleUpAndRevertWith(address(_subscriber));
+            address(_subscriber).bubbleUpAndRevertWith(
+                ICLSubscriber.notifyTransfer.selector, TransferNotificationReverted.selector
+            );
         }
     }
 

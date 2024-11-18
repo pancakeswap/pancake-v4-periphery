@@ -29,6 +29,7 @@ import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionMan
 import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
+import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 // test on the native token pair etc..
 contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, DeployPermit2 {
@@ -157,9 +158,30 @@ contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, 
         binPm.modifyLiquidities(payload, _deadline);
         snapEnd();
 
-        // after remove liqudiity
-        assertEq(address(this).balance, 1 ether);
-        assertEq(token1.balanceOf(address(this)), 1 ether);
+        // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
+        // 3 bins, left with (0, 1) (1, 1) (1, 0)
+        assertEq(address(this).balance, 1 ether - 2);
+        assertEq(token1.balanceOf(address(this)), 1 ether - 2);
+
+        // check reserve of each bin
+        (uint128 binReserveX, uint128 binReserveY, uint256 binLiquidity, uint256 totalShares) =
+            poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, 0);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[1]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[2]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 0);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
     }
 
     // allow contract to receive native token when removing liquidity

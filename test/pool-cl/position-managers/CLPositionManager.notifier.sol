@@ -24,6 +24,7 @@ import {ICLNotifier} from "../../../src/pool-cl/interfaces/ICLNotifier.sol";
 import {MockCLReturnDataSubscriber, MockCLRevertSubscriber} from "../mocks/MockCLBadSubscribers.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
 import {MockCLReenterHook} from "../mocks/MockCLReenterHook.sol";
+import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
 contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
     using Planner for Plan;
@@ -494,9 +495,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICLNotifier.Wrap__SubscriptionReverted.selector,
+                CustomRevert.WrappedError.selector,
                 address(revertSubscriber),
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifySubscribe")
+                ICLSubscriber.notifySubscribe.selector,
+                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifySubscribe"),
+                abi.encodeWithSelector(ICLNotifier.SubscriptionReverted.selector)
             )
         );
         lpm.subscribe(tokenId, address(revertSubscriber), ZERO_BYTES);
@@ -524,9 +527,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         bytes memory calls = plan.finalizeModifyLiquidityWithSettlePair(key);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICLNotifier.Wrap__ModifyLiquidityNotificationReverted.selector,
+                CustomRevert.WrappedError.selector,
                 address(revertSubscriber),
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyModifyLiquidity")
+                ICLSubscriber.notifyModifyLiquidity.selector,
+                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyModifyLiquidity"),
+                abi.encodeWithSelector(ICLNotifier.ModifyLiquidityNotificationReverted.selector)
             )
         );
         lpm.modifyLiquidities(calls, _deadline);
@@ -545,9 +550,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICLNotifier.Wrap__TransferNotificationReverted.selector,
+                CustomRevert.WrappedError.selector,
                 address(revertSubscriber),
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer")
+                ICLSubscriber.notifyTransfer.selector,
+                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer"),
+                abi.encodeWithSelector(ICLNotifier.TransferNotificationReverted.selector)
             )
         );
         lpm.transferFrom(alice, bob, tokenId);
@@ -566,9 +573,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICLNotifier.Wrap__TransferNotificationReverted.selector,
+                CustomRevert.WrappedError.selector,
                 address(revertSubscriber),
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer")
+                ICLSubscriber.notifyTransfer.selector,
+                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer"),
+                abi.encodeWithSelector(ICLNotifier.TransferNotificationReverted.selector)
             )
         );
         lpm.safeTransferFrom(alice, bob, tokenId);
@@ -587,9 +596,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ICLNotifier.Wrap__TransferNotificationReverted.selector,
+                CustomRevert.WrappedError.selector,
                 address(revertSubscriber),
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer")
+                ICLSubscriber.notifyTransfer.selector,
+                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer"),
+                abi.encodeWithSelector(ICLNotifier.TransferNotificationReverted.selector)
             )
         );
         lpm.safeTransferFrom(alice, bob, tokenId, "");
@@ -660,9 +671,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         // should revert since the vault is locked
         vm.expectRevert(
             abi.encodeWithSelector(
-                Hooks.Wrap__FailedHookCall.selector,
+                CustomRevert.WrappedError.selector,
                 address(reenterHook),
-                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector)
+                reenterHook.beforeAddLiquidity.selector,
+                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector),
+                abi.encodeWithSelector(Hooks.HookCallFailed.selector)
             )
         );
         lpm.modifyLiquidities(actions, _deadline);
@@ -681,9 +694,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         // should revert since the vault is locked
         vm.expectRevert(
             abi.encodeWithSelector(
-                Hooks.Wrap__FailedHookCall.selector,
+                CustomRevert.WrappedError.selector,
                 address(reenterHook),
-                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector)
+                reenterHook.beforeAddLiquidity.selector,
+                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector),
+                abi.encodeWithSelector(Hooks.HookCallFailed.selector)
             )
         );
         lpm.modifyLiquidities(actions, _deadline);
@@ -702,9 +717,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         // should revert since the vault is locked
         vm.expectRevert(
             abi.encodeWithSelector(
-                Hooks.Wrap__FailedHookCall.selector,
+                CustomRevert.WrappedError.selector,
                 address(reenterHook),
-                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector)
+                reenterHook.beforeAddLiquidity.selector,
+                abi.encodeWithSelector(IPositionManager.VaultMustBeUnlocked.selector),
+                abi.encodeWithSelector(Hooks.HookCallFailed.selector)
             )
         );
         lpm.modifyLiquidities(actions, _deadline);

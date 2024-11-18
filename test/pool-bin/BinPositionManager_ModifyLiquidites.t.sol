@@ -36,6 +36,7 @@ import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
+import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
     using Planner for Plan;
@@ -256,9 +257,13 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         // building event to verify
         uint256[] memory liquidityMinted = new uint256[](binIds.length);
         bytes32 binReserves = PackedUint128Math.encode(0, 0); // binReserve=0 for new pool
-        liquidityMinted[0] = calculateLiquidityMinted(binReserves, 0 ether, 0.5 ether, binIds[0], 10, 0);
-        liquidityMinted[1] = calculateLiquidityMinted(binReserves, 0.5 ether, 0.5 ether, binIds[1], 10, 0);
-        liquidityMinted[2] = calculateLiquidityMinted(binReserves, 0.5 ether, 0 ether, binIds[2], 10, 0);
+        // since BinPool.MINIMUM_SHARE will be locked up, we need to exclude it from the expected value
+        liquidityMinted[0] =
+            calculateLiquidityMinted(binReserves, 0 ether, 0.5 ether, binIds[0], 10, 0) - BinPool.MINIMUM_SHARE;
+        liquidityMinted[1] =
+            calculateLiquidityMinted(binReserves, 0.5 ether, 0.5 ether, binIds[1], 10, 0) - BinPool.MINIMUM_SHARE;
+        liquidityMinted[2] =
+            calculateLiquidityMinted(binReserves, 0.5 ether, 0 ether, binIds[2], 10, 0) - BinPool.MINIMUM_SHARE;
         uint256[] memory tokenIds = new uint256[](binIds.length);
         for (uint256 i; i < binIds.length; i++) {
             tokenIds[i] = key1.toId().toTokenId(binIds[i]);
@@ -297,7 +302,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
             uint256 tokenId = key1.toId().toTokenId(binIds[i]);
             uint256 bal = binPm.balanceOf(alice, tokenId);
             uint256 expectedBal = calculateLiquidityMinted(binReserves, 0, 0.2 ether, binIds[i], 10, 0);
-            assertApproxEqAbs(bal, expectedBal, 1);
+            // the share should be less than expected due to our lockup mechanism
+            assertApproxEqAbs(bal, expectedBal, BinPool.MINIMUM_SHARE);
         }
 
         // re-add existing id, gas should be way cheaper
@@ -370,12 +376,14 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         IBinPositionManager.BinRemoveLiquidityParams memory param;
         bytes memory payload;
 
+        // the actual amount is 1 ether - 2 for both tokens since we lock up some dust
+
         // amount0 min slippage
         param = _getRemoveParams(key1, binIds, liquidityMinted, address(this));
         param.amount0Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
         vm.expectRevert(
-            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether)
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether - 2)
         );
         binPm.modifyLiquidities(payload, _deadline);
 
@@ -384,7 +392,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         param.amount1Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
         vm.expectRevert(
-            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount1Min, 1 ether)
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount1Min, 1 ether - 2)
         );
         binPm.modifyLiquidities(payload, _deadline);
 
@@ -394,7 +402,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         param.amount1Min = 2 ether;
         payload = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param)).encode();
         vm.expectRevert(
-            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether)
+            abi.encodeWithSelector(SlippageCheck.MinimumAmountInsufficient.selector, param.amount0Min, 1 ether - 2)
         );
         binPm.modifyLiquidities(payload, _deadline);
     }
@@ -424,12 +432,30 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(payload, _deadline);
         snapEnd();
 
-        // check after token balance and verify liquidity owned = 0
-        assertEq(token0.balanceOf(address(this)), 1000 ether);
-        assertEq(token1.balanceOf(address(this)), 1000 ether);
-        for (uint256 i; i < tokenIds.length; i++) {
-            assertEq(binPm.balanceOf(address(this), tokenIds[i]), 0);
-        }
+        // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
+        // 3 bins, left with (0, 1) (1, 1) (1, 0)
+        assertEq(token0.balanceOf(address(this)), 1000 ether - 2);
+        assertEq(token1.balanceOf(address(this)), 1000 ether - 2);
+
+        // check reserve of each bin
+        (uint128 binReserveX, uint128 binReserveY, uint256 binLiquidity, uint256 totalShares) =
+            poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, 0);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[1]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[2]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 0);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
     }
 
     function test_decreaseLiquidity_threeBins_half() public {
@@ -501,8 +527,30 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         binPm.modifyLiquidities(payload, _deadline);
 
         // after, verify alice balance increased as tokens sent to alice
-        assertEq(token1.balanceOf(alice), 1 ether);
-        assertEq(token1.balanceOf(alice), 1 ether);
+        // and there will be some dust locked in the contract to prevent inflation attack
+        // 3 bins, left with (0, 1) (1, 1) (1, 0)
+        assertEq(token1.balanceOf(alice), 1 ether - 2);
+        assertEq(token1.balanceOf(alice), 1 ether - 2);
+
+        // check reserve of each bin
+        (uint128 binReserveX, uint128 binReserveY, uint256 binLiquidity, uint256 totalShares) =
+            poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, 0);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[1]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 1);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
+
+        (binReserveX, binReserveY, binLiquidity, totalShares) = poolManager.getBin(key1.toId(), binIds[2]);
+        assertEq(binReserveX, 1);
+        assertEq(binReserveY, 0);
+        assertGt(binLiquidity, 0);
+        assertEq(totalShares, BinPool.MINIMUM_SHARE);
     }
 
     function test_removeLiquidity_hookData() public {

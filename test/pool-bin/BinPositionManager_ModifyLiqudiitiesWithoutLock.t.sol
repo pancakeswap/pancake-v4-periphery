@@ -35,6 +35,7 @@ import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {BinHookModifyLiquidities} from "./shared/BinHookModifyLiquidities.sol";
 import {MockV4Router} from "../mocks/MockV4Router.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
+import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
 contract BinPositionManager_ModifyLiquidityWithoutLockTest is
     BinLiquidityHelper,
@@ -150,8 +151,10 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
 
         // after: verify pool reserve decrease due to hook decreasing liquidity too
         (binReserveX, binReserveY,,) = poolManager.getBin(key1.toId(), activeId);
-        assertEq(binReserveX, 600000000000000000); // +1eth from add, -0.5eth from remove, +0.1 eth from swapIn
-        assertEq(binReserveY, 400300000000000000); // +1eth from add, -0.5eth from remove, -0.1 eth from swapOut
+
+        // (-0.5 ether + 1) from remove due to the lockup share of the liquidity
+        assertEq(binReserveX, 600000000000000000 + 1); // +1eth from add, (-0.5eth + 1) from remove, +0.1 eth from swapIn
+        assertEq(binReserveY, 400300000000000000 + 1); // +1eth from add, (-0.5eth + 1) from remove, -0.1 eth from swapOut
     }
 
     function test_hook_decreaseLiquidity_RevertNoLp() public {
@@ -167,14 +170,16 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Hooks.Wrap__FailedHookCall.selector,
+                CustomRevert.WrappedError.selector,
                 address(hookModifyLiquidities),
+                hookModifyLiquidities.beforeSwap.selector,
                 abi.encodeWithSelector(
                     IBinFungibleToken.BinFungibleToken_BurnExceedsBalance.selector,
                     address(hookModifyLiquidities),
                     key1.toId().toTokenId(binIds[0]),
                     liquidityMinted[0] // amount to Burn
-                )
+                ),
+                abi.encodeWithSelector(Hooks.HookCallFailed.selector)
             )
         );
         _swapExactIn(key1, 0.1 ether, payload);
