@@ -34,14 +34,15 @@ export ETHERSCAN_API_KEY=xx
 
 ### Execute
 
-Refer to the script source code for the exact command
+Refer to the script source code for the specific commands: there are two commands—one for deployment and one for verification. A separate verification command is necessary because the contract is deployed through the create3Factory.
 
-Example. within `script/01_DeployCLPositionManager.s.sol`
+Example. within `script/02_DeployCLPositionManager.s.sol`
 ```
-// remove --verify flag if etherscan_api_key is not set
-forge script script/01_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript -vvv \
+forge script script/02_DeployCLPositionManager.s.sol:DeployCLPositionManagerScript -vvv \
     --rpc-url $RPC_URL \
     --broadcast \
-    --slow \
-    --verify
+    --slow 
+
+forge verify-contract <address> CLPositionManager --watch \
+    --chain <chainId> --constructor-args $(cast abi-encode "constructor(address,address,address,uint256,address,address)" <vault> <clPoolManager> <permit2> <unsubscribeGasLimit> <clPositionDescriptor> <weth9>)
 ```

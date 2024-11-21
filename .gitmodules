@@ -4,3 +4,6 @@
 [submodule "lib/permit2"]
 	path = lib/permit2
 	url = https://github.com/pancakeswap/permit2
+[submodule "lib/pancake-create3-factory"]
+	path = lib/pancake-create3-factory
+	url = https://github.com/pancakeswap/pancake-create3-factory
