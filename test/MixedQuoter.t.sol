@@ -47,6 +47,7 @@ import {DeployStableSwapHelper} from "./helpers/DeployStableSwapHelper.sol";
 import {IStableSwapFactory} from "../src/interfaces/external/IStableSwapFactory.sol";
 import {IStableSwap} from "../src/interfaces/external/IStableSwap.sol";
 import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
+import "forge-std/console2.sol";
 
 contract MixedQuoterTest is
     Test,
@@ -332,6 +333,49 @@ contract MixedQuoterTest is
         assertEq(_gasEstimate, gasEstimate);
         assertGt(_gasEstimate, 80000);
         assertLt(_gasEstimate, 90000);
+    }
+
+    function test_quoteMixedExactInputEffectSamePool() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token0);
+        paths[1] = address(token1);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        // swap 0.5 ether
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
+        console2.log("amountOut", amountOut);
+        assertEq(amountOut, 498417179678643398);
+        uint256 swapPath1Output = amountOut;
+
+        // swap 1 ether
+        (amountOut, gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 996668773744192346);
+        uint256 swapPath2Output = amountOut - swapPath1Output;
+
+        // path 1: (0.5)token0 -> token1 , tokenOut should be 498417179678643398
+        // path 2: (0.5)token0 -> token1, tokenOut should be 996668773744192346 - 498417179678643398 = 498251594065548948
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputEffectSamePool.selector, paths, actions, params, 0.5 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputEffectSamePool.selector, paths, actions, params, 0.5 ether
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfPath1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfPath2,) = abi.decode(results[1], (uint256, uint256));
+        console2.log("amountOutOfPath1", amountOutOfPath1);
+        assertEq(amountOutOfPath1, swapPath1Output);
+        console2.log("amountOutOfPath2", amountOutOfPath2);
+        assertEq(amountOutOfPath2, swapPath2Output);
     }
 
     function testV4CLquoteExactInputSingle_OneForZero() public {

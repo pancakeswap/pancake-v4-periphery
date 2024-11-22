@@ -62,6 +62,13 @@ interface IMixedQuoter {
         uint256 amountIn
     ) external returns (uint256 amountOut, uint256 gasEstimate);
 
+    function quoteMixedExactInputEffectSamePool(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountIn
+    ) external returns (uint256 amountOut, uint256 gasEstimate);
+
     /// @notice Returns the amount out received for a given exact input but for a swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactInputSingleParams`
     /// tokenIn The token being swapped in
