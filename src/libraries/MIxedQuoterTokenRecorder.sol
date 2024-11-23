@@ -16,6 +16,9 @@ library MixedQuoterTokenRecorder {
     uint256 internal constant SWAP_TOKEN1_ACCUMULATION =
         0x8039a0cfe43b448f327ddf378771d67fba431d4dbc5c8f9531fa80f8a45125e9;
 
+    /// @dev uint256 internal SWAP_SS = uint256(keccak256("MIXED_QUOTER_SWAP_SS")) - 1;
+    uint256 internal constant SWAP_SS = 0x0b6c8b64c3ab4ac7b96ca59ae1454278ba2d62c99873c03d98ae968df846210a;
+
     /// @dev uint256 internal SWAP_V2 = uint256(keccak256("MIXED_QUOTER_SWAP_V2")) - 1;
     uint256 internal constant SWAP_V2 = 0xfb50ad98219c08ac49c2f2012c28ee455be42a0adc9a9a5df9e0882de4cf56b5;
 
@@ -152,6 +155,11 @@ library MixedQuoterTokenRecorder {
         returns (uint256, uint256)
     {
         return getPoolSwapTokenAccumulation(getV2PoolHash(token0, token1), isZeroForOne);
+    }
+
+    function getSSPoolHash(address token0, address token1) internal pure returns (bytes32) {
+        (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
+        return keccak256(abi.encode(token0, token1, SWAP_SS));
     }
 
     function getV2PoolHash(address token0, address token1) internal pure returns (bytes32) {

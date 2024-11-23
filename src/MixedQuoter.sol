@@ -397,7 +397,16 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
             } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
+
+                bool zeroForOne = swapDirection(tokenIn, tokenOut);
+                bytes32 poolHash = MixedQuoterTokenRecorder.getSSPoolHash(tokenIn, tokenOut);
+                // update stable pool swap direction, only allow one direction in one transaction
+                MixedQuoterTokenRecorder.setAndCheckSwapDirection(poolHash, zeroForOne ? 1 : 2);
+                (uint256 accAmountIn, uint256 accAmountOut) =
+                    MixedQuoterTokenRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
+                uint256 swapAmountOut;
+                amountIn += accAmountIn;
+                (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleStable(
                     QuoteExactInputSingleStableParams({
                         tokenIn: tokenIn,
                         tokenOut: tokenOut,
@@ -405,6 +414,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                         flag: 2
                     })
                 );
+                MixedQuoterTokenRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
+                amountIn = swapAmountOut - accAmountOut;
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
