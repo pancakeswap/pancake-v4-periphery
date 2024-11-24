@@ -87,8 +87,8 @@ library MixedQuoterTokenRecorder {
         amount0 += currentAmount0;
         amount1 += currentAmount1;
         assembly {
-            sstore(token0Slot, amount0)
-            sstore(token1Slot, amount1)
+            tstore(token0Slot, amount0)
+            tstore(token1Slot, amount1)
         }
     }
 
@@ -108,8 +108,8 @@ library MixedQuoterTokenRecorder {
             amount1 = currentAmount1 + amountIn;
         }
         assembly {
-            sstore(token0Slot, amount0)
-            sstore(token1Slot, amount1)
+            tstore(token0Slot, amount0)
+            tstore(token1Slot, amount1)
         }
     }
 
@@ -123,8 +123,8 @@ library MixedQuoterTokenRecorder {
         uint256 amount0;
         uint256 amount1;
         assembly {
-            amount0 := sload(token0Slot)
-            amount1 := sload(token1Slot)
+            amount0 := tload(token0Slot)
+            amount1 := tload(token1Slot)
         }
         return (amount0, amount1);
     }
@@ -139,8 +139,8 @@ library MixedQuoterTokenRecorder {
         uint256 amount0;
         uint256 amount1;
         assembly {
-            amount0 := sload(token0Slot)
-            amount1 := sload(token1Slot)
+            amount0 := tload(token0Slot)
+            amount1 := tload(token1Slot)
         }
         if (isZeroForOne) {
             return (amount0, amount1);
