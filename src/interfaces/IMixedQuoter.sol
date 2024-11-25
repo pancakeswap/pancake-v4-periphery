@@ -62,7 +62,7 @@ interface IMixedQuoter {
         uint256 amountIn
     ) external returns (uint256 amountOut, uint256 gasEstimate);
 
-    function quoteMixedExactInputEffectSamePool(
+    function quoteMixedExactInputAffectSamePool(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,

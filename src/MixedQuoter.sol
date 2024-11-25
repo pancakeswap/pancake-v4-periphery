@@ -284,7 +284,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
     }
 
     /// @dev Swap result will affect the result of the next swap in same pool
-    function quoteMixedExactInputEffectSamePool(
+    function quoteMixedExactInputAffectSamePool(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,

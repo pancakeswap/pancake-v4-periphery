@@ -335,7 +335,7 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 90000);
     }
 
-    function test_quoteMixedExactInputEffectSamePool() public {
+    function test_quoteMixedExactInputAffectSamePool() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -363,10 +363,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputEffectSamePool.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputAffectSamePool.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputEffectSamePool.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputAffectSamePool.selector, paths, actions, params, 0.5 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
