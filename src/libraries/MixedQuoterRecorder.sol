@@ -30,8 +30,8 @@ library MixedQuoterRecorder {
     /// @dev uint256 internal constant SWAP_V4_CL = uint256(keccak256("MIXED_QUOTER_SWAP_V4_CL")) - 1;
     uint256 internal constant SWAP_V4_CL = 0x1a7c9a13842b613486d9207eda875c24e33425305b8b8df2e040c19ef2ae3088;
 
-    /// @dev uint256 internal constant SWAP_V4_CL_LIST = uint256(keccak256("MIXED_QUOTER_SWAP_V4_CL_LIST")) - 1;
-    uint256 internal constant SWAP_V4_CL_LIST = 0x56b09120707293fbb5dc1dd1cd2de2aa3ce765be052d861614e2f29dd1c60d99;
+    /// @dev uint256 internal constant SWAP_V4_LIST = uint256(keccak256("MIXED_QUOTER_SWAP_V4_LIST")) - 1;
+    uint256 internal constant SWAP_V4_LIST = 0xecc1e5328541d701c0936cbe59876b89db17cc11dfd146412e855a9a2e1ecbd3;
 
     /// @dev uint256 internal constant SWAP_V4_BIN = uint256(keccak256("MIXED_QUOTER_SWAP_V4_BIN")) - 1;
     uint256 internal constant SWAP_V4_BIN = 0xea33987d3dc3e2595aa727354eec3d9b92d4061c1331c4a19f9862248f2e1040;
@@ -118,7 +118,7 @@ library MixedQuoterRecorder {
     /// @param poolHash The hash of the pool.
     /// @param swapListBytes The swap history list bytes.
     function setV4PoolSwapList(bytes32 poolHash, bytes memory swapListBytes) internal {
-        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_CL_LIST)));
+        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
         assembly {
             // save the length of the bytes
             tstore(swapListSlot, mload(swapListBytes))
@@ -135,7 +135,7 @@ library MixedQuoterRecorder {
     /// @param poolHash The hash of the pool.
     /// @return swapListBytes The swap history list bytes.
     function getV4PoolSwapList(bytes32 poolHash) internal view returns (bytes memory swapListBytes) {
-        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_CL_LIST)));
+        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
         assembly {
             // get the length of the bytes
             let length := tload(swapListSlot)
