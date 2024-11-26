@@ -50,6 +50,8 @@ import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
 import {MockV4Router} from "./mocks/MockV4Router.sol";
 import {ICLRouterBase} from "../src/pool-cl/interfaces/ICLRouterBase.sol";
 import {ActionConstants} from "../src/libraries/ActionConstants.sol";
+import {V3SmartRouterHelper} from "../src/libraries/external/V3SmartRouterHelper.sol";
+import {MixedQuoterRecorder} from "../src/libraries/MixedQuoterRecorder.sol";
 import "forge-std/console2.sol";
 
 contract MixedQuoterTest is
@@ -287,6 +289,35 @@ contract MixedQuoterTest is
         assertLt(gasEstimate, 50000);
     }
 
+    function test_quoteMixedExactInputNotIsolation_SS2_revert_INVALID_SWAP_DIRECTION() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token1);
+        paths[1] = address(token2);
+
+        address[] memory paths2 = new address[](2);
+        paths2[0] = address(token2);
+        paths2[1] = address(token1);
+
+        bool isZeroForOne = token1 < token2;
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+
+        // path 1: (0.5)token1 -> token2
+        // path 2: (0.5)token1 -> token2
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions, params, 0.5 ether
+        );
+        vm.expectRevert(MixedQuoterRecorder.INVALID_SWAP_DIRECTION.selector);
+        mixedQuoter.multicall(multicallBytes);
+    }
+
     function test_quoteMixedExactInputNotIsolation_SS2() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token1);
@@ -332,9 +363,6 @@ contract MixedQuoterTest is
         uint256 route2TokenOutBalanceBefore = token2.balanceOf(address(this));
         stableSwapPair.exchange(isZeroForOne ? 0 : 1, isZeroForOne ? 1 : 0, 0.5 ether, 0);
         uint256 route2TokenOutBalanceAfter = token2.balanceOf(address(this));
-        console2.logString("log balance before and after");
-        console2.logUint(route2TokenOutBalanceBefore);
-        console2.logUint(route2TokenOutBalanceAfter);
         // not exactly equal , but diff is very small, less than 1/1000000
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 1000000);
     }
@@ -388,8 +416,7 @@ contract MixedQuoterTest is
         } else {
             route1TokenOutBalanceAfter = token0OfSS.balanceOf(address(this));
         }
-        // not exactly equal , but diff is very small, less than 1/1000000
-        assertApproxEqRel(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1, 1e18 / 1000000);
+        assertEq(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1);
 
         // swap 0.5 ether in stable swap
         uint256 route2TokenOutBalanceBefore;
@@ -405,9 +432,6 @@ contract MixedQuoterTest is
         } else {
             route2TokenOutBalanceAfter = token0OfSS.balanceOf(address(this));
         }
-        console2.logString("log balance before and after");
-        console2.logUint(route2TokenOutBalanceBefore);
-        console2.logUint(route2TokenOutBalanceAfter);
         // not exactly equal , but diff is very small, less than 1/1000000
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 1000000);
     }
@@ -426,6 +450,32 @@ contract MixedQuoterTest is
         assertEq(amountOut, 907024323709934075);
         assertGt(gasEstimate, 10000);
         assertLt(gasEstimate, 20000);
+    }
+
+    function test_quoteMixedExactInputNotIsolation_V2_revert_INVALID_SWAP_DIRECTION() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(weth);
+        paths[1] = address(token2);
+
+        address[] memory paths2 = new address[](2);
+        paths2[0] = address(token2);
+        paths2[1] = address(weth);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
+        bytes[] memory params = new bytes[](1);
+
+        // path 1: (0.5)weth -> token2
+        // path 2: (0.5)weth -> token2
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions, params, 0.5 ether
+        );
+        vm.expectRevert(MixedQuoterRecorder.INVALID_SWAP_DIRECTION.selector);
+        mixedQuoter.multicall(multicallBytes);
     }
 
     function test_quoteMixedExactInputNotIsolation_V2() public {
@@ -461,6 +511,97 @@ contract MixedQuoterTest is
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
         assertEq(amountOutOfRoute1, swapPath1Output);
         assertEq(amountOutOfRoute2, swapPath2Output);
+
+        // swap 0.5 ether in v2 pair
+        uint256 route1TokenOutBalanceBefore = token2.balanceOf(address(this));
+        _swapV2(address(weth), address(token2), 0.5 ether);
+        uint256 route1TokenOutBalanceAfter = token2.balanceOf(address(this));
+        assertEq(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1);
+
+        // swap 0.5 ether in v2 pair
+        uint256 route2TokenOutBalanceBefore = token2.balanceOf(address(this));
+        _swapV2(address(weth), address(token2), 0.5 ether);
+        uint256 route2TokenOutBalanceAfter = token2.balanceOf(address(this));
+        // not exactly equal , but diff is very small, less than 1/2000
+        assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 2000);
+    }
+
+    function testFuzz_quoteMixedExactInputNotIsolation_V2(uint8 firstSwapPercent, bool isZeroForOne) public {
+        uint256 OneHundredPercent = type(uint8).max;
+        vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
+        uint256 totalSwapAmount = 1 ether;
+        uint128 firstSwapAmount = uint128((totalSwapAmount * firstSwapPercent) / OneHundredPercent);
+        uint128 secondSwapAmount = uint128(totalSwapAmount - firstSwapAmount);
+        (MockERC20 token0OfV2, MockERC20 token1OfV2) =
+            address(weth) < address(token2) ? (MockERC20(address(weth)), token2) : (token2, MockERC20(address(weth)));
+
+        address[] memory paths = new address[](2);
+        if (isZeroForOne) {
+            paths[0] = address(token0OfV2);
+            paths[1] = address(token1OfV2);
+        } else {
+            paths[0] = address(token1OfV2);
+            paths[1] = address(token0OfV2);
+        }
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
+        bytes[] memory params = new bytes[](1);
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+
+        // swap 0.5 ether in v2 pair
+        uint256 route1TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route1TokenOutBalanceBefore = token1OfV2.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceBefore = token0OfV2.balanceOf(address(this));
+        }
+        if (isZeroForOne) {
+            _swapV2(address(token0OfV2), address(token1OfV2), firstSwapAmount);
+        } else {
+            _swapV2(address(token1OfV2), address(token0OfV2), firstSwapAmount);
+        }
+        uint256 route1TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route1TokenOutBalanceAfter = token1OfV2.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceAfter = token0OfV2.balanceOf(address(this));
+        }
+
+        // not exactly equal , but diff is very small, less than 1/2000
+        assertApproxEqRel(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1, 1e18 / 2000);
+
+        // swap 0.5 ether in v2 pair
+        uint256 route2TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route2TokenOutBalanceBefore = token1OfV2.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceBefore = token0OfV2.balanceOf(address(this));
+        }
+        if (isZeroForOne) {
+            _swapV2(address(token0OfV2), address(token1OfV2), secondSwapAmount);
+        } else {
+            _swapV2(address(token1OfV2), address(token0OfV2), secondSwapAmount);
+        }
+        uint256 route2TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route2TokenOutBalanceAfter = token1OfV2.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceAfter = token0OfV2.balanceOf(address(this));
+        }
+        // not exactly equal , but diff is very small, less than 1/2000
+        assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 2000);
     }
 
     function testQuoteExactInputSingleV3() public {
@@ -525,7 +666,6 @@ contract MixedQuoterTest is
             abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         // swap 0.5 ether
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
-        console2.log("amountOut", amountOut);
         assertEq(amountOut, 498417179678643398);
         uint256 swapPath1Output = amountOut;
 
@@ -549,9 +689,8 @@ contract MixedQuoterTest is
 
         (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
-        console2.log("amountOutOfRoute1", amountOutOfRoute1);
         assertEq(amountOutOfRoute1, swapPath1Output);
-        console2.log("amountOutOfRoute2", amountOutOfRoute2);
+        // -1 is due to precision round loss
         assertEq(amountOutOfRoute2, swapPath2Output - 1);
 
         // swap 0.5 ether in v4 pool
@@ -565,7 +704,6 @@ contract MixedQuoterTest is
         uint256 route1Token1BalanceAfter = poolKey.currency1.balanceOf(address(this));
 
         uint256 route1Token1Received = route1Token1BalanceAfter - route1Token1BalanceBefore;
-        console2.log("route1Token1Received", route1Token1Received);
         assertEq(route1Token1Received, swapPath1Output);
 
         // swap another 0.5 ether in v4 pool
@@ -579,8 +717,7 @@ contract MixedQuoterTest is
         uint256 route2Token1BalanceAfter = poolKey.currency1.balanceOf(address(this));
 
         uint256 route2Token1Received = route2Token1BalanceAfter - route2Token1BalanceBefore;
-        console2.log("route2Token1Received", route2Token1Received);
-        // -2 is due to precision round loss
+        // -1 is due to precision round loss
         assertEq(route2Token1Received, swapPath2Output - 1);
     }
 
@@ -618,8 +755,6 @@ contract MixedQuoterTest is
 
         (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
-        console2.log("amountOutOfRoute1", amountOutOfRoute1);
-        console2.log("amountOutOfRoute2", amountOutOfRoute2);
 
         // first swap in v4 pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
@@ -647,7 +782,6 @@ contract MixedQuoterTest is
         }
 
         uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
-        console2.log("route1TokenOutReceived", route1TokenOutReceived);
         assertEq(route1TokenOutReceived, amountOutOfRoute1);
 
         // second swap in v4 pool
@@ -1003,6 +1137,22 @@ contract MixedQuoterTest is
         IERC20(pair.token1()).transfer(address(pair), amount1);
 
         pair.mint(address(this));
+    }
+
+    function _swapV2(address tokenIn, address tokenOut, uint256 amountIn) internal returns (uint256) {
+        (address v2Token0, address v2Token1) = tokenIn < tokenOut ? (tokenIn, tokenOut) : (tokenOut, tokenIn);
+        IPancakePair pair = IPancakePair(v2Factory.getPair(v2Token0, v2Token1));
+        require(address(pair) != address(0), "Pair doesn't exist");
+
+        IERC20(tokenIn).transfer(address(pair), amountIn);
+        (uint256 reserveIn, uint256 reserveOut) = V3SmartRouterHelper.getReserves(address(v2Factory), tokenIn, tokenOut);
+        uint256 amountOut = V3SmartRouterHelper.getAmountOut(amountIn, reserveIn, reserveOut);
+
+        (uint256 amount0Out, uint256 amount1Out) =
+            tokenIn == v2Token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
+
+        pair.swap(amount0Out, amount1Out, address(this), new bytes(0));
+        return amountOut;
     }
 
     function _getBytecodePath() internal pure returns (string memory) {
