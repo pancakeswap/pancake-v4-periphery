@@ -402,7 +402,7 @@ contract CLPositionManager is
     /// @dev will revert if vault is locked
     function transferFrom(address from, address to, uint256 id) public virtual override onlyIfVaultUnlocked {
         super.transferFrom(from, to, id);
-        if (positionInfo[id].hasSubscriber()) _notifyTransfer(id, from, to);
+        if (positionInfo[id].hasSubscriber()) _unsubscribe(id);
     }
 
     /// @inheritdoc ICLPositionManager
