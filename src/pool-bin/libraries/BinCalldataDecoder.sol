@@ -6,6 +6,9 @@ import {IV4Router} from "../../interfaces/IV4Router.sol";
 
 /// @title Library for abi decoding in bin pool calldata
 library BinCalldataDecoder {
+    /// @notice equivalent to SliceOutOfBounds.selector, stored in least-significant bits
+    uint256 constant SLICE_ERROR_SELECTOR = 0x3b99b53d;
+
     /// todo: <wip> see if tweaking to calldataload saves gas
     /// @dev equivalent to: abi.decode(params, (IBinPositionManager.BinAddLiquidityParams))
     function decodeBinAddLiquidityParams(bytes calldata params)
@@ -38,6 +41,12 @@ library BinCalldataDecoder {
     {
         // BinExactInputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where path is empty
+            // 0xa0 = 5 * 0x20 -> 3 elements, path offset, and path length 0
+            if lt(params.length, 0xa0) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -50,6 +59,12 @@ library BinCalldataDecoder {
     {
         // BinExactInputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where hookData is empty
+            // 0x160 = 11 * 0x20 -> 9 elements, bytes offset, and bytes length 0
+            if lt(params.length, 0x160) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -62,6 +77,12 @@ library BinCalldataDecoder {
     {
         // BinExactOutputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where path is empty
+            // 0xa0 = 5 * 0x20 -> 3 elements, path offset, and path length 0
+            if lt(params.length, 0xa0) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -74,6 +95,12 @@ library BinCalldataDecoder {
     {
         // BinExactOutputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where hookData is empty
+            // 0x160 = 9 * 0x20 -> 9 elements, bytes offset, and bytes length 0
+            if lt(params.length, 0x160) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
