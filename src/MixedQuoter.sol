@@ -232,22 +232,62 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
             if (action == MixedQuoterActions.V2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleV2(
-                    QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
-                );
+                if (isIsolate) {
+                    (amountIn, gasEstimateForCurAction) = quoteExactInputSingleV2(
+                        QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
+                    );
+                } else {
+                    bool isZeroForOne = tokenIn < tokenOut;
+                    bytes32 poolHash = MixedQuoterRecorder.getV2PoolHash(tokenIn, tokenOut);
+                    // update v2 pool swap direction, only allow one direction in one transaction
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, isZeroForOne);
+                    (uint256 accAmountIn, uint256 accAmountOut) =
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, isZeroForOne);
+
+                    uint256 swapAmountOut;
+                    amountIn += accAmountIn;
+                    (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleV2(
+                        QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
+                    );
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, isZeroForOne);
+                    amountIn = swapAmountOut - accAmountOut;
+                }
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex]: abi.encode(fee)
                 uint24 fee = abi.decode(params[actionIndex], (uint24));
-                (amountIn,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
-                    QuoteExactInputSingleV3Params({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        fee: fee,
-                        sqrtPriceLimitX96: 0
-                    })
-                );
+                if (isIsolate) {
+                    (amountIn,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
+                        QuoteExactInputSingleV3Params({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            fee: fee,
+                            sqrtPriceLimitX96: 0
+                        })
+                    );
+                } else {
+                    bool isZeroForOne = tokenIn < tokenOut;
+                    bytes32 poolHash = MixedQuoterRecorder.getV3PoolHash(tokenIn, tokenOut, fee);
+                    // update v3 pool swap direction, only allow one direction in one transaction
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, isZeroForOne);
+                    (uint256 accAmountIn, uint256 accAmountOut) =
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, isZeroForOne);
+
+                    uint256 swapAmountOut;
+                    amountIn += accAmountIn;
+                    (swapAmountOut,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
+                        QuoteExactInputSingleV3Params({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            fee: fee,
+                            sqrtPriceLimitX96: 0
+                        })
+                    );
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, isZeroForOne);
+                    amountIn = swapAmountOut - accAmountOut;
+                }
             } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
                 QuoteMixedV4ExactInputSingleParams memory clParams =
                     abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
@@ -264,11 +304,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                 });
 
                 if (!isIsolate) {
-                    console2.logString("in isIsolate");
                     bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
                     bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
-                    console2.logString("getV4PoolSwapList output");
-                    console2.logBytes(swapListBytes);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
                     uint256 swapHistoryListLength;
                     if (swapListBytes.length > 0) {
@@ -284,11 +321,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     swapList[swapHistoryListLength] = swapParams;
 
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingleList(swapList);
-                    console2.logString("quoteExactInputSingleList output");
-                    console2.logUint(amountIn);
                     swapListBytes = abi.encode(swapList);
-                    console2.logString("setV4PoolSwapList swapListBytes");
-                    console2.logBytes(swapListBytes);
                     MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
                 } else {
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(swapParams);
@@ -321,14 +354,35 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 3
-                    })
-                );
+                if (isIsolate) {
+                    (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
+                        QuoteExactInputSingleStableParams({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            flag: 3
+                        })
+                    );
+                } else {
+                    bool zeroForOne = tokenIn < tokenOut;
+                    bytes32 poolHash = MixedQuoterRecorder.getSSPoolHash(tokenIn, tokenOut);
+                    // update stable pool swap direction, only allow one direction in one transaction
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, zeroForOne);
+                    (uint256 accAmountIn, uint256 accAmountOut) =
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
+                    uint256 swapAmountOut;
+                    amountIn += accAmountIn;
+                    (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleStable(
+                        QuoteExactInputSingleStableParams({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            flag: 2
+                        })
+                    );
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
+                    amountIn = swapAmountOut - accAmountOut;
+                }
             } else {
                 revert UnsupportedAction(action);
             }
