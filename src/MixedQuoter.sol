@@ -343,24 +343,14 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
             } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 2
-                    })
-                );
-            } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
-                (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
-                // params[actionIndex] is zero bytes
+
                 if (isIsolate) {
                     (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
                         QuoteExactInputSingleStableParams({
                             tokenIn: tokenIn,
                             tokenOut: tokenOut,
                             amountIn: amountIn,
-                            flag: 3
+                            flag: 2
                         })
                     );
                 } else {
@@ -383,6 +373,17 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
                     amountIn = swapAmountOut - accAmountOut;
                 }
+            } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
+                (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
+                // params[actionIndex] is zero bytes
+                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
+                    QuoteExactInputSingleStableParams({
+                        tokenIn: tokenIn,
+                        tokenOut: tokenOut,
+                        amountIn: amountIn,
+                        flag: 3
+                    })
+                );
             } else {
                 revert UnsupportedAction(action);
             }
