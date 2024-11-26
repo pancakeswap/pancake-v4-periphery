@@ -47,6 +47,10 @@ import {DeployStableSwapHelper} from "./helpers/DeployStableSwapHelper.sol";
 import {IStableSwapFactory} from "../src/interfaces/external/IStableSwapFactory.sol";
 import {IStableSwap} from "../src/interfaces/external/IStableSwap.sol";
 import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
+import {MockV4Router} from "./mocks/MockV4Router.sol";
+import {ICLRouterBase} from "../src/pool-cl/interfaces/ICLRouterBase.sol";
+import {ActionConstants} from "../src/libraries/ActionConstants.sol";
+import "forge-std/console2.sol";
 
 contract MixedQuoterTest is
     Test,
@@ -72,6 +76,8 @@ contract MixedQuoterTest is
     MockERC20 token3;
     MockERC20 token4;
     MockERC20 token5;
+
+    MockV4Router v4Router;
 
     IVault vault;
     ICLPoolManager clPoolManager;
@@ -102,7 +108,11 @@ contract MixedQuoterTest is
 
     PoolKey binPoolKey;
 
+    Plan plan;
+
     function setUp() public {
+        plan = Planner.init();
+
         weth = _WETH9;
         token2 = new MockERC20("Token0", "TKN2", 18);
         token3 = new MockERC20("Token1", "TKN3", 18);
@@ -115,6 +125,14 @@ contract MixedQuoterTest is
 
         binPoolManager = new BinPoolManager(vault);
         vault.registerApp(address(binPoolManager));
+
+        v4Router = new MockV4Router(vault, clPoolManager, binPoolManager);
+        MockERC20(Currency.unwrap(poolKey.currency0)).approve(address(v4Router), type(uint256).max);
+        MockERC20(Currency.unwrap(poolKey.currency1)).approve(address(v4Router), type(uint256).max);
+        token2.approve(address(v4Router), type(uint256).max);
+        token3.approve(address(v4Router), type(uint256).max);
+        token4.approve(address(v4Router), type(uint256).max);
+        token5.approve(address(v4Router), type(uint256).max);
 
         currency0 = poolKey.currency0;
         currency1 = poolKey.currency1;
@@ -332,6 +350,173 @@ contract MixedQuoterTest is
         assertEq(_gasEstimate, gasEstimate);
         assertGt(_gasEstimate, 80000);
         assertLt(_gasEstimate, 90000);
+    }
+
+    function test_quoteMixedExactInputNotIsolation_V4CL() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token0);
+        paths[1] = address(token1);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        // swap 0.5 ether
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
+        console2.log("amountOut", amountOut);
+        assertEq(amountOut, 498417179678643398);
+        uint256 swapPath1Output = amountOut;
+
+        // swap 1 ether
+        (amountOut, gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+
+        assertEq(amountOut, 996668773744192346);
+        uint256 swapPath2Output = amountOut - swapPath1Output;
+
+        // path 1: (0.5)token0 -> token1 , tokenOut should be 498417179678643398
+        // path 2: (0.5)token0 -> token1, tokenOut should be 996668773744192346 - 498417179678643398 = 498251594065548948
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+        console2.log("amountOutOfRoute1", amountOutOfRoute1);
+        assertEq(amountOutOfRoute1, swapPath1Output);
+        console2.log("amountOutOfRoute2", amountOutOfRoute2);
+        assertEq(amountOutOfRoute2, swapPath2Output - 1);
+
+        // swap 0.5 ether in v4 pool
+        ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 0.5 ether, 0, ZERO_BYTES);
+
+        plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
+        bytes memory swapData1 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
+        uint256 route1Token1BalanceBefore = poolKey.currency1.balanceOf(address(this));
+        v4Router.executeActions(swapData1);
+        uint256 route1Token1BalanceAfter = poolKey.currency1.balanceOf(address(this));
+
+        uint256 route1Token1Received = route1Token1BalanceAfter - route1Token1BalanceBefore;
+        console2.log("route1Token1Received", route1Token1Received);
+        assertEq(route1Token1Received, swapPath1Output);
+
+        // swap another 0.5 ether in v4 pool
+        ICLRouterBase.CLSwapExactInputSingleParams memory swapParams2 =
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 0.5 ether, 0, ZERO_BYTES);
+        plan = Planner.init();
+        plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams2));
+        bytes memory swapData2 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
+        uint256 route2Token1BalanceBefore = poolKey.currency1.balanceOf(address(this));
+        v4Router.executeActions(swapData2);
+        uint256 route2Token1BalanceAfter = poolKey.currency1.balanceOf(address(this));
+
+        uint256 route2Token1Received = route2Token1BalanceAfter - route2Token1BalanceBefore;
+        console2.log("route2Token1Received", route2Token1Received);
+        // -2 is due to precision round loss
+        assertEq(route2Token1Received, swapPath2Output - 1);
+    }
+
+    function testFuzz_quoteMixedExactInputNotIsolation_V4CL(uint8 firstSwapPercent, bool isZeroForOne) public {
+        uint256 OneHundredPercent = type(uint8).max;
+        vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
+        uint256 totalSwapAmount = 1 ether;
+        uint128 firstSwapAmount = uint128((totalSwapAmount * firstSwapPercent) / OneHundredPercent);
+        uint128 secondSwapAmount = uint128(totalSwapAmount - firstSwapAmount);
+
+        address[] memory paths = new address[](2);
+        if (isZeroForOne) {
+            paths[0] = address(token0);
+            paths[1] = address(token1);
+        } else {
+            paths[0] = address(token1);
+            paths[1] = address(token0);
+        }
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+        console2.log("amountOutOfRoute1", amountOutOfRoute1);
+        console2.log("amountOutOfRoute2", amountOutOfRoute2);
+
+        // first swap in v4 pool
+        ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey, isZeroForOne, firstSwapAmount, 0, ZERO_BYTES);
+
+        plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
+        bytes memory swapData1;
+        if (isZeroForOne) {
+            swapData1 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
+        } else {
+            swapData1 = plan.finalizeSwap(poolKey.currency1, poolKey.currency0, ActionConstants.MSG_SENDER);
+        }
+        uint256 route1TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route1TokenOutBalanceBefore = poolKey.currency1.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceBefore = poolKey.currency0.balanceOf(address(this));
+        }
+        v4Router.executeActions(swapData1);
+        uint256 route1TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route1TokenOutBalanceAfter = poolKey.currency1.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceAfter = poolKey.currency0.balanceOf(address(this));
+        }
+
+        uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
+        console2.log("route1TokenOutReceived", route1TokenOutReceived);
+        assertEq(route1TokenOutReceived, amountOutOfRoute1);
+
+        // second swap in v4 pool
+        ICLRouterBase.CLSwapExactInputSingleParams memory swapParams2 =
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey, isZeroForOne, secondSwapAmount, 0, ZERO_BYTES);
+        plan = Planner.init();
+        plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams2));
+        bytes memory swapData2;
+        if (isZeroForOne) {
+            swapData2 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
+        } else {
+            swapData2 = plan.finalizeSwap(poolKey.currency1, poolKey.currency0, ActionConstants.MSG_SENDER);
+        }
+        uint256 route2TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route2TokenOutBalanceBefore = poolKey.currency1.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceBefore = poolKey.currency0.balanceOf(address(this));
+        }
+        v4Router.executeActions(swapData2);
+        uint256 route2TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route2TokenOutBalanceAfter = poolKey.currency1.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceAfter = poolKey.currency0.balanceOf(address(this));
+        }
+
+        uint256 route2TokenOutReceived = route2TokenOutBalanceAfter - route2TokenOutBalanceBefore;
+        assertEq(route2TokenOutReceived, amountOutOfRoute2);
     }
 
     function testV4CLquoteExactInputSingle_OneForZero() public {

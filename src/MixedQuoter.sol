@@ -15,13 +15,16 @@ import {V3PoolTicksCounter} from "./libraries/external/V3PoolTicksCounter.sol";
 import {V3SmartRouterHelper} from "./libraries/external/V3SmartRouterHelper.sol";
 import {IMixedQuoter} from "./interfaces/IMixedQuoter.sol";
 import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
+import {MixedQuoterRecorder} from "./libraries/MixedQuoterRecorder.sol";
+import {Multicall_v4} from "./base/Multicall_v4.sol";
+import "forge-std/console2.sol";
 
 /// @title Provides on chain quotes for v4, V3, V2, Stable and MixedRoute exact input swaps
 /// @notice Allows getting the expected amount out for a given swap without executing the swap
 /// @notice Does not support exact output swaps since using the contract balance between exactOut swaps is not supported
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
-contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
+contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
     using SafeCast for *;
     using V3PoolTicksCounter for IPancakeV3Pool;
 
@@ -186,12 +189,35 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     /**
      * Mixed *************************************************
      */
+    /// @dev All swap results will influence the outcome of subsequent swaps within the same pool
+    function quoteMixedExactInputNotIsolation(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountIn
+    ) external override returns (uint256 amountOut, uint256 gasEstimate) {
+        return quoteMixedExactInputIsolationMode(paths, actions, params, amountIn, false);
+    }
+
     function quoteMixedExactInput(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,
         uint256 amountIn
     ) external override returns (uint256 amountOut, uint256 gasEstimate) {
+        return quoteMixedExactInputIsolationMode(paths, actions, params, amountIn, true);
+    }
+
+    /// @dev if isIsolate is true, each swap is isolated and does not influence the outcome of subsequent swaps within the same pool
+    /// @dev if isIsolate is false, all swap results will influence the outcome of subsequent swaps within the same pool
+    /// @dev if isIsolate is false, non-v4 pools only support one swap direction for same pool
+    function quoteMixedExactInputIsolationMode(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountIn,
+        bool isIsolate
+    ) private returns (uint256 amountOut, uint256 gasEstimate) {
         uint256 numActions = actions.length;
         if (numActions == 0) revert NoActions();
         if (numActions != params.length || numActions != paths.length - 1) revert InputLengthMismatch();
@@ -228,14 +254,45 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(clParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
-                (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(
-                    IQuoter.QuoteExactSingleParams({
-                        poolKey: clParams.poolKey,
-                        zeroForOne: zeroForOne,
-                        exactAmount: amountIn.toUint128(),
-                        hookData: clParams.hookData
-                    })
-                );
+
+                // will execute all swap history of same v4 pool in one transaction if isIsolate is false
+                IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
+                    poolKey: clParams.poolKey,
+                    zeroForOne: zeroForOne,
+                    exactAmount: amountIn.toUint128(),
+                    hookData: clParams.hookData
+                });
+
+                if (!isIsolate) {
+                    console2.logString("in isIsolate");
+                    bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    console2.logString("getV4PoolSwapList output");
+                    console2.logBytes(swapListBytes);
+                    IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
+                    uint256 swapHistoryListLength;
+                    if (swapListBytes.length > 0) {
+                        swapHistoryList = abi.decode(swapListBytes, (IQuoter.QuoteExactSingleParams[]));
+
+                        swapHistoryListLength = swapHistoryList.length;
+                    }
+                    IQuoter.QuoteExactSingleParams[] memory swapList =
+                        new IQuoter.QuoteExactSingleParams[](swapHistoryListLength + 1);
+                    for (uint256 i = 0; i < swapHistoryListLength; i++) {
+                        swapList[i] = swapHistoryList[i];
+                    }
+                    swapList[swapHistoryListLength] = swapParams;
+
+                    (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingleList(swapList);
+                    console2.logString("quoteExactInputSingleList output");
+                    console2.logUint(amountIn);
+                    swapListBytes = abi.encode(swapList);
+                    console2.logString("setV4PoolSwapList swapListBytes");
+                    console2.logBytes(swapListBytes);
+                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                } else {
+                    (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(swapParams);
+                }
             } else if (action == MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE) {
                 QuoteMixedV4ExactInputSingleParams memory binParams =
                     abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
