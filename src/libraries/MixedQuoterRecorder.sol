@@ -102,7 +102,7 @@ library MixedQuoterRecorder {
     /// @param swapListBytes The swap history list bytes.
     function setV4PoolSwapList(bytes32 poolHash, bytes memory swapListBytes) internal {
         uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
-        assembly {
+        assembly ("memory-safe") {
             // save the length of the bytes
             tstore(swapListSlot, mload(swapListBytes))
 
@@ -119,7 +119,7 @@ library MixedQuoterRecorder {
     /// @return swapListBytes The swap history list bytes.
     function getV4PoolSwapList(bytes32 poolHash) internal view returns (bytes memory swapListBytes) {
         uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
-        assembly {
+        assembly ("memory-safe") {
             // get the length of the bytes
             let length := tload(swapListSlot)
             swapListBytes := mload(0x40)
@@ -173,25 +173,46 @@ library MixedQuoterRecorder {
         }
     }
 
+    /// @dev Get the stable swap pool hash.
+    /// @param token0 The address of token0.
+    /// @param token1 The address of token1.
+    /// @return poolHash The hash of the pool.
     function getSSPoolHash(address token0, address token1) internal pure returns (bytes32) {
+        if (token0 == token1) revert();
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
         return keccak256(abi.encode(token0, token1, SWAP_SS));
     }
 
+    /// @dev Get the v2 pool hash.
+    /// @param token0 The address of token0.
+    /// @param token1 The address of token1.
+    /// @return poolHash The hash of the pool.
     function getV2PoolHash(address token0, address token1) internal pure returns (bytes32) {
+        if (token0 == token1) revert();
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
         return keccak256(abi.encode(token0, token1, SWAP_V2));
     }
 
+    /// @dev Get the v3 pool hash.
+    /// @param token0 The address of token0.
+    /// @param token1 The address of token1.
+    /// @param fee The fee of the pool.
     function getV3PoolHash(address token0, address token1, uint24 fee) internal pure returns (bytes32) {
+        if (token0 == token1) revert();
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
         return keccak256(abi.encode(token0, token1, fee, SWAP_V3));
     }
 
+    /// @dev Get the v4 cl pool hash.
+    /// @param key The pool key.
+    /// @return poolHash The hash of the pool.
     function getV4CLPoolHash(PoolKey memory key) internal pure returns (bytes32) {
         return keccak256(abi.encode(key, SWAP_V4_CL));
     }
 
+    /// @dev Get the v4 bin pool hash.
+    /// @param key The pool key.
+    /// @return poolHash The hash of the pool.
     function getV4BinPoolHash(PoolKey memory key) internal pure returns (bytes32) {
         return keccak256(abi.encode(key, SWAP_V4_BIN));
     }

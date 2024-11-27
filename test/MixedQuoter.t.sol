@@ -1293,6 +1293,143 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 50000);
     }
 
+    // route 1: path 1: token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v3 pool
+    // route 2: path 2:  token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v2 pool
+    // route 2: path 3:  token2 -> weth, v2 pool
+    function test_quoteMixedExactInputNotIsolation_multi_route() public {
+        // path: token0 -> token1 -> token2 -> weth
+        address[] memory paths1 = new address[](4);
+        paths1[0] = address(token0);
+        paths1[1] = address(token1);
+        paths1[2] = address(token2);
+        paths1[3] = address(weth);
+        // cl pool -> ss pool -> v3 pool
+        bytes memory actions1 = new bytes(3);
+        actions1[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions1[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+        actions1[2] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+        bytes[] memory params1 = new bytes[](3);
+        params1[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        params1[1] = new bytes(0);
+        uint24 fee = 500;
+        params1[2] = abi.encode(fee);
+
+        // path: token0 -> token1 -> token2 -> weth
+        address[] memory paths2 = new address[](4);
+        paths2[0] = address(token0);
+        paths2[1] = address(token1);
+        paths2[2] = address(token2);
+        paths2[3] = address(weth);
+        // cl pool -> ss pool -> v2 pool
+        bytes memory actions2 = new bytes(3);
+        actions2[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions2[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
+        actions2[2] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params2 = new bytes[](3);
+        params2[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+        params2[1] = new bytes(0);
+        params2[2] = new bytes(0);
+
+        // path: token2 -> weth
+        address[] memory paths3 = new address[](2);
+        paths3[0] = address(token2);
+        paths3[1] = address(weth);
+        // v2 pool
+        bytes memory actions3 = new bytes(1);
+        actions3[0] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
+        bytes[] memory params3 = new bytes[](1);
+        params3[0] = new bytes(0);
+
+        bytes[] memory multicallBytes = new bytes[](3);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths1, actions1, params1, 1 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions2, params2, 1 ether
+        );
+        multicallBytes[2] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths3, actions3, params3, 1 ether
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+        (uint256 amountOutOfRoute3,) = abi.decode(results[2], (uint256, uint256));
+
+        // route 1: path 1: token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v3 pool
+        uint256 route1Token1BalanceBefore = token1.balanceOf(address(this));
+        // swap 1 ether in v4 cl pool
+        ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 1 ether, 0, ZERO_BYTES);
+        plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
+        bytes memory swapData1 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
+        v4Router.executeActions(swapData1);
+        uint256 route1Token1BalanceAfter = token1.balanceOf(address(this));
+        uint256 route1Token1Received = route1Token1BalanceAfter - route1Token1BalanceBefore;
+
+        // swap route1Token1Received in ss pool
+        uint256 route1Token2BalanceBefore = token2.balanceOf(address(this));
+        bool isZeroForOneOfRout1SS = address(token1) < address(token2);
+        stableSwapPair.exchange(isZeroForOneOfRout1SS ? 0 : 1, isZeroForOneOfRout1SS ? 1 : 0, route1Token1Received, 0);
+        uint256 route1Token2BalanceAfter = token2.balanceOf(address(this));
+        uint256 route1Token2Received = route1Token2BalanceAfter - route1Token2BalanceBefore;
+
+        // swap route1Token2Received in v3 pool
+        uint256 route1WethBalanceBefore = weth.balanceOf(address(this));
+        PancakeV3Router.ExactInputSingleParams memory swapParams2 = PancakeV3Router.ExactInputSingleParams({
+            tokenIn: address(token2),
+            tokenOut: address(weth),
+            fee: fee,
+            recipient: address(this),
+            deadline: block.timestamp + 300,
+            amountIn: route1Token2Received,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        v3Router.exactInputSingle(swapParams2);
+        uint256 route1WethBalanceAfter = weth.balanceOf(address(this));
+        uint256 route1WethReceived = route1WethBalanceAfter - route1WethBalanceBefore;
+        assertEq(route1WethReceived, amountOutOfRoute1);
+
+        // route 2: path 2: token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v2 pool
+        uint256 route2Token1BalanceBefore = token1.balanceOf(address(this));
+        // swap 1 ether in v4 cl pool
+        ICLRouterBase.CLSwapExactInputSingleParams memory swapParams3 =
+            ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 1 ether, 0, ZERO_BYTES);
+        plan = Planner.init();
+        plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams3));
+        bytes memory swapData3 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
+        v4Router.executeActions(swapData3);
+        uint256 route2Token1BalanceAfter = token1.balanceOf(address(this));
+        uint256 route2Token1Received = route2Token1BalanceAfter - route2Token1BalanceBefore;
+
+        // swap route2Token1Received in ss pool
+        uint256 route2Token2BalanceBefore = token2.balanceOf(address(this));
+        bool isZeroForOneOfRout2SS = address(token1) < address(token2);
+        stableSwapPair.exchange(isZeroForOneOfRout2SS ? 0 : 1, isZeroForOneOfRout2SS ? 1 : 0, route2Token1Received, 0);
+        uint256 route2Token2BalanceAfter = token2.balanceOf(address(this));
+        uint256 route2Token2Received = route2Token2BalanceAfter - route2Token2BalanceBefore;
+
+        // swap route2Token2Received in v2 pool
+        uint256 route2WethBalanceBefore = weth.balanceOf(address(this));
+        _swapV2(address(token2), address(weth), route2Token2Received);
+        uint256 route2WethBalanceAfter = weth.balanceOf(address(this));
+        uint256 route2WethReceived = route2WethBalanceAfter - route2WethBalanceBefore;
+        // not exactly equal , but difference is very small, less than 1/1000000
+        assertApproxEqRel(route2WethReceived, amountOutOfRoute2, 1e18 / 1000000);
+
+        // route 3: path 3: token2 -> weth, v2 pool
+        uint256 route3WethBalanceBefore = weth.balanceOf(address(this));
+        _swapV2(address(token2), address(weth), 1 ether);
+        uint256 route3WethBalanceAfter = weth.balanceOf(address(this));
+        uint256 route3WethReceived = route3WethBalanceAfter - route3WethBalanceBefore;
+        // not exactly equal , but difference is very small, less than 1/2000
+        assertApproxEqRel(route3WethReceived, amountOutOfRoute3, 1e18 / 2000);
+    }
+
     // token0 -> token1 -> token2
     // V4 CL Pool -> SS Pool
     function testQuoteMixedTwoHops_V4Cl_SS() public {
