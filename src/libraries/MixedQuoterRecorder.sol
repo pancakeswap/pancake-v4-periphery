@@ -2,7 +2,6 @@
 pragma solidity 0.8.26;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import "forge-std/console2.sol";
 
 /// @dev Record all token accumulation and swap direction of the transaction for non-v4 pools.
 /// @dev Record v4 swap history list for v4 pools.

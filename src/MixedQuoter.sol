@@ -17,7 +17,6 @@ import {IMixedQuoter} from "./interfaces/IMixedQuoter.sol";
 import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
 import {MixedQuoterRecorder} from "./libraries/MixedQuoterRecorder.sol";
 import {Multicall_v4} from "./base/Multicall_v4.sol";
-import "forge-std/console2.sol";
 
 /// @title Provides on chain quotes for v4, V3, V2, Stable and MixedRoute exact input swaps
 /// @notice Allows getting the expected amount out for a given swap without executing the swap

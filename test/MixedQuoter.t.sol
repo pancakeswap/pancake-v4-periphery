@@ -54,7 +54,6 @@ import {ActionConstants} from "../src/libraries/ActionConstants.sol";
 import {V3SmartRouterHelper} from "../src/libraries/external/V3SmartRouterHelper.sol";
 import {MixedQuoterRecorder} from "../src/libraries/MixedQuoterRecorder.sol";
 import {PancakeV3Router} from "./helpers/PancakeV3Router.sol";
-import "forge-std/console2.sol";
 
 contract MixedQuoterTest is
     Test,
