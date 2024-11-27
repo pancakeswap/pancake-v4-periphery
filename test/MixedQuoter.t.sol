@@ -623,6 +623,74 @@ contract MixedQuoterTest is
         assertLt(gasEstimate, 130000);
     }
 
+    function test_quoteMixedExactInputNotIsolation_V3_revert_INVALID_SWAP_DIRECTION() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(weth);
+        paths[1] = address(token2);
+
+        address[] memory paths2 = new address[](2);
+        paths2[0] = address(token2);
+        paths2[1] = address(weth);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        uint24 fee = 500;
+        params[0] = abi.encode(fee);
+
+        // path 1: (0.5)weth -> token2
+        // path 2: (0.5)weth -> token2
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions, params, 0.5 ether
+        );
+        vm.expectRevert(MixedQuoterRecorder.INVALID_SWAP_DIRECTION.selector);
+        mixedQuoter.multicall(multicallBytes);
+    }
+
+    function test_quoteMixedExactInputNotIsolation_V3() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(weth);
+        paths[1] = address(token2);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        uint24 fee = 500;
+        params[0] = abi.encode(fee);
+
+        // swap 0.3 ether
+        (uint256 amountOut,) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.3 ether);
+        uint256 swapPath1Output = amountOut;
+
+        // swap 1 ether
+        (amountOut,) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        uint256 swapPath2Output = amountOut - swapPath1Output;
+
+        // path 1: (0.3)weth -> token2
+        // path 2: (0.7)weth -> token2
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.3 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.7 ether
+        );
+
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+        assertEq(amountOutOfRoute1, swapPath1Output);
+        assertEq(amountOutOfRoute2, swapPath2Output);
+    }
+
     function testV4CLquoteExactInputSingle_ZeroForOne() public {
         address[] memory paths = new address[](2);
         paths[0] = address(Currency.unwrap(poolKey.currency0));
