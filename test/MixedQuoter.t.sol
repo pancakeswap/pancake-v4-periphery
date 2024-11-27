@@ -49,6 +49,7 @@ import {IStableSwap} from "../src/interfaces/external/IStableSwap.sol";
 import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
 import {MockV4Router} from "./mocks/MockV4Router.sol";
 import {ICLRouterBase} from "../src/pool-cl/interfaces/ICLRouterBase.sol";
+import {IBinRouterBase} from "../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {ActionConstants} from "../src/libraries/ActionConstants.sol";
 import {V3SmartRouterHelper} from "../src/libraries/external/V3SmartRouterHelper.sol";
 import {MixedQuoterRecorder} from "../src/libraries/MixedQuoterRecorder.sol";
@@ -297,8 +298,6 @@ contract MixedQuoterTest is
         address[] memory paths2 = new address[](2);
         paths2[0] = address(token2);
         paths2[1] = address(token1);
-
-        bool isZeroForOne = token1 < token2;
 
         bytes memory actions = new bytes(1);
         actions[0] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
@@ -975,6 +974,159 @@ contract MixedQuoterTest is
         assertEq(_gasEstimate, gasEstimate);
         assertGt(_gasEstimate, 40000);
         assertLt(_gasEstimate, 50000);
+    }
+
+    function test_quoteMixedExactInputNotIsolation_V4Bin() public {
+        address[] memory paths = new address[](2);
+        paths[0] = address(token3);
+        paths[1] = address(token4);
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+        // swap 0.5 ether
+        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
+        uint256 swapPath1Output = amountOut;
+
+        // swap 1 ether
+        (amountOut, gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
+        uint256 swapPath2Output = amountOut - swapPath1Output;
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+        assertEq(amountOutOfRoute1, swapPath1Output);
+        assertEq(amountOutOfRoute2, swapPath2Output);
+
+        // swap 0.5 ether in v4 bin pool
+        IBinRouterBase.BinSwapExactInputSingleParams memory swapParams1 =
+            IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, true, 0.5 ether, 0, ZERO_BYTES);
+        plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
+        bytes memory swapData1 =
+            plan.finalizeSwap(binPoolKey.currency0, binPoolKey.currency1, ActionConstants.MSG_SENDER);
+        uint256 route1TokenOutBalanceBefore = binPoolKey.currency1.balanceOf(address(this));
+        v4Router.executeActions(swapData1);
+        uint256 route1TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
+
+        uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
+        assertEq(route1TokenOutReceived, amountOutOfRoute1);
+
+        // swap another 0.5 ether in v4 bin pool
+        IBinRouterBase.BinSwapExactInputSingleParams memory swapParams2 =
+            IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, true, 0.5 ether, 0, ZERO_BYTES);
+        plan = Planner.init();
+        plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams2));
+        bytes memory swapData2 =
+            plan.finalizeSwap(binPoolKey.currency0, binPoolKey.currency1, ActionConstants.MSG_SENDER);
+        uint256 route2TokenOutBalanceBefore = binPoolKey.currency1.balanceOf(address(this));
+        v4Router.executeActions(swapData2);
+        uint256 route2TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
+
+        uint256 route2TokenOutReceived = route2TokenOutBalanceAfter - route2TokenOutBalanceBefore;
+        assertEq(route2TokenOutReceived, amountOutOfRoute2);
+    }
+
+    function testFuzz_quoteMixedExactInputNotIsolation_V4Bin(uint8 firstSwapPercent, bool isZeroForOne) public {
+        uint256 OneHundredPercent = type(uint8).max;
+        vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
+        uint256 totalSwapAmount = 1 ether;
+        uint128 firstSwapAmount = uint128((totalSwapAmount * firstSwapPercent) / OneHundredPercent);
+        uint128 secondSwapAmount = uint128(totalSwapAmount - firstSwapAmount);
+
+        address[] memory paths = new address[](2);
+        if (isZeroForOne) {
+            paths[0] = address(token3);
+            paths[1] = address(token4);
+        } else {
+            paths[0] = address(token4);
+            paths[1] = address(token3);
+        }
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        params[0] =
+            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+
+        // first swap in v4 bin pool
+        IBinRouterBase.BinSwapExactInputSingleParams memory swapParams1 =
+            IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, isZeroForOne, firstSwapAmount, 0, ZERO_BYTES);
+
+        plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
+        bytes memory swapData1;
+        if (isZeroForOne) {
+            swapData1 = plan.finalizeSwap(binPoolKey.currency0, binPoolKey.currency1, ActionConstants.MSG_SENDER);
+        } else {
+            swapData1 = plan.finalizeSwap(binPoolKey.currency1, binPoolKey.currency0, ActionConstants.MSG_SENDER);
+        }
+        uint256 route1TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route1TokenOutBalanceBefore = binPoolKey.currency1.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceBefore = binPoolKey.currency0.balanceOf(address(this));
+        }
+        v4Router.executeActions(swapData1);
+        uint256 route1TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route1TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceAfter = binPoolKey.currency0.balanceOf(address(this));
+        }
+
+        uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
+        assertEq(route1TokenOutReceived, amountOutOfRoute1);
+
+        // second swap in v4 bin pool
+        IBinRouterBase.BinSwapExactInputSingleParams memory swapParams2 =
+            IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, isZeroForOne, secondSwapAmount, 0, ZERO_BYTES);
+        plan = Planner.init();
+        plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams2));
+        bytes memory swapData2;
+        if (isZeroForOne) {
+            swapData2 = plan.finalizeSwap(binPoolKey.currency0, binPoolKey.currency1, ActionConstants.MSG_SENDER);
+        } else {
+            swapData2 = plan.finalizeSwap(binPoolKey.currency1, binPoolKey.currency0, ActionConstants.MSG_SENDER);
+        }
+        uint256 route2TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route2TokenOutBalanceBefore = binPoolKey.currency1.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceBefore = binPoolKey.currency0.balanceOf(address(this));
+        }
+        v4Router.executeActions(swapData2);
+        uint256 route2TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route2TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceAfter = binPoolKey.currency0.balanceOf(address(this));
+        }
+
+        uint256 route2TokenOutReceived = route2TokenOutBalanceAfter - route2TokenOutBalanceBefore;
+        assertEq(route2TokenOutReceived, amountOutOfRoute2);
     }
 
     function testBinQuoteExactInputSingle_OneForZero() public {

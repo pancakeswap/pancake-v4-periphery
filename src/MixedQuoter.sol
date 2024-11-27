@@ -332,14 +332,37 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(binParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
-                (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingle(
-                    IQuoter.QuoteExactSingleParams({
-                        poolKey: binParams.poolKey,
-                        zeroForOne: zeroForOne,
-                        exactAmount: amountIn.toUint128(),
-                        hookData: binParams.hookData
-                    })
-                );
+
+                IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
+                    poolKey: binParams.poolKey,
+                    zeroForOne: zeroForOne,
+                    exactAmount: amountIn.toUint128(),
+                    hookData: binParams.hookData
+                });
+                // will execute all swap history of same v4 pool in one transaction if isIsolate is false
+                if (!isIsolate) {
+                    bytes32 poolHash = MixedQuoterRecorder.getV4BinPoolHash(binParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
+                    uint256 swapHistoryListLength;
+                    if (swapListBytes.length > 0) {
+                        swapHistoryList = abi.decode(swapListBytes, (IQuoter.QuoteExactSingleParams[]));
+
+                        swapHistoryListLength = swapHistoryList.length;
+                    }
+                    IQuoter.QuoteExactSingleParams[] memory swapList =
+                        new IQuoter.QuoteExactSingleParams[](swapHistoryListLength + 1);
+                    for (uint256 i = 0; i < swapHistoryListLength; i++) {
+                        swapList[i] = swapHistoryList[i];
+                    }
+                    swapList[swapHistoryListLength] = swapParams;
+
+                    (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingleList(swapList);
+                    swapListBytes = abi.encode(swapList);
+                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                } else {
+                    (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingle(swapParams);
+                }
             } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
@@ -374,6 +397,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     amountIn = swapAmountOut - accAmountOut;
                 }
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
+                /// @dev PCS do not support three pool stable swap, so will skip isolation mode
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
