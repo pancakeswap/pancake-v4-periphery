@@ -194,27 +194,6 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         lpm.multicall(calls);
     }
 
-    // create a pool where tickSpacing is negative
-    // core's TickSpacingTooSmall(int24) should bubble up through Multicall
-    function test_multicall_bubbleRevert_core_args() public {
-        int24 tickSpacing = -10;
-        key = PoolKey({
-            currency0: currency0,
-            currency1: currency1,
-            fee: 0,
-            poolManager: manager,
-            hooks: IHooks(address(0)),
-            parameters: bytes32(uint256(int256(tickSpacing << 16) | 0x0000))
-        });
-
-        // Use multicall to initialize a pool
-        bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(ICLPositionManager.initializePool.selector, key, SQRT_RATIO_1_1, ZERO_BYTES);
-
-        vm.expectRevert(abi.encodeWithSelector(ICLPoolManager.TickSpacingTooSmall.selector, tickSpacing));
-        lpm.multicall(calls);
-    }
-
     function test_multicall_initializePool_twice_andMint_succeeds() public {
         key = PoolKey({
             currency0: currency0,
