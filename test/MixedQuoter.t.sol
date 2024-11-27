@@ -53,6 +53,7 @@ import {IBinRouterBase} from "../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {ActionConstants} from "../src/libraries/ActionConstants.sol";
 import {V3SmartRouterHelper} from "../src/libraries/external/V3SmartRouterHelper.sol";
 import {MixedQuoterRecorder} from "../src/libraries/MixedQuoterRecorder.sol";
+import {PancakeV3Router} from "./helpers/PancakeV3Router.sol";
 import "forge-std/console2.sol";
 
 contract MixedQuoterTest is
@@ -92,6 +93,7 @@ contract MixedQuoterTest is
     address v3Deployer;
     IPancakeV3Factory v3Factory;
     IV3NonfungiblePositionManager v3Nfpm;
+    PancakeV3Router v3Router;
 
     IStableSwapFactory stableSwapFactory;
     IStableSwap stableSwapPair;
@@ -212,10 +214,16 @@ contract MixedQuoterTest is
             );
         }
 
+        v3Router = new PancakeV3Router(v3Factory);
+
         // make sure v3Nfpm has allowance
         weth.approve(address(v3Nfpm), type(uint256).max);
         token2.approve(address(v3Nfpm), type(uint256).max);
         token3.approve(address(v3Nfpm), type(uint256).max);
+        // approve v3Router
+        weth.approve(address(v3Router), type(uint256).max);
+        token2.approve(address(v3Router), type(uint256).max);
+        token3.approve(address(v3Router), type(uint256).max);
 
         // 1. mint some liquidity to the v3 pool
         _mintV3Liquidity(address(weth), address(token2));
@@ -362,7 +370,7 @@ contract MixedQuoterTest is
         uint256 route2TokenOutBalanceBefore = token2.balanceOf(address(this));
         stableSwapPair.exchange(isZeroForOne ? 0 : 1, isZeroForOne ? 1 : 0, 0.5 ether, 0);
         uint256 route2TokenOutBalanceAfter = token2.balanceOf(address(this));
-        // not exactly equal , but diff is very small, less than 1/1000000
+        // not exactly equal , but difference is very small, less than 1/1000000
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 1000000);
     }
 
@@ -431,7 +439,7 @@ contract MixedQuoterTest is
         } else {
             route2TokenOutBalanceAfter = token0OfSS.balanceOf(address(this));
         }
-        // not exactly equal , but diff is very small, less than 1/1000000
+        // not exactly equal , but difference is very small, less than 1/1000000
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 1000000);
     }
 
@@ -521,7 +529,7 @@ contract MixedQuoterTest is
         uint256 route2TokenOutBalanceBefore = token2.balanceOf(address(this));
         _swapV2(address(weth), address(token2), 0.5 ether);
         uint256 route2TokenOutBalanceAfter = token2.balanceOf(address(this));
-        // not exactly equal , but diff is very small, less than 1/2000
+        // not exactly equal , but difference is very small, less than 1/2000
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 2000);
     }
 
@@ -578,7 +586,7 @@ contract MixedQuoterTest is
             route1TokenOutBalanceAfter = token0OfV2.balanceOf(address(this));
         }
 
-        // not exactly equal , but diff is very small, less than 1/2000
+        // not exactly equal , but difference is very small, less than 1/2000
         assertApproxEqRel(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1, 1e18 / 2000);
 
         // swap 0.5 ether in v2 pair
@@ -599,7 +607,7 @@ contract MixedQuoterTest is
         } else {
             route2TokenOutBalanceAfter = token0OfV2.balanceOf(address(this));
         }
-        // not exactly equal , but diff is very small, less than 1/2000
+        // not exactly equal , but difference is very small, less than 1/2000
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 2000);
     }
 
@@ -688,6 +696,133 @@ contract MixedQuoterTest is
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
         assertEq(amountOutOfRoute1, swapPath1Output);
         assertEq(amountOutOfRoute2, swapPath2Output);
+
+        // swap 0.3 ether in v3 pool
+        PancakeV3Router.ExactInputSingleParams memory swapParams1 = PancakeV3Router.ExactInputSingleParams({
+            tokenIn: address(weth),
+            tokenOut: address(token2),
+            fee: fee,
+            recipient: address(this),
+            deadline: block.timestamp + 1,
+            amountIn: 0.3 ether,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        uint256 route1TokenOutBalanceBefore = token2.balanceOf(address(this));
+        v3Router.exactInputSingle(swapParams1);
+        uint256 route1TokenOutBalanceAfter = token2.balanceOf(address(this));
+
+        assertEq(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1);
+
+        // //swap 0.7 ether in v3 pool
+        // PancakeV3Router.ExactInputSingleParams memory swapParams2 =
+        //     PancakeV3Router.ExactInputSingleParams({
+        //         tokenIn: address(weth),
+        //         tokenOut: address(token2),
+        //         fee: fee,
+        //         recipient: address(this),
+        //         deadline: block.timestamp + 1,
+        //         amountIn: 0.7 ether,
+        //         amountOutMinimum: 0,
+        //         sqrtPriceLimitX96: 0
+        //     });
+        // uint256 route2TokenOutBalanceBefore = token2.balanceOf(address(this));
+        // v3Router.exactInputSingle(swapParams2);
+        // uint256 route2TokenOutBalanceAfter = token2.balanceOf(address(this));
+        // assertEq(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2);
+    }
+
+    function testFuzz_quoteMixedExactInputNotIsolation_V3(uint8 firstSwapPercent, bool isZeroForOne) public {
+        uint256 OneHundredPercent = type(uint8).max;
+        vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
+        uint256 totalSwapAmount = 1 ether;
+        uint128 firstSwapAmount = uint128((totalSwapAmount * firstSwapPercent) / OneHundredPercent);
+        uint128 secondSwapAmount = uint128(totalSwapAmount - firstSwapAmount);
+        (MockERC20 token0OfV3, MockERC20 token1OfV3) =
+            address(weth) < address(token2) ? (MockERC20(address(weth)), token2) : (token2, MockERC20(address(weth)));
+
+        address[] memory paths = new address[](2);
+        if (isZeroForOne) {
+            paths[0] = address(token0OfV3);
+            paths[1] = address(token1OfV3);
+        } else {
+            paths[0] = address(token1OfV3);
+            paths[1] = address(token0OfV3);
+        }
+
+        bytes memory actions = new bytes(1);
+        actions[0] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
+
+        bytes[] memory params = new bytes[](1);
+        uint24 fee = 500;
+        params[0] = abi.encode(fee);
+
+        bytes[] memory multicallBytes = new bytes[](2);
+        multicallBytes[0] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+        );
+        multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+        );
+        bytes[] memory results = mixedQuoter.multicall(multicallBytes);
+
+        (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
+        (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
+
+        uint256 route1TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route1TokenOutBalanceBefore = token1OfV3.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceBefore = token0OfV3.balanceOf(address(this));
+        }
+        PancakeV3Router.ExactInputSingleParams memory swapParams1 = PancakeV3Router.ExactInputSingleParams({
+            tokenIn: isZeroForOne ? address(token0OfV3) : address(token1OfV3),
+            tokenOut: isZeroForOne ? address(token1OfV3) : address(token0OfV3),
+            fee: fee,
+            recipient: address(this),
+            deadline: block.timestamp + 1,
+            amountIn: firstSwapAmount,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        v3Router.exactInputSingle(swapParams1);
+        uint256 route1TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route1TokenOutBalanceAfter = token1OfV3.balanceOf(address(this));
+        } else {
+            route1TokenOutBalanceAfter = token0OfV3.balanceOf(address(this));
+        }
+        assertEq(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1);
+
+        uint256 route2TokenOutBalanceBefore;
+        if (isZeroForOne) {
+            route2TokenOutBalanceBefore = token1OfV3.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceBefore = token0OfV3.balanceOf(address(this));
+        }
+        PancakeV3Router.ExactInputSingleParams memory swapParams2 = PancakeV3Router.ExactInputSingleParams({
+            tokenIn: isZeroForOne ? address(token0OfV3) : address(token1OfV3),
+            tokenOut: isZeroForOne ? address(token1OfV3) : address(token0OfV3),
+            fee: fee,
+            recipient: address(this),
+            deadline: block.timestamp + 1,
+            amountIn: secondSwapAmount,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        v3Router.exactInputSingle(swapParams2);
+        uint256 route2TokenOutBalanceAfter;
+        if (isZeroForOne) {
+            route2TokenOutBalanceAfter = token1OfV3.balanceOf(address(this));
+        } else {
+            route2TokenOutBalanceAfter = token0OfV3.balanceOf(address(this));
+        }
+        uint256 tokenOutReceived = route2TokenOutBalanceAfter - route2TokenOutBalanceBefore;
+        uint256 diff = tokenOutReceived > amountOutOfRoute2
+            ? tokenOutReceived - amountOutOfRoute2
+            : amountOutOfRoute2 - tokenOutReceived;
+        // not exactly equal in some cases , but difference is very small, only 1 wei or 2 wei
+        assertLe(diff, 2);
     }
 
     function testV4CLquoteExactInputSingle_ZeroForOne() public {
