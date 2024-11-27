@@ -73,22 +73,6 @@ library MixedQuoterRecorder {
 
     /// @dev Record the swap token accumulation of the pool.
     /// @param poolHash The hash of the pool.
-    /// @param amount0 The amount of token0.
-    /// @param amount1 The amount of token1.
-    function setPoolSwapTokenAccumulation(bytes32 poolHash, uint256 amount0, uint256 amount1) internal {
-        uint256 token0Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN0_ACCUMULATION)));
-        uint256 token1Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN1_ACCUMULATION)));
-        (uint256 currentAmount0, uint256 currentAmount1) = getPoolSwapTokenAccumulation(poolHash);
-        amount0 += currentAmount0;
-        amount1 += currentAmount1;
-        assembly ("memory-safe") {
-            tstore(token0Slot, amount0)
-            tstore(token1Slot, amount1)
-        }
-    }
-
-    /// @dev Record the swap token accumulation of the pool.
-    /// @param poolHash The hash of the pool.
     /// @param amountIn The amount of tokenIn.
     /// @param amountOut The amount of tokenOut.
     /// @param isZeroForOne The direction of the swap.
@@ -187,14 +171,6 @@ library MixedQuoterRecorder {
         } else {
             return (amount1, amount0);
         }
-    }
-
-    function getV2PoolSwapTokenAccumulation(address token0, address token1, bool isZeroForOne)
-        internal
-        view
-        returns (uint256, uint256)
-    {
-        return getPoolSwapTokenAccumulation(getV2PoolHash(token0, token1), isZeroForOne);
     }
 
     function getSSPoolHash(address token0, address token1) internal pure returns (bytes32) {
