@@ -53,6 +53,24 @@ contract BinCalldataDecoderTest is Test {
         assertEq(removeLiquidityParams.from, _removeLiquidityParams.from);
     }
 
+    function test_fuzz_decodeBinAddLiquidityFromDeltasParams(
+        IBinPositionManager.BinAddLiquidityFromDeltasParams memory _addLiquidityParams
+    ) public view {
+        bytes memory params = abi.encode(_addLiquidityParams);
+        IBinPositionManager.BinAddLiquidityFromDeltasParams memory addLiquidityParams =
+            decoder.decodeBinAddLiquidityFromDeltasParams(params);
+
+        _assertEq(addLiquidityParams.poolKey, _addLiquidityParams.poolKey);
+        assertEq(addLiquidityParams.amount0Max, _addLiquidityParams.amount0Max);
+        assertEq(addLiquidityParams.amount1Max, _addLiquidityParams.amount1Max);
+        assertEq(addLiquidityParams.activeIdDesired, _addLiquidityParams.activeIdDesired);
+        assertEq(addLiquidityParams.idSlippage, _addLiquidityParams.idSlippage);
+        _assertEq(addLiquidityParams.deltaIds, _addLiquidityParams.deltaIds);
+        _assertEq(addLiquidityParams.distributionX, _addLiquidityParams.distributionX);
+        _assertEq(addLiquidityParams.distributionY, _addLiquidityParams.distributionY);
+        assertEq(addLiquidityParams.to, _addLiquidityParams.to);
+    }
+
     function test_fuzz_decodeBinSwapExactInParams(IV4Router.BinSwapExactInputParams memory _swapParams) public view {
         bytes memory params = abi.encode(_swapParams);
         IV4Router.BinSwapExactInputParams memory swapParams = decoder.decodeBinSwapExactInParams(params);

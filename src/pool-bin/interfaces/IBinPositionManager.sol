@@ -56,6 +56,31 @@ interface IBinPositionManager is IPositionManager {
         bytes hookData;
     }
 
+    /// @notice BinAddLiquidityFromDeltasParams
+    /// - amount0Max: Max amount to send for token0
+    /// - amount1Max: Max amount to send for token1
+    /// - activeIdDesired: Active id that user wants to add liquidity from
+    /// - idSlippage: Number of id that are allowed to slip
+    /// - deltaIds: List of delta ids to add liquidity (`deltaId = activeId - desiredId`)
+    /// - distributionX: Distribution of tokenX with sum(distributionX) = 1e18 (100%) or 0 (0%)
+    /// - distributionY: Distribution of tokenY with sum(distributionY) = 1e18 (100%) or 0 (0%)
+    /// - to: Address of recipient
+    /// - deadline: Deadline of transaction
+    struct BinAddLiquidityFromDeltasParams {
+        PoolKey poolKey;
+        uint128 amount0;
+        uint128 amount1;
+        uint128 amount0Max;
+        uint128 amount1Max;
+        uint256 activeIdDesired;
+        uint256 idSlippage;
+        int256[] deltaIds;
+        uint256[] distributionX;
+        uint256[] distributionY;
+        address to;
+        bytes hookData;
+    }
+
     function binPoolManager() external view returns (IBinPoolManager);
 
     /// @notice Initialize a v4 PCS bin pool

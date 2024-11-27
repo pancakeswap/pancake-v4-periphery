@@ -26,6 +26,14 @@ contract MockBinCalldataDecoder {
         return params.decodeBinRemoveLiquidityParams();
     }
 
+    function decodeBinAddLiquidityFromDeltasParams(bytes calldata params)
+        external
+        pure
+        returns (IBinPositionManager.BinAddLiquidityFromDeltasParams calldata addLiquidityParams)
+    {
+        return params.decodeBinAddLiquidityFromDeltasParams();
+    }
+
     function decodeBinSwapExactInParams(bytes calldata params)
         external
         pure

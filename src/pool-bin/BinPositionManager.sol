@@ -15,6 +15,7 @@ import {PackedUint128Math} from "pancake-v4-core/src/pool-bin/libraries/math/Pac
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
+import {SafeCastTemp} from "../libraries/SafeCast.sol";
 import {BaseActionsRouter} from "../base/BaseActionsRouter.sol";
 import {ReentrancyLock} from "../base/ReentrancyLock.sol";
 import {DeltaResolver} from "../base/DeltaResolver.sol";
@@ -49,6 +50,7 @@ contract BinPositionManager is
     using BinTokenLibrary for PoolId;
     using BinPoolParametersHelper for bytes32;
     using SlippageCheck for BalanceDelta;
+    using SafeCastTemp for *;
 
     IBinPoolManager public immutable override binPoolManager;
 
@@ -131,6 +133,24 @@ contract BinPositionManager is
                     params.decodeBinAddLiquidityParams();
                 _addLiquidity(liquidityParams);
                 return;
+            } else if (action == Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS) {
+                IBinPositionManager.BinAddLiquidityFromDeltasParams calldata liquidityParams =
+                    params.decodeBinAddLiquidityFromDeltasParams();
+                _addLiquidity(
+                    liquidityParams.poolKey,
+                    _getFullCredit(liquidityParams.poolKey.currency0).toUint128(),
+                    _getFullCredit(liquidityParams.poolKey.currency1).toUint128(),
+                    liquidityParams.amount0Max,
+                    liquidityParams.amount1Max,
+                    liquidityParams.activeIdDesired,
+                    liquidityParams.idSlippage,
+                    liquidityParams.deltaIds,
+                    liquidityParams.distributionX,
+                    liquidityParams.distributionY,
+                    liquidityParams.to,
+                    liquidityParams.hookData
+                );
+                return;
             } else if (action == Actions.BIN_REMOVE_LIQUIDITY) {
                 IBinPositionManager.BinRemoveLiquidityParams calldata liquidityParams =
                     params.decodeBinRemoveLiquidityParams();
@@ -189,9 +209,39 @@ contract BinPositionManager is
     }
 
     function _addLiquidity(IBinPositionManager.BinAddLiquidityParams calldata params) internal {
-        uint256 deltaLen = params.deltaIds.length;
-        uint256 lenX = params.distributionX.length;
-        uint256 lenY = params.distributionY.length;
+        _addLiquidity(
+            params.poolKey,
+            params.amount0,
+            params.amount1,
+            params.amount0Max,
+            params.amount1Max,
+            params.activeIdDesired,
+            params.idSlippage,
+            params.deltaIds,
+            params.distributionX,
+            params.distributionY,
+            params.to,
+            params.hookData
+        );
+    }
+
+    function _addLiquidity(
+        PoolKey calldata poolKey,
+        uint128 amount0,
+        uint128 amount1,
+        uint128 amount0Max,
+        uint128 amount1Max,
+        uint256 activeIdDesired,
+        uint256 idSlippage,
+        int256[] calldata deltaIds,
+        uint256[] calldata distributionX,
+        uint256[] calldata distributionY,
+        address to,
+        bytes calldata hookData
+    ) internal {
+        uint256 deltaLen = deltaIds.length;
+        uint256 lenX = distributionX.length;
+        uint256 lenY = distributionY.length;
         assembly ("memory-safe") {
             /// @dev revert if deltaLen != lenX || deltaLen != lenY
             if iszero(and(eq(deltaLen, lenX), eq(deltaLen, lenY))) {
@@ -200,47 +250,47 @@ contract BinPositionManager is
             }
         }
 
-        if (params.activeIdDesired > type(uint24).max || params.idSlippage > type(uint24).max) {
+        if (activeIdDesired > type(uint24).max || idSlippage > type(uint24).max) {
             revert AddLiquidityInputActiveIdMismath();
         }
 
         /// @dev Checks if the activeId is within slippage before calling mint. If user mint to activeId and there
         //       was a swap in hook.beforeMint() which changes the activeId, user txn will fail
-        (uint24 activeId,,) = binPoolManager.getSlot0(params.poolKey.toId());
-        if (params.activeIdDesired + params.idSlippage < activeId) {
-            revert IdSlippageCaught(params.activeIdDesired, params.idSlippage, activeId);
+        (uint24 activeId,,) = binPoolManager.getSlot0(poolKey.toId());
+        if (activeIdDesired + idSlippage < activeId) {
+            revert IdSlippageCaught(activeIdDesired, idSlippage, activeId);
         }
-        if (params.activeIdDesired - params.idSlippage > activeId) {
-            revert IdSlippageCaught(params.activeIdDesired, params.idSlippage, activeId);
+        if (activeIdDesired - idSlippage > activeId) {
+            revert IdSlippageCaught(activeIdDesired, idSlippage, activeId);
         }
 
         bytes32[] memory liquidityConfigs = new bytes32[](deltaLen);
         for (uint256 i; i < liquidityConfigs.length; i++) {
-            int256 _id = int256(uint256(activeId)) + params.deltaIds[i];
+            int256 _id = int256(uint256(activeId)) + deltaIds[i];
             if (_id < 0 || uint256(_id) > type(uint24).max) revert IdOverflows(_id);
 
             liquidityConfigs[i] = LiquidityConfigurations.encodeParams(
-                uint64(params.distributionX[i]), uint64(params.distributionY[i]), uint24(uint256(_id))
+                uint64(distributionX[i]), uint64(distributionY[i]), uint24(uint256(_id))
             );
         }
 
-        bytes32 amountIn = params.amount0.encode(params.amount1);
+        bytes32 amountIn = amount0.encode(amount1);
         (BalanceDelta delta, BinPool.MintArrays memory mintArray) = binPoolManager.mint(
-            params.poolKey,
+            poolKey,
             IBinPoolManager.MintParams({liquidityConfigs: liquidityConfigs, amountIn: amountIn, salt: bytes32(0)}),
-            params.hookData
+            hookData
         );
 
         /// Slippage checks, similar to CL type. However, this is different from TJ, in PCS v4,
         /// as hooks can impact delta (take extra token), user need to be protected with amountMax instead
-        delta.validateMaxIn(params.amount0Max, params.amount1Max);
+        delta.validateMaxIn(amount0Max, amount1Max);
 
         // mint
-        PoolId poolId = cachePoolKey(params.poolKey);
+        PoolId poolId = cachePoolKey(poolKey);
         uint256[] memory tokenIds = new uint256[](mintArray.ids.length);
         for (uint256 i; i < mintArray.ids.length; i++) {
             uint256 tokenId = poolId.toTokenId(mintArray.ids[i]);
-            _mint(params.to, tokenId, mintArray.liquidityMinted[i]);
+            _mint(to, tokenId, mintArray.liquidityMinted[i]);
 
             if (_positions[tokenId].binId == 0) {
                 _positions[tokenId] = TokenPosition({poolId: poolId, binId: uint24(mintArray.ids[i])});
@@ -249,7 +299,7 @@ contract BinPositionManager is
             tokenIds[i] = tokenId;
         }
 
-        emit TransferBatch(msgSender(), address(0), params.to, tokenIds, mintArray.liquidityMinted);
+        emit TransferBatch(msgSender(), address(0), to, tokenIds, mintArray.liquidityMinted);
     }
 
     function _removeLiquidity(IBinPositionManager.BinRemoveLiquidityParams calldata params)
