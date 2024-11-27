@@ -40,11 +40,6 @@ contract BinPositionManager_MultiCallTest is
     TokenFixture,
     DeployPermit2
 {
-    // <WIP>: maybe
-    // 1. try swap -> trigger hook#beforeSwap
-    // 2. try removeLiquidity -> trigger hook#beforeRemoveLiquidity
-    // 2. try addLiquidity -> trigger hook#addRemoveLiquidity
-
     using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
@@ -139,7 +134,40 @@ contract BinPositionManager_MultiCallTest is
         assertGt(binReserveY, 0);
     }
 
-    function test_multicall_bubbleRevertX() public {
+    function test_multicall_initializePool_twice_andMint_succeeds() public {
+        vm.deal(address(this), 1 ether);
+
+        // approval for token1 was done earlier, so no new approval required
+        PoolKey memory key = PoolKey({
+            currency0: CurrencyLibrary.NATIVE,
+            currency1: Currency.wrap(address(token1)),
+            hooks: IHooks(address(0)),
+            poolManager: IBinPoolManager(address(poolManager)),
+            fee: uint24(3000), // 3000 = 0.3%
+            parameters: poolParam.setBinStep(10) // binStep
+        });
+        poolManager.initialize(key, activeId);
+
+        uint24[] memory binIds = getBinIds(activeId, 3);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(key, binIds, 1 ether, 1 ether, activeId, address(this));
+        Plan memory planner = Planner.init();
+        planner.add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
+        bytes memory actions = planner.finalizeModifyLiquidityWithClose(key);
+
+        // Use multicall to initialize a pool and mint liquidity
+        bytes[] memory calls = new bytes[](2);
+        calls[0] = abi.encodeWithSelector(binPm.initializePool.selector, key, activeId, ZERO_BYTES);
+        calls[1] = abi.encodeWithSelector(binPm.modifyLiquidities.selector, actions, _deadline);
+        binPm.multicall{value: 1 ether}(calls);
+
+        // verify pool
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(key.toId(), activeId);
+        assertGt(binReserveX, 0);
+        assertGt(binReserveY, 0);
+    }
+
+    function test_multicall_bubbleRevert() public {
         uint24[] memory binIds = getBinIds(activeId, 3);
         (, uint256[] memory liquidityMinted) = _addLiquidity(binPm, key1, binIds, activeId);
 

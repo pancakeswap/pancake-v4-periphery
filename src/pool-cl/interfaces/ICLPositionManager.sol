@@ -25,8 +25,10 @@ interface ICLPositionManager is IPositionManager {
     function clPoolManager() external view returns (ICLPoolManager);
 
     /// @notice Initialize a v4 PCS cl pool
+    /// @dev If the pool is already initialized, this function will not revert and just return type(int24).max
     /// @param key the PoolKey of the pool to initialize
     /// @param sqrtPriceX96 the initial sqrtPriceX96 of the pool
+    /// @return tick The current tick of the pool
     function initializePool(PoolKey calldata key, uint160 sqrtPriceX96) external payable returns (int24);
 
     /// @notice Used to get the ID that will be used for the next minted liquidity position
