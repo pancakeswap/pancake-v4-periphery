@@ -215,6 +215,47 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         lpm.multicall(calls);
     }
 
+    function test_multicall_initializePool_twice_andMint_succeeds() public {
+        key = PoolKey({
+            currency0: currency0,
+            currency1: currency1,
+            fee: 0,
+            poolManager: manager,
+            hooks: IHooks(address(0)),
+            parameters: bytes32(uint256((10 << 16) | 0x0000))
+        });
+        manager.initialize(key, SQRT_RATIO_1_1);
+
+        // Use multicall to initialize the pool again.
+        bytes[] memory calls = new bytes[](2);
+        calls[0] = abi.encodeWithSelector(ICLPositionManager.initializePool.selector, key, SQRT_RATIO_1_1);
+
+        Plan memory planner = Planner.init();
+        planner.add(
+            Actions.CL_MINT_POSITION,
+            abi.encode(
+                key,
+                TickMath.minUsableTick(key.parameters.getTickSpacing()),
+                TickMath.maxUsableTick(key.parameters.getTickSpacing()),
+                100e18,
+                MAX_SLIPPAGE_INCREASE,
+                MAX_SLIPPAGE_INCREASE,
+                ActionConstants.MSG_SENDER,
+                ZERO_BYTES
+            )
+        );
+        bytes memory actions = planner.finalizeModifyLiquidityWithClose(key);
+        calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
+
+        IMulticall_v4(address(lpm)).multicall(calls);
+
+        // test swap, doesn't revert, showing the mint succeeded even after initialize reverted
+        int256 amountSpecified = -1e18;
+        BalanceDelta result = swap(key, true, amountSpecified, ZERO_BYTES);
+        assertEq(result.amount0(), amountSpecified);
+        assertGt(result.amount1(), 0);
+    }
+
     function test_multicall_permitAndDecrease() public {
         uint256 liquidityAlice = 1e18;
         vm.startPrank(alice);
