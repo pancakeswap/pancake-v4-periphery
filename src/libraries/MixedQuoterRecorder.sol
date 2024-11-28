@@ -96,6 +96,31 @@ library MixedQuoterRecorder {
         }
     }
 
+    // @dev Get the swap token accumulation of the pool.
+    // @param poolHash The hash of the pool.
+    // @param isZeroForOne The direction of the swap.
+    // @return accAmountIn The accumulation amount of tokenIn.
+    // @return accAmountOut The accumulation amount of tokenOut.
+    function getPoolSwapTokenAccumulation(bytes32 poolHash, bool isZeroForOne)
+        internal
+        view
+        returns (uint256, uint256)
+    {
+        uint256 token0Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN0_ACCUMULATION)));
+        uint256 token1Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN1_ACCUMULATION)));
+        uint256 amount0;
+        uint256 amount1;
+        assembly ("memory-safe") {
+            amount0 := tload(token0Slot)
+            amount1 := tload(token1Slot)
+        }
+        if (isZeroForOne) {
+            return (amount0, amount1);
+        } else {
+            return (amount1, amount0);
+        }
+    }
+
     /// @dev Record the swap history list of the v4 pool.
     /// @param poolHash The hash of the pool.
     /// @param swapListBytes The swap history list bytes.
@@ -128,47 +153,6 @@ library MixedQuoterRecorder {
                 mstore(add(swapListBytes, add(0x20, i)), tload(add(dataSlot, div(i, 32))))
             }
             mstore(0x40, add(swapListBytes, add(0x20, length)))
-        }
-    }
-
-    /// @dev Get the swap token accumulation of the pool.
-    /// @param poolHash The hash of the pool.
-    /// @return amount0 The amount of token0.
-    /// @return amount1 The amount of token1.
-    function getPoolSwapTokenAccumulation(bytes32 poolHash) internal view returns (uint256, uint256) {
-        uint256 token0Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN0_ACCUMULATION)));
-        uint256 token1Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN1_ACCUMULATION)));
-        uint256 amount0;
-        uint256 amount1;
-        assembly ("memory-safe") {
-            amount0 := tload(token0Slot)
-            amount1 := tload(token1Slot)
-        }
-        return (amount0, amount1);
-    }
-
-    // @dev Get the swap token accumulation of the pool.
-    // @param poolHash The hash of the pool.
-    // @param isZeroForOne The direction of the swap.
-    // @return amount0 The amount of token0.
-    // @return amount1 The amount of token1.
-    function getPoolSwapTokenAccumulation(bytes32 poolHash, bool isZeroForOne)
-        internal
-        view
-        returns (uint256, uint256)
-    {
-        uint256 token0Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN0_ACCUMULATION)));
-        uint256 token1Slot = uint256(keccak256(abi.encode(poolHash, SWAP_TOKEN1_ACCUMULATION)));
-        uint256 amount0;
-        uint256 amount1;
-        assembly ("memory-safe") {
-            amount0 := tload(token0Slot)
-            amount1 := tload(token1Slot)
-        }
-        if (isZeroForOne) {
-            return (amount0, amount1);
-        } else {
-            return (amount1, amount0);
         }
     }
 
