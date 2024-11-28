@@ -160,10 +160,21 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
         override
         returns (uint256 amountOut, uint256 gasEstimate)
     {
+        return quoteExactInputSingleV2WithAccumulation(params, 0, 0);
+    }
+
+    /// @dev Fetch an exactIn quote for a V2 pair on chain with token accumulation
+    function quoteExactInputSingleV2WithAccumulation(
+        QuoteExactInputSingleV2Params memory params,
+        uint256 accTokenInAmount,
+        uint256 accTokenOutAmount
+    ) internal view returns (uint256 amountOut, uint256 gasEstimate) {
         uint256 gasBefore = gasleft();
         (uint256 reserveIn, uint256 reserveOut) =
             V3SmartRouterHelper.getReserves(factoryV2, params.tokenIn, params.tokenOut);
-        amountOut = V3SmartRouterHelper.getAmountOut(params.amountIn, reserveIn, reserveOut);
+        amountOut = V3SmartRouterHelper.getAmountOut(
+            params.amountIn, reserveIn + accTokenInAmount, reserveOut - accTokenOutAmount
+        );
         gasEstimate = gasBefore - gasleft();
     }
 
@@ -244,12 +255,15 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                         MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
 
                     uint256 swapAmountOut;
-                    amountIn += accAmountIn;
-                    (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleV2(
-                        QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
+                    (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleV2WithAccumulation(
+                        QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn}),
+                        accAmountIn,
+                        accAmountOut
                     );
-                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
-                    amountIn = swapAmountOut - accAmountOut;
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(
+                        poolHash, amountIn + accAmountIn, swapAmountOut + accAmountOut, zeroForOne
+                    );
+                    amountIn = swapAmountOut;
                 }
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);

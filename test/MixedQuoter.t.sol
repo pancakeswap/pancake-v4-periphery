@@ -493,43 +493,43 @@ contract MixedQuoterTest is
         actions[0] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
         bytes[] memory params = new bytes[](1);
 
-        // swap 0.5 ether
-        (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
-        uint256 swapPath1Output = amountOut;
+        // path 1: (0.3)weth -> token2
+        // path 2: (0.4)weth -> token2
+        // path 3: (0.5)weth -> token2
 
-        // swap 1 ether
-        (amountOut, gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
-        uint256 swapPath2Output = amountOut - swapPath1Output;
-
-        // path 1: (0.5)weth -> token2
-        // path 2: (0.5)weth -> token2
-
-        bytes[] memory multicallBytes = new bytes[](2);
+        bytes[] memory multicallBytes = new bytes[](3);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.3 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
+            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.4 ether
+        );
+        multicallBytes[2] = abi.encodeWithSelector(
             IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
         (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
-        assertEq(amountOutOfRoute1, swapPath1Output);
-        assertEq(amountOutOfRoute2, swapPath2Output);
+        (uint256 amountOutOfRoute3,) = abi.decode(results[2], (uint256, uint256));
 
-        // swap 0.5 ether in v2 pair
+        // swap 0.3 ether in v2 pair
         uint256 route1TokenOutBalanceBefore = token2.balanceOf(address(this));
-        _swapV2(address(weth), address(token2), 0.5 ether);
+        _swapV2(address(weth), address(token2), 0.3 ether);
         uint256 route1TokenOutBalanceAfter = token2.balanceOf(address(this));
         assertEq(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1);
 
-        // swap 0.5 ether in v2 pair
+        // swap 0.4 ether in v2 pair
         uint256 route2TokenOutBalanceBefore = token2.balanceOf(address(this));
-        _swapV2(address(weth), address(token2), 0.5 ether);
+        _swapV2(address(weth), address(token2), 0.4 ether);
         uint256 route2TokenOutBalanceAfter = token2.balanceOf(address(this));
-        // not exactly equal , but difference is very small, less than 1/2000
-        assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 2000);
+        assertEq(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2);
+
+        // swap 0.5 ether in v2 pair
+        uint256 route3TokenOutBalanceBefore = token2.balanceOf(address(this));
+        _swapV2(address(weth), address(token2), 0.5 ether);
+        uint256 route3TokenOutBalanceAfter = token2.balanceOf(address(this));
+        assertEq(route3TokenOutBalanceAfter - route3TokenOutBalanceBefore, amountOutOfRoute3);
     }
 
     function testFuzz_quoteMixedExactInputNotIsolation_V2(uint8 firstSwapPercent, bool isZeroForOne) public {
@@ -585,8 +585,7 @@ contract MixedQuoterTest is
             route1TokenOutBalanceAfter = token0OfV2.balanceOf(address(this));
         }
 
-        // not exactly equal , but difference is very small, less than 1/2000
-        assertApproxEqRel(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1, 1e18 / 2000);
+        assertEq(route1TokenOutBalanceAfter - route1TokenOutBalanceBefore, amountOutOfRoute1);
 
         // swap 0.5 ether in v2 pair
         uint256 route2TokenOutBalanceBefore;
@@ -606,8 +605,7 @@ contract MixedQuoterTest is
         } else {
             route2TokenOutBalanceAfter = token0OfV2.balanceOf(address(this));
         }
-        // not exactly equal , but difference is very small, less than 1/2000
-        assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 2000);
+        assertEq(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2);
     }
 
     function testQuoteExactInputSingleV3() public {
@@ -1426,8 +1424,8 @@ contract MixedQuoterTest is
         _swapV2(address(token2), address(weth), 1 ether);
         uint256 route3WethBalanceAfter = weth.balanceOf(address(this));
         uint256 route3WethReceived = route3WethBalanceAfter - route3WethBalanceBefore;
-        // not exactly equal , but difference is very small, less than 1/2000
-        assertApproxEqRel(route3WethReceived, amountOutOfRoute3, 1e18 / 2000);
+        // not exactly equal , but difference is very small, less than 1/100000
+        assertApproxEqRel(route3WethReceived, amountOutOfRoute3, 1e18 / 100000);
     }
 
     // token0 -> token1 -> token2
