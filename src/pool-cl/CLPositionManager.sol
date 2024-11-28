@@ -109,7 +109,13 @@ contract CLPositionManager is
 
     /// @inheritdoc ICLPositionManager
     function initializePool(PoolKey calldata key, uint160 sqrtPriceX96) external payable override returns (int24) {
-        return clPoolManager.initialize(key, sqrtPriceX96);
+        /// @dev Swallow any error. If the pool revert due to other errors eg. currencyOutOfOrder etc..,
+        /// then follow-up action to the pool will still revert accordingly
+        try clPoolManager.initialize(key, sqrtPriceX96) returns (int24 tick) {
+            return tick;
+        } catch {
+            return type(int24).max;
+        }
     }
 
     /// @inheritdoc IPositionManager
