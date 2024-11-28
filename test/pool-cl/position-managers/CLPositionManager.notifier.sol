@@ -26,8 +26,6 @@ import {CLPositionInfo, CLPositionInfoLibrary} from "../../../src/pool-cl/librar
 import {MockCLReenterHook} from "../mocks/MockCLReenterHook.sol";
 import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
     using Planner for Plan;
     using CLPositionInfoLibrary for CLPositionInfo;
