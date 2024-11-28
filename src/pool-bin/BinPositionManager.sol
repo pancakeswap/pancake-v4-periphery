@@ -119,7 +119,8 @@ contract BinPositionManager is
 
     /// @inheritdoc IBinPositionManager
     function initializePool(PoolKey memory key, uint24 activeId) external payable {
-        binPoolManager.initialize(key, activeId);
+        /// @dev if the pool revert due to other error (currencyOutOfOrder etc..), then the follow-up action to the pool will still revert accordingly
+        try binPoolManager.initialize(key, activeId) {} catch {}
     }
 
     function msgSender() public view override returns (address) {
