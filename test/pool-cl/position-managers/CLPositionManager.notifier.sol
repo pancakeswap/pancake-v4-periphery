@@ -26,6 +26,8 @@ import {CLPositionInfo, CLPositionInfoLibrary} from "../../../src/pool-cl/librar
 import {MockCLReenterHook} from "../mocks/MockCLReenterHook.sol";
 import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
     using Planner for Plan;
     using CLPositionInfoLibrary for CLPositionInfo;
@@ -606,8 +608,32 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         lpm.safeTransferFrom(alice, bob, tokenId, "");
     }
 
-    /// @notice burning a position will automatically notify unsubscribe
-    function test_burn_unsubscribe() public {
+    function test_notifyBurn_wraps_revert() public {
+        uint256 tokenId = lpm.nextTokenId();
+        mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
+
+        // approve this contract to operate on alices liq
+        vm.startPrank(alice);
+        lpm.approve(address(this), tokenId);
+        vm.stopPrank();
+
+        lpm.subscribe(tokenId, address(revertSubscriber), ZERO_BYTES);
+
+        bytes memory calls = getBurnEncoded(tokenId, ZERO_BYTES);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CustomRevert.WrappedError.selector,
+                address(revertSubscriber),
+                ICLSubscriber.notifyBurn.selector,
+                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyBurn"),
+                abi.encodeWithSelector(ICLNotifier.BurnNotificationReverted.selector)
+            )
+        );
+        lpm.modifyLiquidities(calls, _deadline);
+    }
+
+    /// @notice burning a position will automatically notify burn
+    function test_notifyBurn_succeeds() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
 
@@ -622,11 +648,12 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         assertEq(sub.notifyUnsubscribeCount(), 0);
 
-        // burn the position, causing an unsubscribe
+        // burn the position, causing a notifyBurn
         burn(tokenId, ZERO_BYTES);
 
         // position is now unsubscribed
-        assertEq(sub.notifyUnsubscribeCount(), 1);
+        assertEq(sub.notifyUnsubscribeCount(), 0);
+        assertEq(sub.notifyBurnCount(), 1);
     }
 
     /// @notice Test that users cannot forcibly avoid unsubscribe logic via gas limits
