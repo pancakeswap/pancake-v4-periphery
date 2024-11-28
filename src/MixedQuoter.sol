@@ -236,19 +236,19 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                         QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
                     );
                 } else {
-                    bool isZeroForOne = tokenIn < tokenOut;
+                    bool zeroForOne = tokenIn < tokenOut;
                     bytes32 poolHash = MixedQuoterRecorder.getV2PoolHash(tokenIn, tokenOut);
                     // update v2 pool swap direction, only allow one direction in one transaction
-                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, isZeroForOne);
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, zeroForOne);
                     (uint256 accAmountIn, uint256 accAmountOut) =
-                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, isZeroForOne);
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
 
                     uint256 swapAmountOut;
                     amountIn += accAmountIn;
                     (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleV2(
                         QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
                     );
-                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, isZeroForOne);
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
                     amountIn = swapAmountOut - accAmountOut;
                 }
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
@@ -266,12 +266,12 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                         })
                     );
                 } else {
-                    bool isZeroForOne = tokenIn < tokenOut;
+                    bool zeroForOne = tokenIn < tokenOut;
                     bytes32 poolHash = MixedQuoterRecorder.getV3PoolHash(tokenIn, tokenOut, fee);
                     // update v3 pool swap direction, only allow one direction in one transaction
-                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, isZeroForOne);
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, zeroForOne);
                     (uint256 accAmountIn, uint256 accAmountOut) =
-                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, isZeroForOne);
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
 
                     uint256 swapAmountOut;
                     amountIn += accAmountIn;
@@ -284,7 +284,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                             sqrtPriceLimitX96: 0
                         })
                     );
-                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, isZeroForOne);
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
                     amountIn = swapAmountOut - accAmountOut;
                 }
             } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
@@ -294,14 +294,13 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
-                // will execute all swap history of same v4 pool in one transaction if isIsolate is false
                 IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
                     poolKey: clParams.poolKey,
                     zeroForOne: zeroForOne,
                     exactAmount: amountIn.toUint128(),
                     hookData: clParams.hookData
                 });
-
+                // will execute all swap history of same v4 pool in one transaction if isIsolate is false
                 if (!isIsolate) {
                     bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
                     bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
