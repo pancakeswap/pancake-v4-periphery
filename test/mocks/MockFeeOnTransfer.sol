@@ -8,13 +8,9 @@ import {BipsLibrary} from "../../src/libraries/BipsLibrary.sol";
 contract MockFOT is MockERC20 {
     using BipsLibrary for uint256;
 
-    IPositionManager immutable posm;
-
     uint256 public bips;
 
-    constructor(IPositionManager _posm) MockERC20("FOT Token", "FOT", 18) {
-        posm = _posm;
-    }
+    constructor() MockERC20("FOT Token", "FOT", 18) {}
 
     function setFee(uint256 amountInBips) public {
         bips = amountInBips;

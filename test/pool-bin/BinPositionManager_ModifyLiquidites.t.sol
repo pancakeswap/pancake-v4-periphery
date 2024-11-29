@@ -37,6 +37,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
+import {MockFOT} from "../mocks/MockFeeOnTransfer.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
     using Planner for Plan;
@@ -45,6 +46,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
     using BinTokenLibrary for PoolId;
 
     IWETH9 public _WETH9 = IWETH9(address(new WETH()));
+    MockERC20 fotToken;
+
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
 
@@ -53,6 +56,7 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
 
     PoolKey nativeKey;
     PoolKey wethKey;
+    PoolKey fotKey;
 
     BinHookHookData hook;
     Vault vault;
@@ -67,6 +71,9 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
     uint24 activeId = 2 ** 23; // where token0 and token1 price is the same
 
     function setUp() public {
+        fotToken = new MockFOT();
+        fotToken.mint(address(this), 10000 ether);
+
         vault = new Vault();
         poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
@@ -116,10 +123,21 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         });
         binPm.initializePool(wethKey, activeId);
 
+        fotKey = PoolKey({
+            currency0: address(fotToken) > Currency.unwrap(currency1) ? currency1 : Currency.wrap(address(fotToken)),
+            currency1: address(fotToken) > Currency.unwrap(currency1) ? Currency.wrap(address(fotToken)) : currency1,
+            hooks: IHooks(address(0)),
+            poolManager: IBinPoolManager(address(poolManager)),
+            fee: uint24(3000), // 3000 = 0.3%
+            parameters: poolParam.setBinStep(10) // binStep
+        });
+        binPm.initializePool(fotKey, activeId);
+
         // approval
         approveBinPm(address(this), key1, address(binPm), permit2);
         approveBinPm(alice, key1, address(binPm), permit2);
         approveBinPm(address(this), wethKey, address(binPm), permit2);
+        approveBinPm(address(this), fotKey, address(binPm), permit2);
 
         // sufficient eth/weth
         vm.deal(address(this), 2000 ether);
@@ -875,6 +893,144 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
     {
         vm.expectRevert(IPositionManager.VaultMustBeUnlocked.selector);
         binPm.batchTransferFrom(address(this), makeAddr("someone"), ids, amounts);
+    }
+
+    function test_addLiquidityFromDeltas_fot() public {
+        // Use a 1% fee.
+        MockFOT(address(fotToken)).setFee(100);
+
+        uint256 fotBalanceBefore = Currency.wrap(address(fotToken)).balanceOf(address(this));
+
+        uint256 amountAfterTransfer = 990e18;
+        uint256 amountToSendFot = 1000e18;
+
+        (uint256 amount0, uint256 amount1) = fotKey.currency0 == Currency.wrap(address(fotToken))
+            ? (amountToSendFot, amountAfterTransfer)
+            : (amountAfterTransfer, amountToSendFot);
+
+        Plan memory planner = Planner.init();
+        planner.add(Actions.SETTLE, abi.encode(fotKey.currency0, amount0, true));
+        planner.add(Actions.SETTLE, abi.encode(fotKey.currency1, amount1, true));
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        IBinPositionManager.BinAddLiquidityParams memory param = _getAddParams(
+            fotKey, binIds, uint128(amountAfterTransfer), uint128(amountAfterTransfer), activeId, address(this)
+        );
+        planner.add(Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS, abi.encode(param));
+
+        bytes memory plan = planner.encode();
+
+        binPm.modifyLiquidities(plan, _deadline);
+
+        uint256 fotBalanceAfter = Currency.wrap(address(fotToken)).balanceOf(address(this));
+
+        // make sure bin position token was minted to the caller
+        uint256 tokenId = fotKey.toId().toTokenId(binIds[0]);
+        uint256 tokenBalance = binPm.balanceOf(address(this), tokenId);
+        assertGt(tokenBalance, 0);
+
+        // make sure the liquidity was added to the pool with considering the transfer fee
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(fotKey.toId(), binIds[0]);
+        assertEq(binReserveX, amountAfterTransfer);
+        assertEq(binReserveY, amountAfterTransfer);
+
+        // make sure expected amount of fot was transferred
+        assertEq(fotBalanceBefore - fotBalanceAfter, amountToSendFot);
+    }
+
+    function test_addLiquidityFromDeltas() public {
+        uint256 currency0TokenBefore = key1.currency0.balanceOf(address(this));
+        uint256 currency1TokenBefore = key1.currency1.balanceOf(address(this));
+
+        uint256 amountToSend = 1000e18;
+
+        Plan memory planner = Planner.init();
+        planner.add(Actions.SETTLE, abi.encode(key1.currency0, amountToSend, true));
+        planner.add(Actions.SETTLE, abi.encode(key1.currency1, amountToSend, true));
+
+        uint24[] memory binIds = getBinIds(activeId, 1);
+        IBinPositionManager.BinAddLiquidityParams memory param =
+            _getAddParams(key1, binIds, uint128(amountToSend), uint128(amountToSend), activeId, address(this));
+        planner.add(Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS, abi.encode(param));
+
+        bytes memory plan = planner.encode();
+
+        binPm.modifyLiquidities(plan, _deadline);
+
+        uint256 currency0TokenAfter = key1.currency0.balanceOf(address(this));
+        uint256 currency1TokenAfter = key1.currency1.balanceOf(address(this));
+
+        // make sure bin position token was minted to the caller
+        uint256 tokenId = key1.toId().toTokenId(binIds[0]);
+        uint256 tokenBalance = binPm.balanceOf(address(this), tokenId);
+        assertGt(tokenBalance, 0);
+
+        // make sure the liquidity was added to the pool with considering the transfer fee
+        (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(key1.toId(), binIds[0]);
+        assertEq(binReserveX, amountToSend);
+        assertEq(binReserveY, amountToSend);
+
+        // make sure expected amount was transferred
+        assertEq(currency0TokenBefore - currency0TokenAfter, amountToSend);
+        assertEq(currency1TokenBefore - currency1TokenAfter, amountToSend);
+    }
+
+    function testFuzz_addLiquidityFromDeltas_fot(uint256 bips, uint256 amount0, uint256 amount1) public {
+        bips = bound(bips, 1, 10_000);
+        MockFOT(address(fotToken)).setFee(bips);
+
+        amount0 = bound(amount0, 0, 1000 ether);
+        amount1 = bound(amount1, 0, 1000 ether);
+        vm.assume(amount0 > 0 || amount1 > 0);
+
+        uint8 binNum = 1;
+
+        uint256 token0Before = fotKey.currency0.balanceOf(address(this));
+        uint256 token1Before = fotKey.currency1.balanceOf(address(this));
+
+        bool isCurrency0FotToken = fotKey.currency0 == Currency.wrap(address(fotToken));
+        uint256 amount0AfterTransfer = amount0;
+        uint256 amount1AfterTransfer = amount1;
+        if (isCurrency0FotToken) {
+            amount0AfterTransfer = amount0 - amount0 * bips / 10_000;
+        } else {
+            amount1AfterTransfer = amount1 - amount1 * bips / 10_000;
+        }
+
+        Plan memory planner = Planner.init();
+        planner.add(Actions.SETTLE, abi.encode(fotKey.currency0, amount0, true));
+        planner.add(Actions.SETTLE, abi.encode(fotKey.currency1, amount1, true));
+
+        uint24[] memory binIds = getBinIds(activeId, binNum);
+        IBinPositionManager.BinAddLiquidityParams memory param = _getAddParams(
+            fotKey, binIds, uint128(amount0AfterTransfer), uint128(amount1AfterTransfer), activeId, address(this)
+        );
+        planner.add(Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS, abi.encode(param));
+
+        bytes memory plan = planner.encode();
+
+        binPm.modifyLiquidities(plan, _deadline);
+
+        uint256 token0After = fotKey.currency0.balanceOf(address(this));
+        uint256 token1After = fotKey.currency1.balanceOf(address(this));
+
+        // make sure bin position token was minted to the caller
+        for (uint256 i = 0; i < binNum; i++) {
+            uint256 tokenId = fotKey.toId().toTokenId(binIds[i]);
+            uint256 tokenBalance = binPm.balanceOf(address(this), tokenId);
+            assertGt(tokenBalance, 0);
+        }
+
+        // make sure the liquidity was added to the pool with considering the transfer fee
+        for (uint256 i = 0; i < binNum; i++) {
+            (uint128 binReserveX, uint128 binReserveY,,) = poolManager.getBin(fotKey.toId(), binIds[i]);
+            assertEq(binReserveX, amount0AfterTransfer / binNum);
+            assertEq(binReserveY, amount1AfterTransfer / binNum);
+        }
+
+        // make sure expected amount of fot was transferred
+        assertEq(token0Before - token0After, amount0);
+        assertEq(token1Before - token1After, amount1);
     }
 
     function lockAcquired(bytes calldata data) external returns (bytes memory result) {

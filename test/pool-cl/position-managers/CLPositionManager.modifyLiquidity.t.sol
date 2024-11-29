@@ -113,7 +113,7 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         seedWeth(address(this));
         approvePosmCurrency(Currency.wrap(address(_WETH9)));
 
-        fotToken = new MockFOT(lpm);
+        fotToken = new MockFOT();
         fotToken.mint(address(this), STARTING_USER_BALANCE);
         approvePosmCurrency(Currency.wrap(address(fotToken)));
 
