@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
 /// @notice A transient reentrancy lock, that stores the caller's address as the lock

@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (C) 2024 PancakeSwap
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
