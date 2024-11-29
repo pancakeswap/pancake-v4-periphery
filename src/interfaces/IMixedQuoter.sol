@@ -76,7 +76,7 @@ interface IMixedQuoter {
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     /// @return gasEstimate The estimate of the gas that the swap consumes
-    function quoteMixedExactInputNotIsolation(
+    function quoteMixedExactInputSharedContext(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,

@@ -200,13 +200,13 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
      * Mixed *************************************************
      */
     /// @dev All swap results will influence the outcome of subsequent swaps within the same pool
-    function quoteMixedExactInputNotIsolation(
+    function quoteMixedExactInputSharedContext(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,
         uint256 amountIn
     ) external override returns (uint256 amountOut, uint256 gasEstimate) {
-        return quoteMixedExactInputIsolationMode(paths, actions, params, amountIn, false);
+        return quoteMixedExactInputWithContext(paths, actions, params, amountIn, true);
     }
 
     function quoteMixedExactInput(
@@ -215,18 +215,18 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
         bytes[] calldata params,
         uint256 amountIn
     ) external override returns (uint256 amountOut, uint256 gasEstimate) {
-        return quoteMixedExactInputIsolationMode(paths, actions, params, amountIn, true);
+        return quoteMixedExactInputWithContext(paths, actions, params, amountIn, false);
     }
 
-    /// @dev if isIsolate is true, each swap is isolated and does not influence the outcome of subsequent swaps within the same pool
-    /// @dev if isIsolate is false, all swap results will influence the outcome of subsequent swaps within the same pool
-    /// @dev if isIsolate is false, non-v4 pools only support one swap direction for same pool
-    function quoteMixedExactInputIsolationMode(
+    /// @dev if withContext is false, each swap is isolated and does not influence the outcome of subsequent swaps within the same pool
+    /// @dev if withContext is true, all swap results will influence the outcome of subsequent swaps within the same pool
+    /// @dev if withContext is true, non-v4 pools only support one swap direction for same pool
+    function quoteMixedExactInputWithContext(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,
         uint256 amountIn,
-        bool isIsolate
+        bool withContext
     ) private returns (uint256 amountOut, uint256 gasEstimate) {
         uint256 numActions = actions.length;
         if (numActions == 0) revert NoActions();
@@ -242,7 +242,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
             if (action == MixedQuoterActions.V2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                if (isIsolate) {
+                if (!withContext) {
                     (amountIn, gasEstimateForCurAction) = quoteExactInputSingleV2(
                         QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
                     );
@@ -269,7 +269,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex]: abi.encode(fee)
                 uint24 fee = abi.decode(params[actionIndex], (uint24));
-                if (isIsolate) {
+                if (!withContext) {
                     (amountIn,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
                         QuoteExactInputSingleV3Params({
                             tokenIn: tokenIn,
@@ -314,8 +314,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     exactAmount: amountIn.toUint128(),
                     hookData: clParams.hookData
                 });
-                // will execute all swap history of same v4 pool in one transaction if isIsolate is false
-                if (!isIsolate) {
+                // will execute all swap history of same v4 pool in one transaction if withContext is true
+                if (withContext) {
                     bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
                     bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
@@ -351,8 +351,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     exactAmount: amountIn.toUint128(),
                     hookData: binParams.hookData
                 });
-                // will execute all swap history of same v4 pool in one transaction if isIsolate is false
-                if (!isIsolate) {
+                // will execute all swap history of same v4 pool in one transaction if withContext is true
+                if (withContext) {
                     bytes32 poolHash = MixedQuoterRecorder.getV4BinPoolHash(binParams.poolKey);
                     bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
@@ -379,7 +379,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
 
-                if (isIsolate) {
+                if (!withContext) {
                     (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
                         QuoteExactInputSingleStableParams({
                             tokenIn: tokenIn,
@@ -409,7 +409,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     amountIn = swapAmountOut - accAmountOut;
                 }
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
-                /// @dev PCS do not support three pool stable swap, so will skip isolation mode
+                /// @dev PCS do not support three pool stable swap, so will skip context mode
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(

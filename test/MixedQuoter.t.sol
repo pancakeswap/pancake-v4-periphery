@@ -297,7 +297,7 @@ contract MixedQuoterTest is
         assertLt(gasEstimate, 50000);
     }
 
-    function test_quoteMixedExactInputNotIsolation_SS2_revert_INVALID_SWAP_DIRECTION() public {
+    function test_quoteMixedExactInputSharedContext_SS2_revert_INVALID_SWAP_DIRECTION() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token1);
         paths[1] = address(token2);
@@ -315,16 +315,16 @@ contract MixedQuoterTest is
         // path 2: (0.5)token1 -> token2
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths2, actions, params, 0.5 ether
         );
         vm.expectRevert(MixedQuoterRecorder.INVALID_SWAP_DIRECTION.selector);
         mixedQuoter.multicall(multicallBytes);
     }
 
-    function test_quoteMixedExactInputNotIsolation_SS2() public {
+    function test_quoteMixedExactInputSharedContext_SS2() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token1);
         paths[1] = address(token2);
@@ -347,10 +347,10 @@ contract MixedQuoterTest is
         // path 2: (0.5)token1 -> token2
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -373,7 +373,7 @@ contract MixedQuoterTest is
         assertApproxEqRel(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2, 1e18 / 1000000);
     }
 
-    function testFuzz_quoteMixedExactInputNotIsolation_SS2(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_SS2(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -398,10 +398,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, firstSwapAmount
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, secondSwapAmount
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -458,7 +458,7 @@ contract MixedQuoterTest is
         assertLt(gasEstimate, 20000);
     }
 
-    function test_quoteMixedExactInputNotIsolation_V2_revert_INVALID_SWAP_DIRECTION() public {
+    function test_quoteMixedExactInputSharedContext_V2_revert_INVALID_SWAP_DIRECTION() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
         paths[1] = address(token2);
@@ -475,16 +475,16 @@ contract MixedQuoterTest is
         // path 2: (0.5)weth -> token2
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths2, actions, params, 0.5 ether
         );
         vm.expectRevert(MixedQuoterRecorder.INVALID_SWAP_DIRECTION.selector);
         mixedQuoter.multicall(multicallBytes);
     }
 
-    function test_quoteMixedExactInputNotIsolation_V2() public {
+    function test_quoteMixedExactInputSharedContext_V2() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
         paths[1] = address(token2);
@@ -499,13 +499,13 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](3);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.3 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.3 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.4 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.4 ether
         );
         multicallBytes[2] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -532,7 +532,7 @@ contract MixedQuoterTest is
         assertEq(route3TokenOutBalanceAfter - route3TokenOutBalanceBefore, amountOutOfRoute3);
     }
 
-    function testFuzz_quoteMixedExactInputNotIsolation_V2(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_V2(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -556,10 +556,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, firstSwapAmount
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, secondSwapAmount
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -627,7 +627,7 @@ contract MixedQuoterTest is
         assertLt(gasEstimate, 130000);
     }
 
-    function test_quoteMixedExactInputNotIsolation_V3_revert_INVALID_SWAP_DIRECTION() public {
+    function test_quoteMixedExactInputSharedContext_V3_revert_INVALID_SWAP_DIRECTION() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
         paths[1] = address(token2);
@@ -647,16 +647,16 @@ contract MixedQuoterTest is
         // path 2: (0.5)weth -> token2
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths2, actions, params, 0.5 ether
         );
         vm.expectRevert(MixedQuoterRecorder.INVALID_SWAP_DIRECTION.selector);
         mixedQuoter.multicall(multicallBytes);
     }
 
-    function test_quoteMixedExactInputNotIsolation_V3() public {
+    function test_quoteMixedExactInputSharedContext_V3() public {
         address[] memory paths = new address[](2);
         paths[0] = address(weth);
         paths[1] = address(token2);
@@ -681,10 +681,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.3 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.3 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.7 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.7 ether
         );
 
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
@@ -728,7 +728,7 @@ contract MixedQuoterTest is
         assertEq(route2TokenOutBalanceAfter - route2TokenOutBalanceBefore, amountOutOfRoute2 - 1);
     }
 
-    function testFuzz_quoteMixedExactInputNotIsolation_V3(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_V3(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -755,10 +755,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, firstSwapAmount
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, secondSwapAmount
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -851,7 +851,7 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 90000);
     }
 
-    function test_quoteMixedExactInputNotIsolation_V4CL() public {
+    function test_quoteMixedExactInputSharedContext_V4CL() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -878,10 +878,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -919,7 +919,7 @@ contract MixedQuoterTest is
         assertEq(route2Token1Received, swapPath2Output - 1);
     }
 
-    function testFuzz_quoteMixedExactInputNotIsolation_V4CL(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_V4CL(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -944,10 +944,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, firstSwapAmount
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, secondSwapAmount
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -1107,7 +1107,7 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 50000);
     }
 
-    function test_quoteMixedExactInputNotIsolation_V4Bin() public {
+    function test_quoteMixedExactInputSharedContext_V4Bin() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token3);
         paths[1] = address(token4);
@@ -1128,10 +1128,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, 0.5 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, 0.5 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -1168,7 +1168,7 @@ contract MixedQuoterTest is
         assertEq(route2TokenOutReceived, amountOutOfRoute2);
     }
 
-    function testFuzz_quoteMixedExactInputNotIsolation_V4Bin(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_V4Bin(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -1193,10 +1193,10 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, firstSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, firstSwapAmount
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths, actions, params, secondSwapAmount
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths, actions, params, secondSwapAmount
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
@@ -1293,7 +1293,7 @@ contract MixedQuoterTest is
     // route 1: path 1: token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v3 pool
     // route 2: path 2:  token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v2 pool
     // route 2: path 3:  token2 -> weth, v2 pool
-    function test_quoteMixedExactInputNotIsolation_multi_route() public {
+    function test_quoteMixedExactInputSharedContext_multi_route() public {
         // path: token0 -> token1 -> token2 -> weth
         address[] memory paths1 = new address[](4);
         paths1[0] = address(token0);
@@ -1342,13 +1342,13 @@ contract MixedQuoterTest is
 
         bytes[] memory multicallBytes = new bytes[](3);
         multicallBytes[0] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths1, actions1, params1, 1 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths1, actions1, params1, 1 ether
         );
         multicallBytes[1] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths2, actions2, params2, 1 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths2, actions2, params2, 1 ether
         );
         multicallBytes[2] = abi.encodeWithSelector(
-            IMixedQuoter.quoteMixedExactInputNotIsolation.selector, paths3, actions3, params3, 1 ether
+            IMixedQuoter.quoteMixedExactInputSharedContext.selector, paths3, actions3, params3, 1 ether
         );
         bytes[] memory results = mixedQuoter.multicall(multicallBytes);
 
