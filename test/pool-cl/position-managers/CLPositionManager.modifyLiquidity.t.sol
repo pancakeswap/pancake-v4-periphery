@@ -849,7 +849,7 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
 
         // Set the fee on transfer amount 1% higher.
         (uint256 amount0, uint256 amount1) =
-            fotKey.currency0 == Currency.wrap(address(fotToken)) ? (100e18, 99e18) : (99e18, 100e18);
+            fotKey.currency0 == Currency.wrap(address(fotToken)) ? (100e18, 99e18) : (99e19, 100e18);
 
         Plan memory planner = Planner.init();
         planner.add(Actions.SETTLE, abi.encode(fotKey.currency0, amount0, true));
@@ -864,7 +864,7 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         lpm.modifyLiquidities(actions, _deadline);
 
         (uint256 amount0AfterTransfer, uint256 amount1AfterTransfer) =
-            fotKey.currency0 == Currency.wrap(address(fotToken)) ? (99e18, 100e18) : (100e18, 99e18);
+            fotKey.currency0 == Currency.wrap(address(fotToken)) ? (99e18, 100e18) : (100e18, 99e19);
 
         uint128 newLiquidity = LiquidityAmounts.getLiquidityForAmounts(
             SQRT_RATIO_1_1,
@@ -951,7 +951,7 @@ contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, Liquidit
         bool currency0IsFOT = fotKey.currency0 == Currency.wrap(address(fotToken));
         bool positionIsEntirelyInOtherToken = currency0IsFOT
             ? tickUpper <= TickMath.getTickAtSqrtRatio(sqrtPriceX96)
-            : tickLower >= TickMath.getTickAtSqrtRatio(sqrtPriceX96);
+            : tickLower > TickMath.getTickAtSqrtRatio(sqrtPriceX96);
 
         if (bips == 10000 && !positionIsEntirelyInOtherToken) {
             vm.expectRevert(CLPosition.CannotUpdateEmptyPosition.selector);
