@@ -50,7 +50,7 @@ contract BinPositionManager is
     using BinTokenLibrary for PoolId;
     using BinPoolParametersHelper for bytes32;
     using SlippageCheck for BalanceDelta;
-    using SafeCastTemp for *;
+    using SafeCastTemp for uint256;
 
     IBinPoolManager public immutable override binPoolManager;
 
@@ -132,7 +132,20 @@ contract BinPositionManager is
             if (action == Actions.BIN_ADD_LIQUIDITY) {
                 IBinPositionManager.BinAddLiquidityParams calldata liquidityParams =
                     params.decodeBinAddLiquidityParams();
-                _addLiquidity(liquidityParams);
+                _addLiquidity(
+                    liquidityParams.poolKey,
+                    liquidityParams.amount0,
+                    liquidityParams.amount1,
+                    liquidityParams.amount0Max,
+                    liquidityParams.amount1Max,
+                    liquidityParams.activeIdDesired,
+                    liquidityParams.idSlippage,
+                    liquidityParams.deltaIds,
+                    liquidityParams.distributionX,
+                    liquidityParams.distributionY,
+                    liquidityParams.to,
+                    liquidityParams.hookData
+                );
                 return;
             } else if (action == Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS) {
                 IBinPositionManager.BinAddLiquidityFromDeltasParams calldata liquidityParams =
@@ -207,23 +220,6 @@ contract BinPositionManager is
         if (_poolIdToPoolKey[PoolId.unwrap(poolId)].parameters.getBinStep() == 0) {
             _poolIdToPoolKey[PoolId.unwrap(poolId)] = poolKey;
         }
-    }
-
-    function _addLiquidity(IBinPositionManager.BinAddLiquidityParams calldata params) internal {
-        _addLiquidity(
-            params.poolKey,
-            params.amount0,
-            params.amount1,
-            params.amount0Max,
-            params.amount1Max,
-            params.activeIdDesired,
-            params.idSlippage,
-            params.deltaIds,
-            params.distributionX,
-            params.distributionY,
-            params.to,
-            params.hookData
-        );
     }
 
     function _addLiquidity(

@@ -30,7 +30,7 @@ library BinCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IBinPositionManager.BinAddLiquidityParams))
+    /// @dev equivalent to: abi.decode(params, (IBinPositionManager.BinAddLiquidityFromDeltasParams))
     function decodeBinAddLiquidityFromDeltasParams(bytes calldata params)
         internal
         pure

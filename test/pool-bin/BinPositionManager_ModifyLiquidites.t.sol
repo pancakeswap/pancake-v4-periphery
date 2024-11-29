@@ -913,9 +913,23 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         planner.add(Actions.SETTLE, abi.encode(fotKey.currency1, amount1, true));
 
         uint24[] memory binIds = getBinIds(activeId, 1);
-        IBinPositionManager.BinAddLiquidityParams memory param = _getAddParams(
+        IBinPositionManager.BinAddLiquidityParams memory _param = _getAddParams(
             fotKey, binIds, uint128(amountAfterTransfer), uint128(amountAfterTransfer), activeId, address(this)
         );
+
+        IBinPositionManager.BinAddLiquidityFromDeltasParams memory param = IBinPositionManager
+            .BinAddLiquidityFromDeltasParams({
+            poolKey: _param.poolKey,
+            amount0Max: _param.amount0Max,
+            amount1Max: _param.amount1Max,
+            activeIdDesired: _param.activeIdDesired,
+            idSlippage: _param.idSlippage,
+            deltaIds: _param.deltaIds,
+            distributionX: _param.distributionX,
+            distributionY: _param.distributionY,
+            to: _param.to,
+            hookData: _param.hookData
+        });
         planner.add(Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS, abi.encode(param));
 
         bytes memory plan = planner.encode();
@@ -949,8 +963,22 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         planner.add(Actions.SETTLE, abi.encode(key1.currency1, amountToSend, true));
 
         uint24[] memory binIds = getBinIds(activeId, 1);
-        IBinPositionManager.BinAddLiquidityParams memory param =
+        IBinPositionManager.BinAddLiquidityParams memory _param =
             _getAddParams(key1, binIds, uint128(amountToSend), uint128(amountToSend), activeId, address(this));
+
+        IBinPositionManager.BinAddLiquidityFromDeltasParams memory param = IBinPositionManager
+            .BinAddLiquidityFromDeltasParams({
+            poolKey: _param.poolKey,
+            amount0Max: _param.amount0Max,
+            amount1Max: _param.amount1Max,
+            activeIdDesired: _param.activeIdDesired,
+            idSlippage: _param.idSlippage,
+            deltaIds: _param.deltaIds,
+            distributionX: _param.distributionX,
+            distributionY: _param.distributionY,
+            to: _param.to,
+            hookData: _param.hookData
+        });
         planner.add(Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS, abi.encode(param));
 
         bytes memory plan = planner.encode();
@@ -1002,12 +1030,32 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         planner.add(Actions.SETTLE, abi.encode(fotKey.currency1, amount1, true));
 
         uint24[] memory binIds = getBinIds(activeId, binNum);
-        IBinPositionManager.BinAddLiquidityParams memory param = _getAddParams(
+        IBinPositionManager.BinAddLiquidityParams memory _param = _getAddParams(
             fotKey, binIds, uint128(amount0AfterTransfer), uint128(amount1AfterTransfer), activeId, address(this)
         );
+        IBinPositionManager.BinAddLiquidityFromDeltasParams memory param = IBinPositionManager
+            .BinAddLiquidityFromDeltasParams({
+            poolKey: _param.poolKey,
+            amount0Max: _param.amount0Max,
+            amount1Max: _param.amount1Max,
+            activeIdDesired: _param.activeIdDesired,
+            idSlippage: _param.idSlippage,
+            deltaIds: _param.deltaIds,
+            distributionX: _param.distributionX,
+            distributionY: _param.distributionY,
+            to: _param.to,
+            hookData: _param.hookData
+        });
         planner.add(Actions.BIN_ADD_LIQUIDITY_FROM_DELTAS, abi.encode(param));
 
         bytes memory plan = planner.encode();
+
+        // if the fee is 100% and amount of normal currency is 0, the transaction will revert
+        if (bips == 10000 && ((isCurrency0FotToken && amount1 == 0) || (!isCurrency0FotToken && amount0 == 0))) {
+            vm.expectRevert();
+            binPm.modifyLiquidities(plan, _deadline);
+            return;
+        }
 
         binPm.modifyLiquidities(plan, _deadline);
 
