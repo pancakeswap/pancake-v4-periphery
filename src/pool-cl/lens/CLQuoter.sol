@@ -40,6 +40,20 @@ contract CLQuoter is ICLQuoter, BaseV4Quoter {
     }
 
     /// @inheritdoc ICLQuoter
+    function quoteExactInputSingleList(QuoteExactSingleParams[] memory params)
+        external
+        returns (uint256 amountIn, uint256 gasEstimate)
+    {
+        uint256 gasBefore = gasleft();
+        try vault.lock(abi.encodeCall(this._quoteExactInputSingleList, (params))) {}
+        catch (bytes memory reason) {
+            gasEstimate = gasBefore - gasleft();
+            // Extract the quote from QuoteSwap error, or throw if the quote failed
+            amountIn = reason.parseQuoteAmount();
+        }
+    }
+
+    /// @inheritdoc ICLQuoter
     function quoteExactInput(QuoteExactParams memory params)
         external
         returns (uint256 amountOut, uint256 gasEstimate)
@@ -109,6 +123,27 @@ contract CLQuoter is ICLQuoter, BaseV4Quoter {
 
         // the output delta of a swap is positive
         uint256 amountOut = params.zeroForOne ? uint128(swapDelta.amount1()) : uint128(swapDelta.amount0());
+        amountOut.revertQuote();
+    }
+
+    /// @dev quote ExactInput swap list on a pool, then revert with the result of last swap
+    function _quoteExactInputSingleList(QuoteExactSingleParams[] calldata swapParamList)
+        external
+        selfOnly
+        returns (bytes memory)
+    {
+        uint256 swapLength = swapParamList.length;
+        if (swapLength == 0) revert();
+        uint256 amountOut;
+        for (uint256 i = 0; i < swapLength; i++) {
+            QuoteExactSingleParams memory params = swapParamList[i];
+            BalanceDelta swapDelta =
+                _swap(params.poolKey, params.zeroForOne, -int256(int128(params.exactAmount)), params.hookData);
+            if (i == swapLength - 1) {
+                // the output delta of a swap is positive
+                amountOut = params.zeroForOne ? uint128(swapDelta.amount1()) : uint128(swapDelta.amount0());
+            }
+        }
         amountOut.revertQuote();
     }
 
