@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
