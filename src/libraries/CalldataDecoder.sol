@@ -72,6 +72,10 @@ library CalldataDecoder {
     /// @dev equivalent to: abi.decode(params, (Currency)) in calldata
     function decodeCurrency(bytes calldata params) internal pure returns (Currency currency) {
         assembly ("memory-safe") {
+            if lt(params.length, 0x20) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency := calldataload(params.offset)
         }
     }
@@ -79,6 +83,10 @@ library CalldataDecoder {
     /// @dev equivalent to: abi.decode(params, (Currency, Currency)) in calldata
     function decodeCurrencyPair(bytes calldata params) internal pure returns (Currency currency0, Currency currency1) {
         assembly ("memory-safe") {
+            if lt(params.length, 0x40) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency0 := calldataload(params.offset)
             currency1 := calldataload(add(params.offset, 0x20))
         }
@@ -91,6 +99,10 @@ library CalldataDecoder {
         returns (Currency currency0, Currency currency1, address _address)
     {
         assembly ("memory-safe") {
+            if lt(params.length, 0x60) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency0 := calldataload(params.offset)
             currency1 := calldataload(add(params.offset, 0x20))
             _address := calldataload(add(params.offset, 0x40))
@@ -104,6 +116,10 @@ library CalldataDecoder {
         returns (Currency currency, address _address)
     {
         assembly ("memory-safe") {
+            if lt(params.length, 0x40) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency := calldataload(params.offset)
             _address := calldataload(add(params.offset, 0x20))
         }
@@ -116,6 +132,10 @@ library CalldataDecoder {
         returns (Currency currency, address _address, uint256 amount)
     {
         assembly ("memory-safe") {
+            if lt(params.length, 0x60) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency := calldataload(params.offset)
             _address := calldataload(add(params.offset, 0x20))
             amount := calldataload(add(params.offset, 0x40))
@@ -129,6 +149,10 @@ library CalldataDecoder {
         returns (Currency currency, uint256 amount)
     {
         assembly ("memory-safe") {
+            if lt(params.length, 0x40) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency := calldataload(params.offset)
             amount := calldataload(add(params.offset, 0x20))
         }
@@ -137,6 +161,10 @@ library CalldataDecoder {
     /// @dev equivalent to: abi.decode(params, (uint256)) in calldata
     function decodeUint256(bytes calldata params) internal pure returns (uint256 amount) {
         assembly ("memory-safe") {
+            if lt(params.length, 0x20) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             amount := calldataload(params.offset)
         }
     }
@@ -148,6 +176,10 @@ library CalldataDecoder {
         returns (Currency currency, uint256 amount, bool boolean)
     {
         assembly ("memory-safe") {
+            if lt(params.length, 0x60) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             currency := calldataload(params.offset)
             amount := calldataload(add(params.offset, 0x20))
             boolean := calldataload(add(params.offset, 0x40))

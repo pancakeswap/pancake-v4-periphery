@@ -10,6 +10,9 @@ import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 library CLCalldataDecoder {
     using CalldataDecoder for bytes;
 
+    /// @notice equivalent to SliceOutOfBounds.selector, stored in least-significant bits
+    uint256 constant SLICE_ERROR_SELECTOR = 0x3b99b53d;
+
     /// @dev equivalent to: abi.decode(params, (IV4Router.CLExactInputParams))
     function decodeCLSwapExactInParams(bytes calldata params)
         internal
@@ -18,6 +21,12 @@ library CLCalldataDecoder {
     {
         // CLExactInputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where path is empty
+            // 0xa0 = 5 * 0x20 -> 3 elements, path offset, and path length 0
+            if lt(params.length, 0xa0) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -30,6 +39,12 @@ library CLCalldataDecoder {
     {
         // CLExactInputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where hookData is empty
+            // 0x160 = 11 * 0x20 -> 9 elements, bytes offset, and bytes length 0
+            if lt(params.length, 0x160) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -42,6 +57,12 @@ library CLCalldataDecoder {
     {
         // CLExactOutputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where path is empty
+            // 0xa0 = 5 * 0x20 -> 3 elements, path offset, and path length 0
+            if lt(params.length, 0xa0) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -54,6 +75,12 @@ library CLCalldataDecoder {
     {
         // CLExactOutputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
+            // only safety checks for the minimum length, where hookData is empty
+            // 0x160 = 9 * 0x20 -> 9 elements, bytes offset, and bytes length 0
+            if lt(params.length, 0x160) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             swapParams := add(params.offset, calldataload(params.offset))
         }
     }
@@ -65,6 +92,10 @@ library CLCalldataDecoder {
         returns (uint256 tokenId, uint256 liquidity, uint128 amount0, uint128 amount1, bytes calldata hookData)
     {
         assembly ("memory-safe") {
+            if lt(params.length, 0x80) {
+                mstore(0, SLICE_ERROR_SELECTOR)
+                revert(0x1c, 4)
+            }
             tokenId := calldataload(params.offset)
             liquidity := calldataload(add(params.offset, 0x20))
             amount0 := calldataload(add(params.offset, 0x40))
