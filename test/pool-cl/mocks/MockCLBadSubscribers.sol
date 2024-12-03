@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {ICLSubscriber} from "../../../src/pool-cl/interfaces/ICLSubscriber.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
+import {CLPositionInfo} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
 
 /// @notice A subscriber contract that returns values from the subscriber entrypoints
 contract MockCLReturnDataSubscriber is ICLSubscriber {
@@ -13,6 +14,7 @@ contract MockCLReturnDataSubscriber is ICLSubscriber {
     uint256 public notifyUnsubscribeCount;
     uint256 public notifyModifyLiquidityCount;
     uint256 public notifyTransferCount;
+    uint256 public notifyBurnCount;
 
     error NotAuthorizedNotifer(address sender);
 
@@ -52,6 +54,10 @@ contract MockCLReturnDataSubscriber is ICLSubscriber {
         notifyTransferCount++;
     }
 
+    function notifyBurn(uint256, address, CLPositionInfo, uint256, BalanceDelta) external {
+        notifyBurnCount++;
+    }
+
     function setReturnDataSize(uint256 _value) external {
         memPtr = _value;
     }
@@ -84,6 +90,10 @@ contract MockCLRevertSubscriber is ICLSubscriber {
 
     function notifyUnsubscribe(uint256) external view onlyByPosm {
         revert TestRevert("notifyUnsubscribe");
+    }
+
+    function notifyBurn(uint256, address, CLPositionInfo, uint256, BalanceDelta) external {
+        revert TestRevert("notifyBurn");
     }
 
     function notifyModifyLiquidity(uint256, int256, BalanceDelta) external view onlyByPosm {
