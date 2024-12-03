@@ -261,15 +261,9 @@ contract CLPositionManager is
     {
         (PoolKey memory poolKey, CLPositionInfo info) = getPoolAndPositionInfo(tokenId);
 
-        (uint160 sqrtPriceX96,,,) = clPoolManager.getSlot0(poolKey.toId());
-
         // Use the credit on the pool manager as the amounts for the mint.
-        uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
-            sqrtPriceX96,
-            TickMath.getSqrtRatioAtTick(info.tickLower()),
-            TickMath.getSqrtRatioAtTick(info.tickUpper()),
-            _getFullCredit(poolKey.currency0),
-            _getFullCredit(poolKey.currency1)
+        uint256 liquidity = _getFullCreditLiquidity(
+            poolKey.toId(), poolKey.currency0, poolKey.currency1, info.tickLower(), info.tickUpper()
         );
 
         // Note: The tokenId is used as the salt for this position, so every minted position has unique storage in the pool manager.
@@ -343,18 +337,28 @@ contract CLPositionManager is
         address owner,
         bytes calldata hookData
     ) internal {
-        (uint160 sqrtPriceX96,,,) = clPoolManager.getSlot0(poolKey.toId());
-
         // Use the credit on the pool manager as the amounts for the mint.
-        uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
+        uint256 liquidity =
+            _getFullCreditLiquidity(poolKey.toId(), poolKey.currency0, poolKey.currency1, tickLower, tickUpper);
+
+        _mint(poolKey, tickLower, tickUpper, liquidity, amount0Max, amount1Max, owner, hookData);
+    }
+
+    function _getFullCreditLiquidity(
+        PoolId id,
+        Currency currency0,
+        Currency currency1,
+        int24 tickLower,
+        int24 tickUpper
+    ) internal view returns (uint256 liquidity) {
+        (uint160 sqrtPriceX96,,,) = clPoolManager.getSlot0(id);
+        return LiquidityAmounts.getLiquidityForAmounts(
             sqrtPriceX96,
             TickMath.getSqrtRatioAtTick(tickLower),
             TickMath.getSqrtRatioAtTick(tickUpper),
-            _getFullCredit(poolKey.currency0),
-            _getFullCredit(poolKey.currency1)
+            _getFullCredit(currency0),
+            _getFullCredit(currency1)
         );
-
-        _mint(poolKey, tickLower, tickUpper, liquidity, amount0Max, amount1Max, owner, hookData);
     }
 
     /// @dev this is overloaded with ERC721Permit_v4._burn
