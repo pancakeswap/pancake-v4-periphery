@@ -21,7 +21,7 @@ import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
  */
 contract DeployMixedQuoterScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/MixedQuoter/0.90");
+        return keccak256("PANCAKE-V4-PERIPHERY/MixedQuoter/0.92");
     }
 
     function run() public {
