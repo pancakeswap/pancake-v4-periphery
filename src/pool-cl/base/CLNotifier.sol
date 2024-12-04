@@ -122,20 +122,6 @@ abstract contract CLNotifier is ICLNotifier {
         }
     }
 
-    function _notifyTransfer(uint256 tokenId, address previousOwner, address newOwner) internal {
-        ICLSubscriber _subscriber = subscriber[tokenId];
-
-        bool success = _call(
-            address(_subscriber), abi.encodeCall(ICLSubscriber.notifyTransfer, (tokenId, previousOwner, newOwner))
-        );
-
-        if (!success) {
-            address(_subscriber).bubbleUpAndRevertWith(
-                ICLSubscriber.notifyTransfer.selector, TransferNotificationReverted.selector
-            );
-        }
-    }
-
     function _call(address target, bytes memory encodedCall) internal returns (bool success) {
         if (target.code.length == 0) revert NoCodeSubscriber();
         assembly ("memory-safe") {

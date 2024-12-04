@@ -13,7 +13,6 @@ contract MockCLSubscriber is ICLSubscriber {
     uint256 public notifySubscribeCount;
     uint256 public notifyUnsubscribeCount;
     uint256 public notifyModifyLiquidityCount;
-    uint256 public notifyTransferCount;
     uint256 public notifyBurnCount;
     int256 public liquidityChange;
     uint256 public liquidity;
@@ -47,10 +46,6 @@ contract MockCLSubscriber is ICLSubscriber {
         notifyModifyLiquidityCount++;
         liquidityChange = _liquidityChange;
         feesAccrued = _feesAccrued;
-    }
-
-    function notifyTransfer(uint256, address, address) external onlyByPosm {
-        notifyTransferCount++;
     }
 
     function notifyBurn(

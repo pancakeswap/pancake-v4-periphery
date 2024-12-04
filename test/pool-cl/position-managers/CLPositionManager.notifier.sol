@@ -197,7 +197,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         assertEq(sub.notifyModifyLiquidityCount(), 10);
     }
 
-    function test_notifyTransfer_withTransferFrom_selfDestruct_revert() public {
+    function test_transferFrom_unsubscribes_selfDestruct() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
 
@@ -212,8 +212,11 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         // simulate selfdestruct by etching the bytecode to 0
         vm.etch(address(sub), ZERO_BYTES);
 
-        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.NoCodeSubscriber.selector));
+        // unsubscribe happens regardless of the subscriber contract's code
         lpm.transferFrom(alice, bob, tokenId);
+
+        assertEq(lpm.positionInfo(tokenId).hasSubscriber(), false);
+        assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
     function test_notifyModifyLiquidity_args() public {
@@ -243,7 +246,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         assertEq(int256(sub.feesAccrued().amount1()), int256(feeRevenue1) - 1 wei);
     }
 
-    function test_notifyTransfer_withSafeTransferFrom_selfDestruct_revert() public {
+    function test_safeTransferFrom_unsubscribes_selfDestruct() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
 
@@ -258,11 +261,13 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         // simulate selfdestruct by etching the bytecode to 0
         vm.etch(address(sub), ZERO_BYTES);
 
-        vm.expectRevert(abi.encodeWithSelector(ICLNotifier.NoCodeSubscriber.selector));
+        // unsubscribe happens regardless of the subscriber contract's code
         lpm.safeTransferFrom(alice, bob, tokenId);
+        assertEq(lpm.positionInfo(tokenId).hasSubscriber(), false);
+        assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
-    function test_notifyTransfer_withTransferFrom_succeeds() public {
+    function test_transferFrom_unsubscribes() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
 
@@ -277,7 +282,9 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         lpm.transferFrom(alice, bob, tokenId);
 
-        assertEq(sub.notifyTransferCount(), 1);
+        assertEq(sub.notifyUnsubscribeCount(), 1);
+        assertEq(lpm.positionInfo(tokenId).hasSubscriber(), false);
+        assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
     function test_unsubscribe_selfDestructed() public {
@@ -301,7 +308,7 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
         assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
-    function test_notifyTransfer_withSafeTransferFrom_succeeds() public {
+    function test_safeTransferFrom_unsubscribes() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
 
@@ -316,10 +323,12 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         lpm.safeTransferFrom(alice, bob, tokenId);
 
-        assertEq(sub.notifyTransferCount(), 1);
+        assertEq(sub.notifyUnsubscribeCount(), 1);
+        assertEq(lpm.positionInfo(tokenId).hasSubscriber(), false);
+        assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
-    function test_notifyTransfer_withSafeTransferFromData_succeeds() public {
+    function test_safeTransferFrom_unsubscribes_withData() public {
         uint256 tokenId = lpm.nextTokenId();
         mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
 
@@ -334,7 +343,9 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
 
         lpm.safeTransferFrom(alice, bob, tokenId, "");
 
-        assertEq(sub.notifyTransferCount(), 1);
+        assertEq(sub.notifyUnsubscribeCount(), 1);
+        assertEq(lpm.positionInfo(tokenId).hasSubscriber(), false);
+        assertEq(address(lpm.subscriber(tokenId)), address(0));
     }
 
     function test_unsubscribe_succeeds() public {
@@ -535,75 +546,6 @@ contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
             )
         );
         lpm.modifyLiquidities(calls, _deadline);
-    }
-
-    function test_notifyTransfer_withTransferFrom_wraps_revert() public {
-        uint256 tokenId = lpm.nextTokenId();
-        mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
-
-        // approve this contract to operate on alices liq
-        vm.startPrank(alice);
-        lpm.approve(address(this), tokenId);
-        vm.stopPrank();
-
-        lpm.subscribe(tokenId, address(revertSubscriber), ZERO_BYTES);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                CustomRevert.WrappedError.selector,
-                address(revertSubscriber),
-                ICLSubscriber.notifyTransfer.selector,
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer"),
-                abi.encodeWithSelector(ICLNotifier.TransferNotificationReverted.selector)
-            )
-        );
-        lpm.transferFrom(alice, bob, tokenId);
-    }
-
-    function test_notifyTransfer_withSafeTransferFrom_wraps_revert() public {
-        uint256 tokenId = lpm.nextTokenId();
-        mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
-
-        // approve this contract to operate on alices liq
-        vm.startPrank(alice);
-        lpm.approve(address(this), tokenId);
-        vm.stopPrank();
-
-        lpm.subscribe(tokenId, address(revertSubscriber), ZERO_BYTES);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                CustomRevert.WrappedError.selector,
-                address(revertSubscriber),
-                ICLSubscriber.notifyTransfer.selector,
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer"),
-                abi.encodeWithSelector(ICLNotifier.TransferNotificationReverted.selector)
-            )
-        );
-        lpm.safeTransferFrom(alice, bob, tokenId);
-    }
-
-    function test_notifyTransfer_withSafeTransferFromData_wraps_revert() public {
-        uint256 tokenId = lpm.nextTokenId();
-        mint(key, -300, 300, 100e18, alice, ZERO_BYTES);
-
-        // approve this contract to operate on alices liq
-        vm.startPrank(alice);
-        lpm.approve(address(this), tokenId);
-        vm.stopPrank();
-
-        lpm.subscribe(tokenId, address(revertSubscriber), ZERO_BYTES);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                CustomRevert.WrappedError.selector,
-                address(revertSubscriber),
-                ICLSubscriber.notifyTransfer.selector,
-                abi.encodeWithSelector(MockCLRevertSubscriber.TestRevert.selector, "notifyTransfer"),
-                abi.encodeWithSelector(ICLNotifier.TransferNotificationReverted.selector)
-            )
-        );
-        lpm.safeTransferFrom(alice, bob, tokenId, "");
     }
 
     function test_notifyBurn_wraps_revert() public {

@@ -23,7 +23,7 @@ interface IBinPositionManager is IPositionManager {
     /// - distributionX: Distribution of tokenX with sum(distributionX) = 1e18 (100%) or 0 (0%)
     /// - distributionY: Distribution of tokenY with sum(distributionY) = 1e18 (100%) or 0 (0%)
     /// - to: Address of recipient
-    /// - deadline: Deadline of transaction
+    /// - hookData: Data to pass to the hook
     struct BinAddLiquidityParams {
         PoolKey poolKey;
         uint128 amount0;
@@ -45,7 +45,7 @@ interface IBinPositionManager is IPositionManager {
     /// - ids: List of bin ids to remove liquidity
     /// - amounts: List of share amount to remove for each bin
     /// - from: Address of NFT holder to burn the NFT
-    /// - deadline: Deadline of transaction
+    /// - hookData: Data to pass to the hook
     struct BinRemoveLiquidityParams {
         PoolKey poolKey;
         uint128 amount0Min;
@@ -53,6 +53,29 @@ interface IBinPositionManager is IPositionManager {
         uint256[] ids;
         uint256[] amounts;
         address from;
+        bytes hookData;
+    }
+
+    /// @notice BinAddLiquidityFromDeltasParams
+    /// - amount0Max: Max amount to send for token0
+    /// - amount1Max: Max amount to send for token1
+    /// - activeIdDesired: Active id that user wants to add liquidity from
+    /// - idSlippage: Number of id that are allowed to slip
+    /// - deltaIds: List of delta ids to add liquidity (`deltaId = activeId - desiredId`)
+    /// - distributionX: Distribution of tokenX with sum(distributionX) = 1e18 (100%) or 0 (0%)
+    /// - distributionY: Distribution of tokenY with sum(distributionY) = 1e18 (100%) or 0 (0%)
+    /// - to: Address of recipient
+    /// - hookData: Data to pass to the hook
+    struct BinAddLiquidityFromDeltasParams {
+        PoolKey poolKey;
+        uint128 amount0Max;
+        uint128 amount1Max;
+        uint256 activeIdDesired;
+        uint256 idSlippage;
+        int256[] deltaIds;
+        uint256[] distributionX;
+        uint256[] distributionY;
+        address to;
         bytes hookData;
     }
 

@@ -34,6 +34,17 @@ library BinCalldataDecoder {
         }
     }
 
+    /// @dev equivalent to: abi.decode(params, (IBinPositionManager.BinAddLiquidityFromDeltasParams))
+    function decodeBinAddLiquidityFromDeltasParams(bytes calldata params)
+        internal
+        pure
+        returns (IBinPositionManager.BinAddLiquidityFromDeltasParams calldata addLiquidityParams)
+    {
+        assembly ("memory-safe") {
+            addLiquidityParams := add(params.offset, calldataload(params.offset))
+        }
+    }
+
     /// @dev equivalent to: abi.decode(params, (IV4Router.BinExactInputParams))
     function decodeBinSwapExactInParams(bytes calldata params)
         internal

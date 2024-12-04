@@ -30,6 +30,8 @@ import {ICLSubscriber} from "./interfaces/ICLSubscriber.sol";
 import {ICLPositionDescriptor} from "./interfaces/ICLPositionDescriptor.sol";
 import {NativeWrapper} from "../base/NativeWrapper.sol";
 import {IWETH9} from "../interfaces/external/IWETH9.sol";
+import {LiquidityAmounts} from "../pool-cl/libraries/LiquidityAmounts.sol";
+import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 
 /// @title CLPositionManager
 /// @notice Contract for modifying liquidity for PCS v4 CL pools
@@ -151,6 +153,11 @@ contract CLPositionManager is
                     params.decodeCLModifyLiquidityParams();
                 _increase(tokenId, liquidity, amount0Max, amount1Max, hookData);
                 return;
+            } else if (action == Actions.CL_INCREASE_LIQUIDITY_FROM_DELTAS) {
+                (uint256 tokenId, uint128 amount0Max, uint128 amount1Max, bytes calldata hookData) =
+                    params.decodeCLIncreaseLiquidityFromDeltasParams();
+                _increaseFromDeltas(tokenId, amount0Max, amount1Max, hookData);
+                return;
             } else if (action == Actions.CL_DECREASE_LIQUIDITY) {
                 (uint256 tokenId, uint256 liquidity, uint128 amount0Min, uint128 amount1Min, bytes calldata hookData) =
                     params.decodeCLModifyLiquidityParams();
@@ -168,6 +175,18 @@ contract CLPositionManager is
                     bytes calldata hookData
                 ) = params.decodeCLMintParams();
                 _mint(poolKey, tickLower, tickUpper, liquidity, amount0Max, amount1Max, _mapRecipient(owner), hookData);
+                return;
+            } else if (action == Actions.CL_MINT_POSITION_FROM_DELTAS) {
+                (
+                    PoolKey calldata poolKey,
+                    int24 tickLower,
+                    int24 tickUpper,
+                    uint128 amount0Max,
+                    uint128 amount1Max,
+                    address owner,
+                    bytes calldata hookData
+                ) = params.decodeCLMintFromDeltasParams();
+                _mintFromDeltas(poolKey, tickLower, tickUpper, amount0Max, amount1Max, _mapRecipient(owner), hookData);
                 return;
             } else if (action == Actions.CL_BURN_POSITION) {
                 // Will automatically decrease liquidity to 0 if the position is not already empty.
@@ -235,6 +254,31 @@ contract CLPositionManager is
         (liquidityDelta - feesAccrued).validateMaxIn(amount0Max, amount1Max);
     }
 
+    /// @dev The liquidity delta is derived from open deltas in the pool manager.
+    function _increaseFromDeltas(uint256 tokenId, uint128 amount0Max, uint128 amount1Max, bytes calldata hookData)
+        internal
+        onlyIfApproved(msgSender(), tokenId)
+    {
+        (PoolKey memory poolKey, CLPositionInfo info) = getPoolAndPositionInfo(tokenId);
+
+        (uint160 sqrtPriceX96,,,) = clPoolManager.getSlot0(poolKey.toId());
+
+        // Use the credit on the pool manager as the amounts for the mint.
+        uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
+            sqrtPriceX96,
+            TickMath.getSqrtRatioAtTick(info.tickLower()),
+            TickMath.getSqrtRatioAtTick(info.tickUpper()),
+            _getFullCredit(poolKey.currency0),
+            _getFullCredit(poolKey.currency1)
+        );
+
+        // Note: The tokenId is used as the salt for this position, so every minted position has unique storage in the pool manager.
+        (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) =
+            _modifyLiquidity(info, poolKey, liquidity.toInt256(), bytes32(tokenId), hookData);
+        // Slippage checks should be done on the principal liquidityDelta which is the liquidityDelta - feesAccrued
+        (liquidityDelta - feesAccrued).validateMaxIn(amount0Max, amount1Max);
+    }
+
     /// @dev Calling decrease with 0 liquidity will credit the caller with any underlying fees of the position
     function _decrease(
         uint256 tokenId,
@@ -288,6 +332,29 @@ contract CLPositionManager is
         liquidityDelta.validateMaxIn(amount0Max, amount1Max);
 
         emit MintPosition(tokenId);
+    }
+
+    function _mintFromDeltas(
+        PoolKey calldata poolKey,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 amount0Max,
+        uint128 amount1Max,
+        address owner,
+        bytes calldata hookData
+    ) internal {
+        (uint160 sqrtPriceX96,,,) = clPoolManager.getSlot0(poolKey.toId());
+
+        // Use the credit on the pool manager as the amounts for the mint.
+        uint256 liquidity = LiquidityAmounts.getLiquidityForAmounts(
+            sqrtPriceX96,
+            TickMath.getSqrtRatioAtTick(tickLower),
+            TickMath.getSqrtRatioAtTick(tickUpper),
+            _getFullCredit(poolKey.currency0),
+            _getFullCredit(poolKey.currency1)
+        );
+
+        _mint(poolKey, tickLower, tickUpper, liquidity, amount0Max, amount1Max, owner, hookData);
     }
 
     /// @dev this is overloaded with ERC721Permit_v4._burn
@@ -423,7 +490,7 @@ contract CLPositionManager is
     /// @dev will revert if vault is locked
     function transferFrom(address from, address to, uint256 id) public virtual override onlyIfVaultUnlocked {
         super.transferFrom(from, to, id);
-        if (positionInfo[id].hasSubscriber()) _notifyTransfer(id, from, to);
+        if (positionInfo[id].hasSubscriber()) _unsubscribe(id);
     }
 
     /// @inheritdoc ICLPositionManager
