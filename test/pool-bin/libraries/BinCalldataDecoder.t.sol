@@ -6,8 +6,10 @@ import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 
 import {MockBinCalldataDecoder} from "../mocks/MockBinCalldataDecoder.sol";
+import {CalldataDecoder} from "../../../src/libraries/CalldataDecoder.sol";
 import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
 import {IBinPositionManager} from "../../../src/pool-bin/interfaces/IBinPositionManager.sol";
+import {IBinRouterBase} from "../../../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {PathKey} from "../../../src/libraries/PathKey.sol";
 
 contract BinCalldataDecoderTest is Test {
@@ -81,6 +83,27 @@ contract BinCalldataDecoderTest is Test {
         assertEq(swapParams.amountOutMinimum, _swapParams.amountOutMinimum);
     }
 
+    function test_decodeBinSwapExactInParams_outOfBounds() public {
+        PathKey[] memory path = new PathKey[](0);
+        IV4Router.BinSwapExactInputParams memory _swapParams = IBinRouterBase.BinSwapExactInputParams({
+            currencyIn: Currency.wrap(makeAddr("currencyIn")),
+            path: path,
+            amountIn: 1 ether,
+            amountOutMinimum: 1 ether
+        });
+
+        /// @dev params.length is 192 as abi.encode adds 32 bytes for dynamic field. However ether.js doesn't add 32 bytes
+        /// thus we need to remove 32 bytes from the end of the params
+        /// ref: https://ethereum.stackexchange.com/questions/152971/abi-encode-decode-mystery-additional-32-byte-field-uniswap-v2
+        bytes memory params = abi.encode(_swapParams);
+        assertEq(params.length, 192);
+        bytes memory invalidParam = _removeBytes(params, 32 + 1);
+        assertEq(invalidParam.length, params.length - 33);
+
+        vm.expectRevert(CalldataDecoder.SliceOutOfBounds.selector);
+        decoder.decodeBinSwapExactInParams(invalidParam);
+    }
+
     function test_fuzz_decodeBinSwapExactInSingleParams(IV4Router.BinSwapExactInputSingleParams memory _swapParams)
         public
         view
@@ -95,6 +118,27 @@ contract BinCalldataDecoderTest is Test {
         assertEq(swapParams.hookData, _swapParams.hookData);
     }
 
+    function test_fuzz_decodeBinSwapExactInSingleParams_outOfBounds(PoolKey memory key) public {
+        IV4Router.BinSwapExactInputSingleParams memory _swapParams = IBinRouterBase.BinSwapExactInputSingleParams({
+            poolKey: key,
+            swapForY: true,
+            amountIn: 1 ether,
+            amountOutMinimum: 1 ether,
+            hookData: ""
+        });
+
+        /// @dev params.length is 384 as abi.encode adds 32 bytes for dynamic field. However ether.js doesn't add 32 bytes
+        /// thus we need to remove 32 bytes from the end of the params
+        /// ref: https://ethereum.stackexchange.com/questions/152971/abi-encode-decode-mystery-additional-32-byte-field-uniswap-v2
+        bytes memory params = abi.encode(_swapParams);
+        assertEq(params.length, 0x180);
+        bytes memory invalidParam = _removeBytes(params, 32 + 1);
+        assertEq(invalidParam.length, 0x160 - 1);
+
+        vm.expectRevert(CalldataDecoder.SliceOutOfBounds.selector);
+        decoder.decodeBinSwapExactInSingleParams(invalidParam);
+    }
+
     function test_fuzz_decodeBinSwapExactOutParams(IV4Router.BinSwapExactOutputParams memory _swapParams) public view {
         bytes memory params = abi.encode(_swapParams);
         IV4Router.BinSwapExactOutputParams memory swapParams = decoder.decodeBinSwapExactOutParams(params);
@@ -103,6 +147,27 @@ contract BinCalldataDecoderTest is Test {
         _assertEq(swapParams.path, _swapParams.path);
         assertEq(swapParams.amountOut, _swapParams.amountOut);
         assertEq(swapParams.amountInMaximum, _swapParams.amountInMaximum);
+    }
+
+    function test_decodeBinSwapExactOutParams_outOfBounds() public {
+        PathKey[] memory path = new PathKey[](0);
+        IV4Router.BinSwapExactOutputParams memory _swapParams = IBinRouterBase.BinSwapExactOutputParams({
+            currencyOut: Currency.wrap(makeAddr("currencyOut")),
+            path: path,
+            amountOut: 1 ether,
+            amountInMaximum: 1 ether
+        });
+
+        /// @dev params.length is 192 as abi.encode adds 32 bytes for dynamic field. However ether.js doesn't add 32 bytes
+        /// thus we need to remove 32 bytes from the end of the params
+        /// ref: https://ethereum.stackexchange.com/questions/152971/abi-encode-decode-mystery-additional-32-byte-field-uniswap-v2
+        bytes memory params = abi.encode(_swapParams);
+        assertEq(params.length, 192);
+        bytes memory invalidParam = _removeBytes(params, 32 + 1);
+        assertEq(invalidParam.length, params.length - 33);
+
+        vm.expectRevert(CalldataDecoder.SliceOutOfBounds.selector);
+        decoder.decodeBinSwapExactOutParams(invalidParam);
     }
 
     function test_fuzz_decodeBinSwapExactOutSingleParams(IV4Router.BinSwapExactOutputSingleParams memory _swapParams)
@@ -117,6 +182,27 @@ contract BinCalldataDecoderTest is Test {
         assertEq(swapParams.amountOut, _swapParams.amountOut);
         assertEq(swapParams.amountInMaximum, _swapParams.amountInMaximum);
         assertEq(swapParams.hookData, _swapParams.hookData);
+    }
+
+    function test_fuzz_decodeBinSwapExactOutSingleParams_outOfBounds(PoolKey memory key) public {
+        IV4Router.BinSwapExactOutputSingleParams memory _swapParams = IBinRouterBase.BinSwapExactOutputSingleParams({
+            poolKey: key,
+            swapForY: true,
+            amountOut: 1 ether,
+            amountInMaximum: 1 ether,
+            hookData: ""
+        });
+
+        /// @dev params.length is 384 as abi.encode adds 32 bytes for dynamic field. However ether.js doesn't add 32 bytes
+        /// thus we need to remove 32 bytes from the end of the params
+        /// ref: https://ethereum.stackexchange.com/questions/152971/abi-encode-decode-mystery-additional-32-byte-field-uniswap-v2
+        bytes memory params = abi.encode(_swapParams);
+        assertEq(params.length, 0x180);
+        bytes memory invalidParam = _removeBytes(params, 32 + 1);
+        assertEq(invalidParam.length, 0x160 - 1);
+
+        vm.expectRevert(CalldataDecoder.SliceOutOfBounds.selector);
+        decoder.decodeBinSwapExactOutSingleParams(invalidParam);
     }
 
     function _assertEq(PathKey[] memory path1, PathKey[] memory path2) internal pure {
@@ -151,6 +237,27 @@ contract BinCalldataDecoderTest is Test {
         assertEq(arr1.length, arr2.length);
         for (uint256 i = 0; i < arr1.length; i++) {
             assertEq(arr1[i], arr2[i]);
+        }
+    }
+
+    function _removeFinalByte(bytes memory params) internal pure returns (bytes memory result) {
+        result = new bytes(params.length - 1);
+        // dont copy the final byte
+        for (uint256 i = 0; i < params.length - 2; i++) {
+            result[i] = params[i];
+        }
+    }
+
+    /// @param amountOfByteToRemove the number of bytes to remove from the end of params
+    function _removeBytes(bytes memory params, uint256 amountOfByteToRemove)
+        internal
+        pure
+        returns (bytes memory result)
+    {
+        result = new bytes(params.length - amountOfByteToRemove);
+        // dont copy the final byte
+        for (uint256 i = 0; i < result.length; i++) {
+            result[i] = params[i];
         }
     }
 }

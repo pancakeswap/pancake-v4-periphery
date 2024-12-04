@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import {IQuoter} from "../../interfaces/IQuoter.sol";
@@ -18,6 +18,18 @@ interface ICLQuoter is IQuoter {
     /// @return amountOut The output quote for the exactIn swap
     /// @return gasEstimate Estimated gas units used for the swap
     function quoteExactInputSingle(QuoteExactSingleParams memory params)
+        external
+        returns (uint256 amountOut, uint256 gasEstimate);
+
+    /// @notice Returns the last swap delta amounts for a given exact input in a list of swap
+    /// @param params The params for the quote, encoded as `QuoteExactSingleParams[]`
+    /// poolKey The key for identifying a V4 pool
+    /// zeroForOne If the swap is from currency0 to currency1
+    /// exactAmount The desired input amount
+    /// hookData arbitrary hookData to pass into the associated hooks
+    /// @return amountOut The last swap output quote for the exactIn swap
+    /// @return gasEstimate Estimated gas units used for the swap
+    function quoteExactInputSingleList(QuoteExactSingleParams[] memory params)
         external
         returns (uint256 amountOut, uint256 gasEstimate);
 

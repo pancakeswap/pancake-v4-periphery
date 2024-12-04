@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
@@ -15,13 +16,15 @@ import {V3PoolTicksCounter} from "./libraries/external/V3PoolTicksCounter.sol";
 import {V3SmartRouterHelper} from "./libraries/external/V3SmartRouterHelper.sol";
 import {IMixedQuoter} from "./interfaces/IMixedQuoter.sol";
 import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
+import {MixedQuoterRecorder} from "./libraries/MixedQuoterRecorder.sol";
+import {Multicall_v4} from "./base/Multicall_v4.sol";
 
 /// @title Provides on chain quotes for v4, V3, V2, Stable and MixedRoute exact input swaps
 /// @notice Allows getting the expected amount out for a given swap without executing the swap
 /// @notice Does not support exact output swaps since using the contract balance between exactOut swaps is not supported
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
-contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
+contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
     using SafeCast for *;
     using V3PoolTicksCounter for IPancakeV3Pool;
 
@@ -158,10 +161,21 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
         override
         returns (uint256 amountOut, uint256 gasEstimate)
     {
+        return quoteExactInputSingleV2WithAccumulation(params, 0, 0);
+    }
+
+    /// @dev Fetch an exactIn quote for a V2 pair on chain with token accumulation
+    function quoteExactInputSingleV2WithAccumulation(
+        QuoteExactInputSingleV2Params memory params,
+        uint256 accTokenInAmount,
+        uint256 accTokenOutAmount
+    ) internal view returns (uint256 amountOut, uint256 gasEstimate) {
         uint256 gasBefore = gasleft();
         (uint256 reserveIn, uint256 reserveOut) =
             V3SmartRouterHelper.getReserves(factoryV2, params.tokenIn, params.tokenOut);
-        amountOut = V3SmartRouterHelper.getAmountOut(params.amountIn, reserveIn, reserveOut);
+        amountOut = V3SmartRouterHelper.getAmountOut(
+            params.amountIn, reserveIn + accTokenInAmount, reserveOut - accTokenOutAmount
+        );
         gasEstimate = gasBefore - gasleft();
     }
 
@@ -186,12 +200,35 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
     /**
      * Mixed *************************************************
      */
+    /// @dev All swap results will influence the outcome of subsequent swaps within the same pool
+    function quoteMixedExactInputSharedContext(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountIn
+    ) external override returns (uint256 amountOut, uint256 gasEstimate) {
+        return quoteMixedExactInputWithContext(paths, actions, params, amountIn, true);
+    }
+
     function quoteMixedExactInput(
         address[] calldata paths,
         bytes calldata actions,
         bytes[] calldata params,
         uint256 amountIn
     ) external override returns (uint256 amountOut, uint256 gasEstimate) {
+        return quoteMixedExactInputWithContext(paths, actions, params, amountIn, false);
+    }
+
+    /// @dev if withContext is false, each swap is isolated and does not influence the outcome of subsequent swaps within the same pool
+    /// @dev if withContext is true, all swap results will influence the outcome of subsequent swaps within the same pool
+    /// @dev if withContext is true, non-v4 pools only support one swap direction for same pool
+    function quoteMixedExactInputWithContext(
+        address[] calldata paths,
+        bytes calldata actions,
+        bytes[] calldata params,
+        uint256 amountIn,
+        bool withContext
+    ) private returns (uint256 amountOut, uint256 gasEstimate) {
         uint256 numActions = actions.length;
         if (numActions == 0) revert NoActions();
         if (numActions != params.length || numActions != paths.length - 1) revert InputLengthMismatch();
@@ -206,62 +243,174 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback {
             if (action == MixedQuoterActions.V2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleV2(
-                    QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
-                );
+                if (!withContext) {
+                    (amountIn, gasEstimateForCurAction) = quoteExactInputSingleV2(
+                        QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn})
+                    );
+                } else {
+                    bool zeroForOne = tokenIn < tokenOut;
+                    bytes32 poolHash = MixedQuoterRecorder.getV2PoolHash(tokenIn, tokenOut);
+                    // update v2 pool swap direction, only allow one direction in one transaction
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, zeroForOne);
+                    (uint256 accAmountIn, uint256 accAmountOut) =
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
+
+                    uint256 swapAmountOut;
+                    (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleV2WithAccumulation(
+                        QuoteExactInputSingleV2Params({tokenIn: tokenIn, tokenOut: tokenOut, amountIn: amountIn}),
+                        accAmountIn,
+                        accAmountOut
+                    );
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(
+                        poolHash, amountIn + accAmountIn, swapAmountOut + accAmountOut, zeroForOne
+                    );
+                    amountIn = swapAmountOut;
+                }
             } else if (action == MixedQuoterActions.V3_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex]: abi.encode(fee)
                 uint24 fee = abi.decode(params[actionIndex], (uint24));
-                (amountIn,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
-                    QuoteExactInputSingleV3Params({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        fee: fee,
-                        sqrtPriceLimitX96: 0
-                    })
-                );
+                if (!withContext) {
+                    (amountIn,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
+                        QuoteExactInputSingleV3Params({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            fee: fee,
+                            sqrtPriceLimitX96: 0
+                        })
+                    );
+                } else {
+                    bool zeroForOne = tokenIn < tokenOut;
+                    bytes32 poolHash = MixedQuoterRecorder.getV3PoolHash(tokenIn, tokenOut, fee);
+                    // update v3 pool swap direction, only allow one direction in one transaction
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, zeroForOne);
+                    (uint256 accAmountIn, uint256 accAmountOut) =
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
+
+                    uint256 swapAmountOut;
+                    amountIn += accAmountIn;
+                    (swapAmountOut,,, gasEstimateForCurAction) = quoteExactInputSingleV3(
+                        QuoteExactInputSingleV3Params({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            fee: fee,
+                            sqrtPriceLimitX96: 0
+                        })
+                    );
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
+                    amountIn = swapAmountOut - accAmountOut;
+                }
             } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
                 QuoteMixedV4ExactInputSingleParams memory clParams =
                     abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(clParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
-                (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(
-                    IQuoter.QuoteExactSingleParams({
-                        poolKey: clParams.poolKey,
-                        zeroForOne: zeroForOne,
-                        exactAmount: amountIn.toUint128(),
-                        hookData: clParams.hookData
-                    })
-                );
+
+                IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
+                    poolKey: clParams.poolKey,
+                    zeroForOne: zeroForOne,
+                    exactAmount: amountIn.toUint128(),
+                    hookData: clParams.hookData
+                });
+                // will execute all swap history of same v4 pool in one transaction if withContext is true
+                if (withContext) {
+                    bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
+                    uint256 swapHistoryListLength;
+                    if (swapListBytes.length > 0) {
+                        swapHistoryList = abi.decode(swapListBytes, (IQuoter.QuoteExactSingleParams[]));
+
+                        swapHistoryListLength = swapHistoryList.length;
+                    }
+                    IQuoter.QuoteExactSingleParams[] memory swapList =
+                        new IQuoter.QuoteExactSingleParams[](swapHistoryListLength + 1);
+                    for (uint256 i = 0; i < swapHistoryListLength; i++) {
+                        swapList[i] = swapHistoryList[i];
+                    }
+                    swapList[swapHistoryListLength] = swapParams;
+
+                    (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingleList(swapList);
+                    swapListBytes = abi.encode(swapList);
+                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                } else {
+                    (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(swapParams);
+                }
             } else if (action == MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE) {
                 QuoteMixedV4ExactInputSingleParams memory binParams =
                     abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(binParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
-                (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingle(
-                    IQuoter.QuoteExactSingleParams({
-                        poolKey: binParams.poolKey,
-                        zeroForOne: zeroForOne,
-                        exactAmount: amountIn.toUint128(),
-                        hookData: binParams.hookData
-                    })
-                );
+
+                IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
+                    poolKey: binParams.poolKey,
+                    zeroForOne: zeroForOne,
+                    exactAmount: amountIn.toUint128(),
+                    hookData: binParams.hookData
+                });
+                // will execute all swap history of same v4 pool in one transaction if withContext is true
+                if (withContext) {
+                    bytes32 poolHash = MixedQuoterRecorder.getV4BinPoolHash(binParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
+                    uint256 swapHistoryListLength;
+                    if (swapListBytes.length > 0) {
+                        swapHistoryList = abi.decode(swapListBytes, (IQuoter.QuoteExactSingleParams[]));
+
+                        swapHistoryListLength = swapHistoryList.length;
+                    }
+                    IQuoter.QuoteExactSingleParams[] memory swapList =
+                        new IQuoter.QuoteExactSingleParams[](swapHistoryListLength + 1);
+                    for (uint256 i = 0; i < swapHistoryListLength; i++) {
+                        swapList[i] = swapHistoryList[i];
+                    }
+                    swapList[swapHistoryListLength] = swapParams;
+
+                    (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingleList(swapList);
+                    swapListBytes = abi.encode(swapList);
+                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                } else {
+                    (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingle(swapParams);
+                }
             } else if (action == MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE) {
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
-                (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
-                    QuoteExactInputSingleStableParams({
-                        tokenIn: tokenIn,
-                        tokenOut: tokenOut,
-                        amountIn: amountIn,
-                        flag: 2
-                    })
-                );
+
+                if (!withContext) {
+                    (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(
+                        QuoteExactInputSingleStableParams({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            flag: 2
+                        })
+                    );
+                } else {
+                    bool zeroForOne = tokenIn < tokenOut;
+                    bytes32 poolHash = MixedQuoterRecorder.getSSPoolHash(tokenIn, tokenOut);
+                    // update stable pool swap direction, only allow one direction in one transaction
+                    MixedQuoterRecorder.setAndCheckSwapDirection(poolHash, zeroForOne);
+                    (uint256 accAmountIn, uint256 accAmountOut) =
+                        MixedQuoterRecorder.getPoolSwapTokenAccumulation(poolHash, zeroForOne);
+                    uint256 swapAmountOut;
+                    amountIn += accAmountIn;
+                    (swapAmountOut, gasEstimateForCurAction) = quoteExactInputSingleStable(
+                        QuoteExactInputSingleStableParams({
+                            tokenIn: tokenIn,
+                            tokenOut: tokenOut,
+                            amountIn: amountIn,
+                            flag: 2
+                        })
+                    );
+                    MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
+                    amountIn = swapAmountOut - accAmountOut;
+                }
             } else if (action == MixedQuoterActions.SS_3_EXACT_INPUT_SINGLE) {
+                /// @dev PCS do not support three pool stable swap, so will skip context mode
                 (tokenIn, tokenOut) = convertNativeToWETH(tokenIn, tokenOut);
                 // params[actionIndex] is zero bytes
                 (amountIn, gasEstimateForCurAction) = quoteExactInputSingleStable(

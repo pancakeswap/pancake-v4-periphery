@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.0;
 
 import {ICLSubscriber} from "../interfaces/ICLSubscriber.sol";
@@ -79,6 +80,31 @@ abstract contract CLNotifier is ICLNotifier {
         }
 
         emit Unsubscription(tokenId, address(_subscriber));
+    }
+
+    /// @dev note this function also deletes the subscriber address from the mapping
+    function _removeSubscriberAndNotifyBurn(
+        uint256 tokenId,
+        address owner,
+        CLPositionInfo info,
+        uint256 liquidity,
+        BalanceDelta feesAccrued
+    ) internal {
+        ICLSubscriber _subscriber = subscriber[tokenId];
+
+        // remove the subscriber
+        delete subscriber[tokenId];
+
+        bool success = _call(
+            address(_subscriber),
+            abi.encodeCall(ICLSubscriber.notifyBurn, (tokenId, owner, info, liquidity, feesAccrued))
+        );
+
+        if (!success) {
+            address(_subscriber).bubbleUpAndRevertWith(
+                ICLSubscriber.notifyBurn.selector, BurnNotificationReverted.selector
+            );
+        }
     }
 
     function _notifyModifyLiquidity(uint256 tokenId, int256 liquidityChange, BalanceDelta feesAccrued) internal {

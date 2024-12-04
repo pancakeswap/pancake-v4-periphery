@@ -366,20 +366,34 @@ contract CLPositionManager is
 
         uint256 liquidity = uint256(_getLiquidity(tokenId, poolKey, info.tickLower(), info.tickUpper()));
 
+        address owner = ownerOf(tokenId);
+
         // Clear the position info.
         positionInfo[tokenId] = CLPositionInfoLibrary.EMPTY_POSITION_INFO;
         // Burn the token.
         _burn(tokenId);
 
         // Can only call modify if there is non zero liquidity.
+        BalanceDelta feesAccrued;
+        BalanceDelta liquidityDelta;
         if (liquidity > 0) {
-            (BalanceDelta liquidityDelta, BalanceDelta feesAccrued) =
-                _modifyLiquidity(info, poolKey, -(liquidity.toInt256()), bytes32(tokenId), hookData);
+            (liquidityDelta, feesAccrued) = clPoolManager.modifyLiquidity(
+                poolKey,
+                ICLPoolManager.ModifyLiquidityParams({
+                    tickLower: info.tickLower(),
+                    tickUpper: info.tickUpper(),
+                    liquidityDelta: -(liquidity.toInt256()),
+                    salt: bytes32(tokenId)
+                }),
+                hookData
+            );
             // Slippage checks should be done on the principal liquidityDelta which is the liquidityDelta - feesAccrued
             (liquidityDelta - feesAccrued).validateMinOut(amount0Min, amount1Min);
+
+            emit ModifyLiquidity(tokenId, -(liquidity.toInt256()), feesAccrued);
         }
 
-        if (info.hasSubscriber()) _unsubscribe(tokenId);
+        if (info.hasSubscriber()) _removeSubscriberAndNotifyBurn(tokenId, owner, info, liquidity, feesAccrued);
     }
 
     function _settlePair(Currency currency0, Currency currency1) internal {
@@ -427,6 +441,7 @@ contract CLPositionManager is
         if (balance > 0) currency.transfer(to, balance);
     }
 
+    /// @dev if there is a subscriber attached to the position, this function will notify the subscriber
     function _modifyLiquidity(
         CLPositionInfo info,
         PoolKey memory poolKey,

@@ -19,7 +19,7 @@ import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
  */
 contract DeployCLQuoterScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/CLQuoter/0.90");
+        return keccak256("PANCAKE-V4-PERIPHERY/CLQuoter/0.92");
     }
 
     function run() public {

@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {ICLSubscriber} from "../../../src/pool-cl/interfaces/ICLSubscriber.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
+import {CLPositionInfo} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
 
 /// @notice A subscriber contract that ingests updates from the v4 position manager
 contract MockCLSubscriber is ICLSubscriber {
@@ -12,7 +13,9 @@ contract MockCLSubscriber is ICLSubscriber {
     uint256 public notifySubscribeCount;
     uint256 public notifyUnsubscribeCount;
     uint256 public notifyModifyLiquidityCount;
+    uint256 public notifyBurnCount;
     int256 public liquidityChange;
+    uint256 public liquidity;
     BalanceDelta public feesAccrued;
 
     bytes public subscribeData;
@@ -43,5 +46,17 @@ contract MockCLSubscriber is ICLSubscriber {
         notifyModifyLiquidityCount++;
         liquidityChange = _liquidityChange;
         feesAccrued = _feesAccrued;
+    }
+
+    function notifyBurn(
+        uint256 tokenId,
+        address owner,
+        CLPositionInfo info,
+        uint256 _liquidity,
+        BalanceDelta _feesAccrued
+    ) external onlyByPosm {
+        liquidity = _liquidity;
+        feesAccrued = _feesAccrued;
+        notifyBurnCount++;
     }
 }
