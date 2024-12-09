@@ -375,8 +375,8 @@ contract CLPositionManager is
 
         // Can only call modify if there is non zero liquidity.
         BalanceDelta feesAccrued;
-        BalanceDelta liquidityDelta;
         if (liquidity > 0) {
+            BalanceDelta liquidityDelta;
             (liquidityDelta, feesAccrued) = clPoolManager.modifyLiquidity(
                 poolKey,
                 ICLPoolManager.ModifyLiquidityParams({
