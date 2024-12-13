@@ -33,11 +33,11 @@ library FeeMath {
         ) = posm.positions(tokenId);
         PoolId poolId = poolKey.toId();
 
-        (uint256 feeGrowthInside0X218, uint256 feeGrowthInside1X128) =
+        (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) =
             _getFeeGrowthInside(manager, poolId, tickLower, tickUpper);
 
         feesOwed = getFeesOwed(
-            feeGrowthInside0X218, feeGrowthInside1X128, feeGrowthInside0LastX128, feeGrowthInside1LastX128, liquidity
+            feeGrowthInside0X128, feeGrowthInside1X128, feeGrowthInside0LastX128, feeGrowthInside1LastX128, liquidity
         );
     }
 
