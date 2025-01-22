@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Test.sol";
+import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
@@ -33,11 +34,13 @@ import {IBinQuoter, BinQuoter} from "../../src/pool-bin/lens/BinQuoter.sol";
 import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
-contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
+contract BinQuoterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
     using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
+
+    error ContractSizeTooLarge(uint256 diff);
 
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
@@ -148,6 +151,17 @@ contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
         planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(addParams));
         payload = planner.finalizeModifyLiquidityWithClose(key3);
         binPm.modifyLiquidities{value: 10 ether}(payload, _deadline);
+    }
+
+    function test_bytecodeSize() public {
+        // todo: update to vm.snapshotValue when overhaul gas test
+        snapSize("BinQuoter bytecode size", address(quoter));
+
+        // forge coverage will run with '--ir-minimum' which set optimizer run to min
+        // thus we do not want to revert for forge coverage case
+        if (vm.envExists("FOUNDRY_PROFILE") && address(quoter).code.length > 24576) {
+            revert ContractSizeTooLarge(address(quoter).code.length - 24576);
+        }
     }
 
     function testQuoter_quoteExactInputSingle_zeroForOne() public {

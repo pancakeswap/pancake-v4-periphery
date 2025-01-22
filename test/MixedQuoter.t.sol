@@ -69,6 +69,8 @@ contract MixedQuoterTest is
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
 
+    error ContractSizeTooLarge(uint256 diff);
+
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
     uint24 activeId = 2 ** 23; // where token0 and token1 price is the same
 
@@ -278,6 +280,17 @@ contract MixedQuoterTest is
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(addParams));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(binPoolKey);
         binPm.modifyLiquidities(payload, block.timestamp + 1);
+    }
+
+    function test_bytecodeSize() public {
+        // todo: update to vm.snapshotValue when overhaul gas test
+        snapSize("MixedQuoter bytecode size", address(mixedQuoter));
+
+        // forge coverage will run with '--ir-minimum' which set optimizer run to min
+        // thus we do not want to revert for forge coverage case
+        if (vm.envExists("FOUNDRY_PROFILE") && address(mixedQuoter).code.length > 24576) {
+            revert ContractSizeTooLarge(address(mixedQuoter).code.length - 24576);
+        }
     }
 
     function testQuoteExactInputSingleStable() public {

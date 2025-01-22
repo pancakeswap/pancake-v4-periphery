@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
+import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IQuoter} from "../../src/interfaces/IQuoter.sol";
 import {ICLQuoter} from "../../src/pool-cl/interfaces/ICLQuoter.sol";
@@ -24,8 +25,10 @@ import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
 import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
 
-contract CLQuoterTest is Test, Deployers {
+contract CLQuoterTest is Test, GasSnapshot, Deployers {
     using SafeCast for *;
+
+    error ContractSizeTooLarge(uint256 diff);
 
     // Min tick for full range with tick spacing of 60
     int24 internal constant MIN_TICK = -887220;
@@ -79,6 +82,17 @@ contract CLQuoterTest is Test, Deployers {
         setupPool(key01);
         setupPool(key12);
         setupPoolMultiplePositions(key02);
+    }
+
+    function test_bytecodeSize() public {
+        // todo: update to vm.snapshotValue when overhaul gas test
+        snapSize("CLQuoter bytecode size", address(quoter));
+
+        // forge coverage will run with '--ir-minimum' which set optimizer run to min
+        // thus we do not want to revert for forge coverage case
+        if (vm.envExists("FOUNDRY_PROFILE") && address(quoter).code.length > 24576) {
+            revert ContractSizeTooLarge(address(quoter).code.length - 24576);
+        }
     }
 
     function testCLQuoter_quoteExactInputSingle_ZeroForOne_MultiplePositions() public {
