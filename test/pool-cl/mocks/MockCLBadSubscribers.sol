@@ -87,7 +87,7 @@ contract MockCLRevertSubscriber is ICLSubscriber {
         revert TestRevert("notifyUnsubscribe");
     }
 
-    function notifyBurn(uint256, address, CLPositionInfo, uint256, BalanceDelta) external {
+    function notifyBurn(uint256, address, CLPositionInfo, uint256, BalanceDelta) external pure {
         revert TestRevert("notifyBurn");
     }
 
