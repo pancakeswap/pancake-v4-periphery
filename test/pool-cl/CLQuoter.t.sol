@@ -86,7 +86,7 @@ contract CLQuoterTest is Test, GasSnapshot, Deployers {
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("CLQuoter bytecode size", address(quoter));
+        snapSize("CLQuoterBytecodeSize", address(quoter));
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case

@@ -55,6 +55,8 @@ abstract contract BinMigratorFromV3 is
     using PackedUint128Math for bytes32;
     using BinTokenLibrary for PoolId;
 
+    error ContractSizeTooLarge(uint256 diff);
+
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
     // 1 tokenX = 1 tokenY
     uint24 public constant ACTIVE_BIN_ID = 2 ** 23;
@@ -157,6 +159,17 @@ abstract contract BinMigratorFromV3 is
         weth.approve(address(v3Nfpm), type(uint256).max);
         token0.approve(address(v3Nfpm), type(uint256).max);
         token1.approve(address(v3Nfpm), type(uint256).max);
+    }
+
+    function test_bytecodeSize() public {
+        // todo: update to vm.snapshotValue when overhaul gas test
+        snapSize("BinMigratorBytecodeSize", address(migrator));
+
+        // forge coverage will run with '--ir-minimum' which set optimizer run to min
+        // thus we do not want to revert for forge coverage case
+        if (vm.envExists("FOUNDRY_PROFILE") && address(migrator).code.length > 24576) {
+            revert ContractSizeTooLarge(address(migrator).code.length - 24576);
+        }
     }
 
     function testMigrateFromV3_WhenPaused() public {

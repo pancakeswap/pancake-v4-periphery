@@ -42,6 +42,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
 
+    error ContractSizeTooLarge(uint256 diff);
+
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
 
     WETH weth;
@@ -135,6 +137,17 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         weth.approve(address(v3Nfpm), type(uint256).max);
         token0.approve(address(v3Nfpm), type(uint256).max);
         token1.approve(address(v3Nfpm), type(uint256).max);
+    }
+
+    function test_bytecodeSize() public {
+        // todo: update to vm.snapshotValue when overhaul gas test
+        snapSize("CLMigratorBytecodeSize", address(migrator));
+
+        // forge coverage will run with '--ir-minimum' which set optimizer run to min
+        // thus we do not want to revert for forge coverage case
+        if (vm.envExists("FOUNDRY_PROFILE") && address(migrator).code.length > 24576) {
+            revert ContractSizeTooLarge(address(migrator).code.length - 24576);
+        }
     }
 
     function testCLMigrateFromV3_WhenPaused() public {

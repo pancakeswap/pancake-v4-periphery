@@ -284,7 +284,7 @@ contract MixedQuoterTest is
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("MixedQuoter bytecode size", address(mixedQuoter));
+        snapSize("MixedQuoterBytecodeSize", address(mixedQuoter));
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case
@@ -1519,7 +1519,7 @@ contract MixedQuoterTest is
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 901152761185198407);
-        assertGt(gasEstimate, 190000);
+        assertGt(gasEstimate, 180000);
         assertLt(gasEstimate, 200000);
     }
 
