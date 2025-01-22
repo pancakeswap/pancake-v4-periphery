@@ -35,7 +35,6 @@ import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 // test on the various way to perform delta resolver
 contract BinPositionManager_DeltaTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;

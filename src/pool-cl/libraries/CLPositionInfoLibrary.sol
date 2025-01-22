@@ -3,7 +3,7 @@
 pragma solidity ^0.8.24;
 
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 
 /**
  * @dev PositionInfo is a packed version of solidity structure.
@@ -31,9 +31,9 @@ import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
  */
 type CLPositionInfo is uint256;
 
-library CLPositionInfoLibrary {
-    using PoolIdLibrary for PoolKey;
+using CLPositionInfoLibrary for CLPositionInfo global;
 
+library CLPositionInfoLibrary {
     CLPositionInfo internal constant EMPTY_POSITION_INFO = CLPositionInfo.wrap(0);
 
     uint256 internal constant MASK_UPPER_200_BITS = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000;

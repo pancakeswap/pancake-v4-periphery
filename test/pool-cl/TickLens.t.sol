@@ -23,7 +23,6 @@ import {ITickLens} from "../../src/pool-cl/interfaces/ITickLens.sol";
 import {TickLens} from "../../src/pool-cl/lens/TickLens.sol";
 
 contract TickLensTest is TokenFixture, Test {
-    using Planner for Plan;
     using PoolIdLibrary for PoolId;
     using CLPoolParametersHelper for bytes32;
 

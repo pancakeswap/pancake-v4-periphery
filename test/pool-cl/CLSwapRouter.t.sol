@@ -26,8 +26,6 @@ import {Actions} from "../../src/libraries/Actions.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 
 contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
-    using Planner for Plan;
-
     IVault public vault;
     ICLPoolManager public poolManager;
     CLPoolManagerRouter public positionManager;

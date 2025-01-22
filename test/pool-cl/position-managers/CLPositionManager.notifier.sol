@@ -27,9 +27,6 @@ import {MockCLReenterHook} from "../mocks/MockCLReenterHook.sol";
 import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
 contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
-    using Planner for Plan;
-    using CLPositionInfoLibrary for CLPositionInfo;
-
     IVault vault;
     ICLPoolManager manager;
 

@@ -3,7 +3,6 @@
 pragma solidity 0.8.26;
 
 import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath.sol";
 import {BaseMigrator, IV3NonfungiblePositionManager} from "../base/BaseMigrator.sol";
 import {ICLMigrator, PoolKey} from "./interfaces/ICLMigrator.sol";
@@ -16,8 +15,6 @@ import {Plan, Planner} from "../libraries/Planner.sol";
 import {ReentrancyLock} from "../base/ReentrancyLock.sol";
 
 contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
-    using Planner for Plan;
-
     ICLPositionManager public immutable clPositionManager;
     ICLPoolManager public immutable clPoolManager;
 

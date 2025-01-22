@@ -32,9 +32,7 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
 
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;

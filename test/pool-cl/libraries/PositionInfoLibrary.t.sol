@@ -7,7 +7,6 @@ import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {CLPositionInfo, CLPositionInfoLibrary, PoolId} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
 
 contract PositionInfoLibraryTest is Test {
-    using CLPositionInfoLibrary for CLPositionInfo;
     using PoolIdLibrary for PoolKey;
 
     function setUp() public {}

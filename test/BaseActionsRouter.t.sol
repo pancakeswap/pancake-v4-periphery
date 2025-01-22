@@ -10,8 +10,6 @@ import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IVault, Vault} from "pancake-v4-core/src/Vault.sol";
 
 contract BaseActionsRouterTest is Test, GasSnapshot {
-    using Planner for Plan;
-
     MockBaseActionsRouter router;
 
     function setUp() public {

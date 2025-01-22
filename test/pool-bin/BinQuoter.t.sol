@@ -36,9 +36,7 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinQuoterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
 
     error ContractSizeTooLarge(uint256 diff);
 

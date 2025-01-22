@@ -40,7 +40,6 @@ contract BinPositionManager_MultiCallTest is
     TokenFixture,
     DeployPermit2
 {
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;

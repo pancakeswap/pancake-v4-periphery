@@ -9,7 +9,6 @@ import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolMana
 import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
 import {SafeCast} from "pancake-v4-core/src/libraries/SafeCast.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 import {IPositionManager} from "../interfaces/IPositionManager.sol";
@@ -48,7 +47,6 @@ contract CLPositionManager is
 {
     using CalldataDecoder for bytes;
     using CLCalldataDecoder for bytes;
-    using CLPositionInfoLibrary for CLPositionInfo;
     using SafeCast for uint256;
     using SlippageCheck for BalanceDelta;
 

@@ -41,7 +41,6 @@ import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPo
 import {BipsLibrary} from "../../../src/libraries/BipsLibrary.sol";
 
 contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, LiquidityFuzzers {
-    using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
     using BipsLibrary for uint256;
 

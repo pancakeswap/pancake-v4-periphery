@@ -33,7 +33,6 @@ import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 // test on the native token pair etc..
 contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, DeployPermit2 {
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;

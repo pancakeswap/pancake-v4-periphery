@@ -40,7 +40,6 @@ import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 import {MockFOT} from "../mocks/MockFeeOnTransfer.sol";
 
 contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;
