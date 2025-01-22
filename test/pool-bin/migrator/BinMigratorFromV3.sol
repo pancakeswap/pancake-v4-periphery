@@ -172,6 +172,13 @@ abstract contract BinMigratorFromV3 is
         }
     }
 
+    function test_initcodeHash() public {
+        vm.snapshotValue(
+            "BinMigrator initcode hash (without constructor params, as uint256)",
+            uint256(keccak256(type(BinMigrator).creationCode))
+        );
+    }
+
     function testMigrateFromV3_WhenPaused() public {
         // 1. mint some liquidity to the v3 pool
         _mintV3Liquidity(address(weth), address(token0));

@@ -81,6 +81,13 @@ contract PositionManagerTest is Test, GasSnapshot, PosmTestSetup, LiquidityFuzze
         }
     }
 
+    function test_initcodeHash() public {
+        vm.snapshotValue(
+            "CLPositionManager initcode hash (without constructor params, as uint256)",
+            uint256(keccak256(type(CLPositionManager).creationCode))
+        );
+    }
+
     function test_tokenURI() public {
         assertEq(lpm.tokenURI(1), "https://pancakeswap.finance/v4/pool-cl/positions/1");
         assertEq(lpm.tokenURI(10), "https://pancakeswap.finance/v4/pool-cl/positions/10");

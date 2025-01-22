@@ -150,6 +150,13 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         }
     }
 
+    function test_initcodeHash() public {
+        vm.snapshotValue(
+            "CLMigrator initcode hash (without constructor params, as uint256)",
+            uint256(keccak256(type(CLMigrator).creationCode))
+        );
+    }
+
     function testCLMigrateFromV3_WhenPaused() public {
         // 1. mint some liquidity to the v3 pool
         _mintV3Liquidity(address(weth), address(token0));
