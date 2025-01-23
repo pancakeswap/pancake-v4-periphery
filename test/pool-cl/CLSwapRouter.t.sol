@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
@@ -25,7 +24,7 @@ import {Plan, Planner} from "../../src/libraries/Planner.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 
-contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
+contract CLSwapRouterTest is TokenFixture, Test {
     IVault public vault;
     ICLPoolManager public poolManager;
     CLPoolManagerRouter public positionManager;
@@ -238,9 +237,8 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, recipient);
 
-        snapStart("CLSwapRouterTest#ExactInputSingle");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactInputSingle_gas");
     }
 
     function testExactInput() external {
@@ -306,7 +304,7 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         router.executeActions(data);
     }
 
-    function testExactInput_gasX() external {
+    function testExactInput_gas() external {
         PathKey[] memory path = new PathKey[](2);
         path[0] = PathKey({
             intermediateCurrency: currency1,
@@ -332,9 +330,8 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         plan = plan.add(Actions.CL_SWAP_EXACT_IN, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency0, currency2, recipient);
 
-        snapStart("CLSwapRouterTest#ExactInput");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactInput_gas");
     }
 
     function testExactOutputSingle_zeroForOne() external {
@@ -427,9 +424,8 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         plan = plan.add(Actions.CL_SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(poolKey0.currency0, poolKey0.currency1, recipient);
 
-        snapStart("CLSwapRouterTest#ExactOutputSingle");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactOutputSingle_amountOutLessThanExpected");
     }
 
     function testExactOutput() external {
@@ -566,9 +562,8 @@ contract CLSwapRouterTest is TokenFixture, Test, GasSnapshot {
         plan = plan.add(Actions.CL_SWAP_EXACT_OUT, abi.encode(params));
         bytes memory data = plan.finalizeSwap(currency0, currency2, recipient);
 
-        snapStart("CLSwapRouterTest#ExactOutput");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactOutput_gas");
     }
 
     // allow refund of ETH

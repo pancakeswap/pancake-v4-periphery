@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
@@ -17,7 +16,7 @@ import {BinPositionManager} from "../../src/pool-bin/BinPositionManager.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
-contract BinPositionManagerTest is Test, GasSnapshot, DeployPermit2 {
+contract BinPositionManagerTest is Test, DeployPermit2 {
     error ContractSizeTooLarge(uint256 diff);
 
     Vault vault;
@@ -38,7 +37,7 @@ contract BinPositionManagerTest is Test, GasSnapshot, DeployPermit2 {
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("BinPositionManagerBytecode size", address(binPm));
+        vm.snapshotValue("BinPositionManagerBytecode size", address(binPm).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case

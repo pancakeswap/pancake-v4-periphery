@@ -21,7 +21,6 @@ import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {BinLiquidityHelper} from "../helper/BinLiquidityHelper.sol";
 import {BinTokenLibrary} from "../../../src/pool-bin/libraries/BinTokenLibrary.sol";
 import {Plan, Planner} from "../../../src/libraries/Planner.sol";
@@ -44,13 +43,7 @@ interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-abstract contract BinMigratorFromV3 is
-    OldVersionHelper,
-    BinLiquidityHelper,
-    DeployPermit2,
-    Permit2ApproveHelper,
-    GasSnapshot
-{
+abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, DeployPermit2, Permit2ApproveHelper {
     using BinPoolParametersHelper for bytes32;
     using PackedUint128Math for bytes32;
     using BinTokenLibrary for PoolId;
@@ -163,7 +156,7 @@ abstract contract BinMigratorFromV3 is
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("BinMigratorBytecodeSize", address(migrator));
+        vm.snapshotValue("BinMigratorBytecodeSize", address(migrator).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case
@@ -361,9 +354,8 @@ abstract contract BinMigratorFromV3 is
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, ACTIVE_BIN_ID, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV3.selector, v3PoolParams, v4BinPoolParams, 0, 0);
-        snapStart(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3IncludingInit")));
         migrator.multicall(data);
-        snapEnd();
+        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3IncludingInit")));
 
         // necessary checks
         // v3 liqudity should be 0
@@ -512,9 +504,8 @@ abstract contract BinMigratorFromV3 is
         });
 
         // 4. migrateFromV3 directly given pool has been initialized
-        snapStart(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3WithoutInit")));
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3WithoutInit")));
 
         // necessary checks
         // v3 liqudity should be 0
@@ -602,9 +593,8 @@ abstract contract BinMigratorFromV3 is
         });
 
         // 4. migrate from v3 to v4
-        snapStart(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3WithoutNativeToken")));
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3WithoutNativeToken")));
 
         // necessary checks
         // v3 liqudity should be 0

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
@@ -38,7 +37,7 @@ import {ReentrantToken} from "../mocks/ReentrantToken.sol";
 import {ICLSubscriber} from "../../../src/pool-cl/interfaces/ICLSubscriber.sol";
 import {CLPositionDescriptorOffChain} from "../../../src/pool-cl/CLPositionDescriptorOffChain.sol";
 
-contract PositionManagerTest is Test, GasSnapshot, PosmTestSetup, LiquidityFuzzers {
+contract CLPositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
     using CLPoolParametersHelper for bytes32;
 
@@ -71,7 +70,7 @@ contract PositionManagerTest is Test, GasSnapshot, PosmTestSetup, LiquidityFuzze
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("CLPositionManager bytecode size", address(manager));
+        vm.snapshotValue("CLPositionManager bytecode size", address(manager).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case

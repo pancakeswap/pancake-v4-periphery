@@ -20,7 +20,6 @@ import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol"
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {PosmTestSetup} from "./pool-cl/shared/PosmTestSetup.sol";
 import {Permit2ApproveHelper} from "./helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
@@ -61,8 +60,7 @@ contract MixedQuoterTest is
     PosmTestSetup,
     Permit2ApproveHelper,
     BinLiquidityHelper,
-    DeployStableSwapHelper,
-    GasSnapshot
+    DeployStableSwapHelper
 {
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
@@ -282,8 +280,7 @@ contract MixedQuoterTest is
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("MixedQuoterBytecodeSize", address(mixedQuoter));
+        vm.snapshotValue("MixedQuoterBytecodeSize", address(mixedQuoter).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case

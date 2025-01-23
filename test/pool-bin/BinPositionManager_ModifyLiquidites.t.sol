@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
@@ -39,7 +38,7 @@ import {WETH} from "solmate/src/tokens/WETH.sol";
 import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 import {MockFOT} from "../mocks/MockFeeOnTransfer.sol";
 
-contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapshot, TokenFixture, DeployPermit2 {
+contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, TokenFixture, DeployPermit2 {
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;
@@ -259,9 +258,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
 
-        snapStart("BinPositionManager_ModifyLiquidityTest#test_addLiquidity_SingleBin");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_addLiquidity_SingleBin");
     }
 
     function test_addLiquidity_ThreeBins() public {
@@ -288,9 +286,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         vm.expectEmit();
         emit IBinFungibleToken.TransferBatch(address(this), address(0), alice, tokenIds, liquidityMinted);
 
-        snapStart("BinPositionManager_ModifyLiquidityTest#test_addLiquidity_ThreeBins");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_addLiquidity_ThreeBins");
     }
 
     function test_addLiquidity_OutsideActiveId() public {
@@ -306,9 +303,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
 
-        snapStart("BinPositionManager_ModifyLiquidityTest#test_addLiquidity_OutsideActiveId_NewId");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_addLiquidity_OutsideActiveId_NewId");
 
         // after: 1 ether consumed
         assertEq(token1.balanceOf(alice), 1 ether);
@@ -324,9 +320,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         }
 
         // re-add existing id, gas should be way cheaper
-        snapStart("BinPositionManager_ModifyLiquidityTest#test_addLiquidity_OutsideActiveId_ExistingId");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_addLiquidity_OutsideActiveId_ExistingId");
     }
 
     function test_addLiquidity_HookData() public {
@@ -445,9 +440,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         vm.expectEmit();
         emit IBinFungibleToken.TransferBatch(address(this), address(this), address(0), tokenIds, liquidityMinted);
 
-        snapStart("BinPositionManager_ModifyLiquidityTest#test_decreaseLiquidity_threeBins");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_decreaseLiquidity_threeBins");
 
         // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
         // 3 bins, left with (0, 1) (1, 1) (1, 0)
@@ -487,9 +481,8 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, GasSnapsh
         Plan memory planner = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(param));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
 
-        snapStart("BinPositionManager_ModifyLiquidityTest#test_decreaseLiquidity_threeBins_half");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_decreaseLiquidity_threeBins_half");
     }
 
     function test_decreaseLiquidity_overBalance() public {

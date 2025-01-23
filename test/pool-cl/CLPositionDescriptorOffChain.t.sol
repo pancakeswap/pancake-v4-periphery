@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {CLPositionDescriptorOffChain} from "../../src/pool-cl/CLPositionDescriptorOffChain.sol";
 import {ICLPositionManager} from "../../src/pool-cl/interfaces/ICLPositionManager.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -20,7 +19,7 @@ contract FakeTokenURIContract is ICLPositionDescriptor {
     }
 }
 
-contract CLPositionDescriptorOffChainTest is Test, GasSnapshot {
+contract CLPositionDescriptorOffChainTest is Test {
     CLPositionDescriptorOffChain clPositionDescriptorOffChain;
 
     error ContractSizeTooLarge(uint256 diff);
@@ -31,7 +30,7 @@ contract CLPositionDescriptorOffChainTest is Test, GasSnapshot {
     }
 
     function test_bytecodeSize() public {
-        snapSize("CLPositionDescriptorOffChainSize", address(clPositionDescriptorOffChain));
+        vm.snapshotValue("CLPositionDescriptorOffChainSize", address(clPositionDescriptorOffChain).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case

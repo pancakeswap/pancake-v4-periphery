@@ -21,7 +21,6 @@ import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {BinLiquidityHelper} from "../helper/BinLiquidityHelper.sol";
 import {BinTokenLibrary} from "../../../src/pool-bin/libraries/BinTokenLibrary.sol";
 import {Plan, Planner} from "../../../src/libraries/Planner.sol";
@@ -48,8 +47,7 @@ abstract contract BinMigratorFromV2 is
     BinLiquidityHelper,
     DeployPermit2,
     Permit2ApproveHelper,
-    Permit2SignatureHelpers,
-    GasSnapshot
+    Permit2SignatureHelpers
 {
     using BinPoolParametersHelper for bytes32;
     using BinTokenLibrary for PoolId;
@@ -322,9 +320,9 @@ abstract contract BinMigratorFromV2 is
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, ACTIVE_BIN_ID, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4BinPoolParams, 0, 0);
-        snapStart(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2IncludingInit")));
+
         migrator.multicall(data);
-        snapEnd();
+        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2IncludingInit")));
 
         // necessary checks
         // v2 pair should be burned already
@@ -470,9 +468,8 @@ abstract contract BinMigratorFromV2 is
         });
 
         // 4. migrateFromV2
-        snapStart(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2WithoutInit")));
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2WithoutInit")));
 
         // necessary checks
         // v2 pair should be burned already
@@ -562,9 +559,8 @@ abstract contract BinMigratorFromV2 is
         });
 
         // 4. migrate from v2 to v4
-        snapStart(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2WithoutNativeToken")));
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2WithoutNativeToken")));
 
         // necessary checks
         // v2 pair should be burned already
