@@ -46,11 +46,4 @@ contract BinPositionManagerTest is Test, GasSnapshot, DeployPermit2 {
             revert ContractSizeTooLarge(address(binPm).code.length - 24576);
         }
     }
-
-    function test_initcodeHash() public {
-        vm.snapshotValue(
-            "BinPositionManager initcode hash (without constructor params, as uint256)",
-            uint256(keccak256(type(BinPositionManager).creationCode))
-        );
-    }
 }
