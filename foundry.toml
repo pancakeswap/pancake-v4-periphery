@@ -2,7 +2,7 @@
 src = 'src'
 out = 'foundry-out'
 solc_version = '0.8.26'
-optimizer_runs = 300_000
+optimizer_runs = 1_000_000
 via_ir = true
 ffi = true
 gas_limit = "3000000000"
