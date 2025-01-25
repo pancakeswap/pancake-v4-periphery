@@ -18,8 +18,4 @@ contract BinMigratorFromUniswapV3Test is BinMigratorFromV3 {
         // https://etherscan.io/address/0xC36442b4a4522E871399CD717aBDD847Ab11FE88#code
         return "./test/bin/uniV3Nfpm.bytecode";
     }
-
-    function _getContractName() internal pure override returns (string memory) {
-        return "BinMigratorFromUniswapV3Test";
-    }
 }

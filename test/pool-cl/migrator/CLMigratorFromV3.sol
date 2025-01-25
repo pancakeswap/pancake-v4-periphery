@@ -19,7 +19,6 @@ import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol"
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IV3NonfungiblePositionManager} from "../../../src/interfaces/external/IV3NonfungiblePositionManager.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
@@ -38,7 +37,7 @@ interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2ApproveHelper, GasSnapshot {
+abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2ApproveHelper {
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
 
@@ -63,8 +62,6 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
     function _getDeployerBytecodePath() internal pure virtual returns (string memory);
     function _getFactoryBytecodePath() internal pure virtual returns (string memory);
     function _getNfpmBytecodePath() internal pure virtual returns (string memory);
-
-    function _getContractName() internal pure virtual returns (string memory);
 
     function setUp() public {
         weth = new WETH();
@@ -141,7 +138,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("CLMigratorBytecodeSize", address(migrator));
+        vm.snapshotValue("CLMigratorBytecodeSize", address(migrator).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case
@@ -308,9 +305,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, INIT_SQRT_PRICE, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV3.selector, v3PoolParams, v4MintParams, 0, 0);
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3IncludingInit")));
         migrator.multicall(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV3IncludingInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -452,9 +448,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // 4. migrateFromV3 directly given pool has been initialized
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3WithoutInit")));
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV3WithoutInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -506,9 +501,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // 4. migrate from v3 to v4
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3WithoutNativeToken")));
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV3WithoutNativeToken");
 
         // necessary checks
         // v3 liqudity should be 0

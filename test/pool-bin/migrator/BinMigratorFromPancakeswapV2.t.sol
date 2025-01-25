@@ -11,8 +11,4 @@ contract BinMigratorFromPancakeswapV2Test is BinMigratorFromV2 {
         // https://etherscan.io/address/0x1097053Fd2ea711dad45caCcc45EfF7548fCB362#code
         return "./test/bin/pcsV2Factory.bytecode";
     }
-
-    function _getContractName() internal pure override returns (string memory) {
-        return "BinMigratorFromPancakeswapV2Test";
-    }
 }

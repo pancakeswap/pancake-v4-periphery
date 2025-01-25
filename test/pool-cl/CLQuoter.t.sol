@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IQuoter} from "../../src/interfaces/IQuoter.sol";
 import {ICLQuoter} from "../../src/pool-cl/interfaces/ICLQuoter.sol";
@@ -25,7 +24,7 @@ import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
 import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
 
-contract CLQuoterTest is Test, GasSnapshot, Deployers {
+contract CLQuoterTest is Test, Deployers {
     using SafeCast for *;
 
     error ContractSizeTooLarge(uint256 diff);
@@ -86,7 +85,7 @@ contract CLQuoterTest is Test, GasSnapshot, Deployers {
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("CLQuoterBytecodeSize", address(quoter));
+        vm.snapshotValue("CLQuoterBytecodeSize", address(quoter).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case

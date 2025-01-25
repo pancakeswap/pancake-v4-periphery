@@ -1,0 +1,8 @@
+{
+  "test_addLiquidity_OutsideActiveId_ExistingId": "292694",
+  "test_addLiquidity_OutsideActiveId_NewId": "1124993",
+  "test_addLiquidity_SingleBin": "532073",
+  "test_addLiquidity_ThreeBins": "905930",
+  "test_decreaseLiquidity_threeBins": "184859",
+  "test_decreaseLiquidity_threeBins_half": "203748"
+}

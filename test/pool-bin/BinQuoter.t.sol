@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
@@ -34,7 +33,7 @@ import {IBinQuoter, BinQuoter} from "../../src/pool-bin/lens/BinQuoter.sol";
 import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
-contract BinQuoterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
+contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
     using BinPoolParametersHelper for bytes32;
 
@@ -153,7 +152,7 @@ contract BinQuoterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("BinQuoterBytecode size", address(quoter));
+        vm.snapshotValue("BinQuoterBytecode size", address(quoter).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case
