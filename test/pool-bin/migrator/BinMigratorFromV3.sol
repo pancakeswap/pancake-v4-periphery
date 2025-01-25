@@ -153,7 +153,6 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
         vm.snapshotValue("BinMigratorBytecodeSize", address(migrator).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min

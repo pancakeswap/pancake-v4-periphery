@@ -151,7 +151,6 @@ contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
         vm.snapshotValue("BinQuoterBytecode size", address(quoter).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min

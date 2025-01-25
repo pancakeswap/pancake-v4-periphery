@@ -69,7 +69,6 @@ contract CLPositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
         vm.snapshotValue("CLPositionManager bytecode size", address(lpm).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min

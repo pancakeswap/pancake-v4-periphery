@@ -137,7 +137,6 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
         vm.snapshotValue("CLMigratorBytecodeSize", address(migrator).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min

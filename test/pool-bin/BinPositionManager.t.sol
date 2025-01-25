@@ -36,7 +36,6 @@ contract BinPositionManagerTest is Test, DeployPermit2 {
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
         vm.snapshotValue("BinPositionManagerBytecode size", address(binPm).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min

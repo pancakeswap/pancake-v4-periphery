@@ -84,7 +84,6 @@ contract CLQuoterTest is Test, Deployers {
     }
 
     function test_bytecodeSize() public {
-        // todo: update to vm.snapshotValue when overhaul gas test
         vm.snapshotValue("CLQuoterBytecodeSize", address(quoter).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
