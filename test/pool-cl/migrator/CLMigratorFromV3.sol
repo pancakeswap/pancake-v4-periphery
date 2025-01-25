@@ -63,8 +63,6 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
     function _getFactoryBytecodePath() internal pure virtual returns (string memory);
     function _getNfpmBytecodePath() internal pure virtual returns (string memory);
 
-    function _getContractName() internal pure virtual returns (string memory);
-
     function setUp() public {
         weth = new WETH();
         token0 = new MockERC20("Token0", "TKN0", 18);
@@ -315,7 +313,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, INIT_SQRT_PRICE, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV3.selector, v3PoolParams, v4MintParams, 0, 0);
         migrator.multicall(data);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3IncludingInit")));
+        vm.snapshotGasLastCall("testCLMigrateFromV3IncludingInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -458,7 +456,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // 4. migrateFromV3 directly given pool has been initialized
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3WithoutInit")));
+        vm.snapshotGasLastCall("testCLMigrateFromV3WithoutInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -511,7 +509,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // 4. migrate from v3 to v4
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3WithoutNativeToken")));
+        vm.snapshotGasLastCall("testCLMigrateFromV3WithoutNativeToken");
 
         // necessary checks
         // v3 liqudity should be 0

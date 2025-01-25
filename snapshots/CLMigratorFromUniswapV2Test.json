@@ -1,0 +1,5 @@
+{
+  "testCLMigrateFromV2IncludingInit": "787130",
+  "testCLMigrateFromV2WithoutInit": "656751",
+  "testCLMigrateFromV2WithoutNativeToken": "726953"
+}

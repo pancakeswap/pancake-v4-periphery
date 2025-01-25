@@ -74,8 +74,6 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
     function _getFactoryBytecodePath() internal pure virtual returns (string memory);
     function _getNfpmBytecodePath() internal pure virtual returns (string memory);
 
-    function _getContractName() internal pure virtual returns (string memory);
-
     function setUp() public {
         weth = new WETH();
         token0 = new MockERC20("Token0", "TKN0", 18);
@@ -355,7 +353,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, ACTIVE_BIN_ID, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV3.selector, v3PoolParams, v4BinPoolParams, 0, 0);
         migrator.multicall(data);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3IncludingInit")));
+        vm.snapshotGasLastCall("testMigrateFromV3IncludingInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -505,7 +503,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
 
         // 4. migrateFromV3 directly given pool has been initialized
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3WithoutInit")));
+        vm.snapshotGasLastCall("testMigrateFromV3WithoutInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -594,7 +592,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
 
         // 4. migrate from v3 to v4
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV3WithoutNativeToken")));
+        vm.snapshotGasLastCall("testMigrateFromV3WithoutNativeToken");
 
         // necessary checks
         // v3 liqudity should be 0

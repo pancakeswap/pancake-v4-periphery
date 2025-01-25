@@ -19,8 +19,4 @@ contract CLMigratorFromPancakeswapV3Test is CLMigratorFromV3 {
         // https://etherscan.io/address/0x46A15B0b27311cedF172AB29E4f4766fbE7F4364#code
         return "./test/bin/pcsV3Nfpm.bytecode";
     }
-
-    function _getContractName() internal pure override returns (string memory) {
-        return "CLMigratorFromPancakeswapV3Test";
-    }
 }

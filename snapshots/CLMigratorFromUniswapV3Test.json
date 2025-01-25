@@ -1,3 +1,7 @@
 {
-  "CLMigratorBytecodeSize": "16581"
+  "CLMigrator initcode hash (without constructor params, as uint256)": "8334262553422925331638157533627412548148999522197415481662295450998513730194",
+  "CLMigratorBytecodeSize": "16581",
+  "testCLMigrateFromV3IncludingInit": "834989",
+  "testCLMigrateFromV3WithoutInit": "704591",
+  "testCLMigrateFromV3WithoutNativeToken": "747930"
 }

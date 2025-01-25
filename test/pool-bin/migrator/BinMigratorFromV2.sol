@@ -75,8 +75,6 @@ abstract contract BinMigratorFromV2 is
 
     function _getBytecodePath() internal pure virtual returns (string memory);
 
-    function _getContractName() internal pure virtual returns (string memory);
-
     function setUp() public {
         weth = new WETH();
         token0 = new MockERC20("Token0", "TKN0", 18);
@@ -322,7 +320,7 @@ abstract contract BinMigratorFromV2 is
         data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4BinPoolParams, 0, 0);
 
         migrator.multicall(data);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2IncludingInit")));
+        vm.snapshotGasLastCall("testMigrateFromV2IncludingInit");
 
         // necessary checks
         // v2 pair should be burned already
@@ -469,7 +467,7 @@ abstract contract BinMigratorFromV2 is
 
         // 4. migrateFromV2
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2WithoutInit")));
+        vm.snapshotGasLastCall("testMigrateFromV2WithoutInit");
 
         // necessary checks
         // v2 pair should be burned already
@@ -560,7 +558,7 @@ abstract contract BinMigratorFromV2 is
 
         // 4. migrate from v2 to v4
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testMigrateFromV2WithoutNativeToken")));
+        vm.snapshotGasLastCall("testMigrateFromV2WithoutNativeToken");
 
         // necessary checks
         // v2 pair should be burned already

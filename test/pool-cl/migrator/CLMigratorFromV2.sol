@@ -57,8 +57,6 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
     function _getBytecodePath() internal pure virtual returns (string memory);
 
-    function _getContractName() internal pure virtual returns (string memory);
-
     function setUp() public {
         weth = new WETH();
         token0 = new MockERC20("Token0", "TKN0", 18);
@@ -274,7 +272,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, initSqrtPrice, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4MintParams, 0, 0);
         migrator.multicall(data);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV2IncludingInit")));
+        vm.snapshotGasLastCall("testCLMigrateFromV2IncludingInit");
 
         // necessary checks
         // v2 pair should be burned already
@@ -418,7 +416,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // 4. migrate from v2 to v4
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV2WithoutInit")));
+        vm.snapshotGasLastCall("testCLMigrateFromV2WithoutInit");
 
         // necessary checks
         // v2 pair should be burned already
@@ -474,7 +472,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         // 4. migrate from v2 to v4
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
-        vm.snapshotGasLastCall(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV2WithoutNativeToken")));
+        vm.snapshotGasLastCall("testCLMigrateFromV2WithoutNativeToken");
 
         // necessary checks
         // v2 pair should be burned already
