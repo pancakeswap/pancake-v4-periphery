@@ -71,12 +71,12 @@ contract PositionManagerTest is Test, GasSnapshot, PosmTestSetup, LiquidityFuzze
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        snapSize("CLPositionManager bytecode size", address(manager));
+        snapSize("CLPositionManager bytecode size", address(lpm));
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case
-        if (vm.envExists("FOUNDRY_PROFILE") && address(manager).code.length > 24576) {
-            revert ContractSizeTooLarge(address(manager).code.length - 24576);
+        if (vm.envExists("FOUNDRY_PROFILE") && address(lpm).code.length > 24576) {
+            revert ContractSizeTooLarge(address(lpm).code.length - 24576);
         }
     }
 

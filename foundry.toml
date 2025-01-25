@@ -15,6 +15,15 @@ fs_permissions = [
 evm_version = 'cancun'
 bytecode_hash = "none"
 
+# more info about compiler_profiles and restrictions here https://github.com/foundry-rs/foundry/pull/8668
+additional_compiler_profiles = [
+  { name = "clPosm", optimizer_runs = 9000 }
+]
+
+compilation_restrictions = [
+  { paths = "src/pool-cl/CLPositionManager.sol", optimizer_runs = 9000 }
+]
+
 [fuzz]
 runs = 1000 # change this for higher number of fuzz/invariant locally
 
