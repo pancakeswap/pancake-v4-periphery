@@ -70,20 +70,13 @@ contract CLPositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
 
     function test_bytecodeSize() public {
         // todo: update to vm.snapshotValue when overhaul gas test
-        vm.snapshotValue("CLPositionManager bytecode size", address(manager).code.length);
+        vm.snapshotValue("CLPositionManager bytecode size", address(lpm).code.length);
 
         // forge coverage will run with '--ir-minimum' which set optimizer run to min
         // thus we do not want to revert for forge coverage case
-        if (vm.envExists("FOUNDRY_PROFILE") && address(manager).code.length > 24576) {
-            revert ContractSizeTooLarge(address(manager).code.length - 24576);
+        if (vm.envExists("FOUNDRY_PROFILE") && address(lpm).code.length > 24576) {
+            revert ContractSizeTooLarge(address(lpm).code.length - 24576);
         }
-    }
-
-    function test_initcodeHash() public {
-        vm.snapshotValue(
-            "CLPositionManager initcode hash (without constructor params, as uint256)",
-            uint256(keccak256(type(CLPositionManager).creationCode))
-        );
     }
 
     function test_tokenURI() public {
