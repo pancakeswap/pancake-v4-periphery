@@ -1,5 +1,4 @@
 {
-  "BinMigrator initcode hash (without constructor params, as uint256)": "72923501030096636299996034337888017009103407358445329663969699939047619093210",
   "BinMigratorBytecodeSize": "15187",
   "testMigrateFromV3IncludingInit": "1246640",
   "testMigrateFromV3WithoutInit": "1116669",
