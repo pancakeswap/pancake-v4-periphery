@@ -48,13 +48,10 @@ contract MockCLSubscriber is ICLSubscriber {
         feesAccrued = _feesAccrued;
     }
 
-    function notifyBurn(
-        uint256 tokenId,
-        address owner,
-        CLPositionInfo info,
-        uint256 _liquidity,
-        BalanceDelta _feesAccrued
-    ) external onlyByPosm {
+    function notifyBurn(uint256, address, CLPositionInfo, uint256 _liquidity, BalanceDelta _feesAccrued)
+        external
+        onlyByPosm
+    {
         liquidity = _liquidity;
         feesAccrued = _feesAccrued;
         notifyBurnCount++;

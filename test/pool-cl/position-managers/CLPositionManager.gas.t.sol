@@ -33,7 +33,6 @@ import {MockCLSubscriber} from "../mocks/MockCLSubscriber.sol";
 
 contract CLPositionManagerGasTest is Test, PosmTestSetup {
     using FixedPointMathLib for uint256;
-    using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
 
     IVault vault;

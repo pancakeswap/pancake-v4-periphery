@@ -39,7 +39,6 @@ import {CLPositionDescriptorOffChain} from "../../../src/pool-cl/CLPositionDescr
 
 contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
-    using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
 
     error ContractSizeTooLarge(uint256 diff);

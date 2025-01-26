@@ -12,10 +12,10 @@ struct Plan {
     bytes[] params;
 }
 
+using Planner for Plan global;
+
 /// @notice Constructs a plan of actions to be executed on Pancakeswap v4.
 library Planner {
-    using Planner for Plan;
-
     function init() internal pure returns (Plan memory plan) {
         return Plan({actions: bytes(""), params: new bytes[](0)});
     }
