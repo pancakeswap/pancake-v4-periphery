@@ -1514,7 +1514,7 @@ contract MixedQuoterTest is
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 901152761185198407);
-        assertGt(gasEstimate, 190000);
+        assertGt(gasEstimate, 180000);
         assertLt(gasEstimate, 200000);
     }
 

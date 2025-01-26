@@ -2,7 +2,7 @@
 src = 'src'
 out = 'foundry-out'
 solc_version = '0.8.26'
-optimizer_runs = 9000
+optimizer_runs = 1_000_000
 via_ir = true
 ffi = true
 gas_limit = "3000000000"
@@ -14,6 +14,14 @@ fs_permissions = [
 ]
 evm_version = 'cancun'
 bytecode_hash = "none"
+
+additional_compiler_profiles = [
+  { name = "clPosm", optimizer_runs = 9000 }
+]
+
+compilation_restrictions = [
+  { paths = "src/pool-cl/CLPositionManager.sol", optimizer_runs = 9000 }
+]
 
 [fuzz]
 runs = 5 # change this for higher number of fuzz runs locally
