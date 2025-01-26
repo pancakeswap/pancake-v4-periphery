@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
+/// @title IStableSwapFactory
+/// @notice Interface for the StableSwapFactory contract
 interface IStableSwapFactory {
     struct StableSwapPairInfo {
         address swapContract;

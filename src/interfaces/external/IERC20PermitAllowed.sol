@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-/// @title Interface for permit
+/// @title IERC20PermitAllowed
 /// @notice Interface used by DAI/CHAI for permit
 interface IERC20PermitAllowed {
     /// @notice Approve the spender to spend some tokens via the holder signature

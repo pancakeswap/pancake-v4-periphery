@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.0;
 
-/// @notice Copying from PancakeSwap V2 Pair
+/// @title IPancakePair
+/// @notice Interface for the PancakeSwap V2 Pair
 /// https://github.com/pancakeswap/pancake-swap-core-v2/blob/master/contracts/interfaces/IPancakePair.sol
 interface IPancakePair {
     event Approval(address indexed owner, address indexed spender, uint256 value);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title Self Permit For ERC721
+/// @title ISelfPermitERC721
 /// @notice Functionality to call permit on any EIP-2612-compliant token
 /// This is for PancakeSwapV3 styled Nonfungible Position Manager which supports permit extension
 interface ISelfPermitERC721 {

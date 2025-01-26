@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-/// @title Self Permit
+/// @title ISelfPermit
 /// @notice Functionality to call permit on any EIP-2612-compliant token for use in the route
 interface ISelfPermit {
     /// @notice Permits this contract to spend a given token from `msg.sender`
