@@ -19,7 +19,6 @@ import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol"
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IV3NonfungiblePositionManager} from "../../../src/interfaces/external/IV3NonfungiblePositionManager.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
@@ -38,9 +37,11 @@ interface IPancakeV3LikePairFactory {
     function createPool(address tokenA, address tokenB, uint24 fee) external returns (address pool);
 }
 
-abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2ApproveHelper, GasSnapshot {
+abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2ApproveHelper {
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
+
+    error ContractSizeTooLarge(uint256 diff);
 
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
 
@@ -135,6 +136,14 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         weth.approve(address(v3Nfpm), type(uint256).max);
         token0.approve(address(v3Nfpm), type(uint256).max);
         token1.approve(address(v3Nfpm), type(uint256).max);
+    }
+
+    function test_bytecodeSize() public {
+        vm.snapshotValue("CLMigratorBytecode size", address(migrator).code.length);
+
+        if (address(migrator).code.length > 24576) {
+            revert ContractSizeTooLarge(address(migrator).code.length - 24576);
+        }
     }
 
     function testCLMigrateFromV3_WhenPaused() public {
@@ -295,9 +304,9 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, INIT_SQRT_PRICE, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV3.selector, v3PoolParams, v4MintParams, 0, 0);
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3IncludingInit")));
+
         migrator.multicall(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV3IncludingInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -439,9 +448,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // 4. migrateFromV3 directly given pool has been initialized
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3WithoutInit")));
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV3WithoutInit");
 
         // necessary checks
         // v3 liqudity should be 0
@@ -493,9 +501,8 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // 4. migrate from v3 to v4
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV3WithoutNativeToken")));
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV3WithoutNativeToken");
 
         // necessary checks
         // v3 liqudity should be 0

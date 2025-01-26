@@ -27,6 +27,8 @@ import {QuoterRevert} from "../../src/libraries/QuoterRevert.sol";
 contract CLQuoterTest is Test, Deployers {
     using SafeCast for *;
 
+    error ContractSizeTooLarge(uint256 diff);
+
     // Min tick for full range with tick spacing of 60
     int24 internal constant MIN_TICK = -887220;
     // Max tick for full range with tick spacing of 60
@@ -97,6 +99,16 @@ contract CLQuoterTest is Test, Deployers {
         assertEq(_amountOut, expectedAmountOut);
         assertGt(_gasEstimate, 140000);
         assertLt(_gasEstimate, 150000);
+    }
+
+    function test_bytecodeSize() public {
+        vm.snapshotValue("CLQuoterBytecode size", address(quoter).code.length);
+
+        // forge coverage will run with '--ir-minimum' which set optimizer run to min
+        // thus we do not want to revert for forge coverage case
+        if (vm.envExists("FOUNDRY_PROFILE") && address(quoter).code.length > 24576) {
+            revert ContractSizeTooLarge(address(quoter).code.length - 24576);
+        }
     }
 
     function testCLQuoter_quoteExactInputSingle_OneForZero_MultiplePositions() public {

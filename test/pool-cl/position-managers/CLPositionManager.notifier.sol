@@ -7,7 +7,6 @@ import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {BalanceDelta, toBalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
 import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
@@ -26,7 +25,7 @@ import {CLPositionInfo, CLPositionInfoLibrary} from "../../../src/pool-cl/librar
 import {MockCLReenterHook} from "../mocks/MockCLReenterHook.sol";
 import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
-contract CLPositionManagerNotifierTest is Test, PosmTestSetup, GasSnapshot {
+contract CLPositionManagerNotifierTest is Test, PosmTestSetup {
     using Planner for Plan;
     using CLPositionInfoLibrary for CLPositionInfo;
 

@@ -1,0 +1,9 @@
+{
+  "testExactInputSingle_DifferentRecipient": "137214",
+  "testExactInputSingle_EthPool_SwapEthForToken": "125543",
+  "testExactInputSingle_EthPool_SwapTokenForEth": "111288",
+  "testExactInput_MultiHopDifferentRecipient": "168754",
+  "testExactOutputSingle_DifferentRecipient": "141480",
+  "testExactOutput_MultiHopDifferentRecipient": "172390",
+  "testExactOutput_SingleHop": "143161"
+}

@@ -20,7 +20,6 @@ import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol"
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {PosmTestSetup} from "./pool-cl/shared/PosmTestSetup.sol";
 import {Permit2ApproveHelper} from "./helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
@@ -61,13 +60,14 @@ contract MixedQuoterTest is
     PosmTestSetup,
     Permit2ApproveHelper,
     BinLiquidityHelper,
-    DeployStableSwapHelper,
-    GasSnapshot
+    DeployStableSwapHelper
 {
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
     using BinPoolParametersHelper for bytes32;
     using Planner for Plan;
+
+    error ContractSizeTooLarge(uint256 diff);
 
     uint160 public constant INIT_SQRT_PRICE = 79228162514264337593543950336;
     uint24 activeId = 2 ** 23; // where token0 and token1 price is the same
@@ -278,6 +278,14 @@ contract MixedQuoterTest is
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(addParams));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(binPoolKey);
         binPm.modifyLiquidities(payload, block.timestamp + 1);
+    }
+
+    function test_bytecodeSize() public {
+        vm.snapshotValue("MixedQuoterBytecode size", address(mixedQuoter).code.length);
+
+        if (address(mixedQuoter).code.length > 24576) {
+            revert ContractSizeTooLarge(address(mixedQuoter).code.length - 24576);
+        }
     }
 
     function testQuoteExactInputSingleStable() public {

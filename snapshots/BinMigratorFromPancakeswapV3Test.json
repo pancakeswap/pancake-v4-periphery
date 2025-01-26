@@ -1,0 +1,6 @@
+{
+  "BinMigratorBytecode size": "12601",
+  "testMigrateFromV3IncludingInit": "1252393",
+  "testMigrateFromV3WithoutInit": "1121789",
+  "testMigrateFromV3WithoutNativeToken": "1156506"
+}

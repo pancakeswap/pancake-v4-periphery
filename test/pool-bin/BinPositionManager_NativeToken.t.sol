@@ -3,7 +3,6 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
@@ -32,7 +31,7 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
 
 // test on the native token pair etc..
-contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, DeployPermit2 {
+contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, DeployPermit2 {
     using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
@@ -91,9 +90,8 @@ contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, 
         Plan memory planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param));
         bytes memory payload = planner.finalizeModifyLiquidityWithClose(key1);
 
-        snapStart("BinPositionManager_NativeTokenTest#test_addLiquidity");
         binPm.modifyLiquidities{value: 1 ether}(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_addLiquidity");
 
         // after
         assertEq(address(this).balance, 0 ether);
@@ -117,9 +115,8 @@ contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, 
         planner.add(Actions.CLOSE_CURRENCY, abi.encode(key1.currency1));
         planner.add(Actions.SWEEP, abi.encode(key1.currency0, address(this)));
 
-        snapStart("BinPositionManager_NativeTokenTest#test_addLiquidity");
         binPm.modifyLiquidities{value: 1 ether}(planner.encode(), _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_addLiquidity_excessEth");
 
         // after, should have 1 ether remaining
         assertEq(address(this).balance, 1 ether);
@@ -154,9 +151,8 @@ contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, GasSnapshot, 
             _getRemoveParams(key1, binIds, liquidityMinted, address(this));
         planner = Planner.init().add(Actions.BIN_REMOVE_LIQUIDITY, abi.encode(removeParam));
         payload = planner.finalizeModifyLiquidityWithClose(key1);
-        snapStart("BinPositionManager_NativeTokenTest#test_decreaseLiquidity");
         binPm.modifyLiquidities(payload, _deadline);
-        snapEnd();
+        vm.snapshotGasLastCall("test_decreaseLiquidity");
 
         // after remove liqudiity, there will be some dust locked in the contract to prevent inflation attack
         // 3 bins, left with (0, 1) (1, 1) (1, 0)

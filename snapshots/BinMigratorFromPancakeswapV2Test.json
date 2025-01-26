@@ -1,0 +1,5 @@
+{
+  "testMigrateFromV2IncludingInit": "1180066",
+  "testMigrateFromV2WithoutInit": "1049481",
+  "testMigrateFromV2WithoutNativeToken": "1090203"
+}
