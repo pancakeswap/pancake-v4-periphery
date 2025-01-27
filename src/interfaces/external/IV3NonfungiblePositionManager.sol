@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC721Permit} from "../../pool-cl/interfaces/IERC721Permit.sol";
 
-/// @title Non-fungible token for positions
+/// @title IV3NonfungiblePositionManager
 /// @notice Wraps PancakeSwap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized. Copying from PancakeSwap-V3
 /// https://github.com/pancakeswap/pancake-v3-contracts/blob/main/projects/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol

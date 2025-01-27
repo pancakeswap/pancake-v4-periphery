@@ -65,7 +65,6 @@ contract MixedQuoterTest is
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
 
     error ContractSizeTooLarge(uint256 diff);
 

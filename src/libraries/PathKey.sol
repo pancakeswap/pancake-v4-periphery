@@ -16,6 +16,8 @@ struct PathKey {
     bytes32 parameters;
 }
 
+using PathKeyLibrary for PathKey global;
+
 library PathKeyLibrary {
     /// @notice Get the pool and swap direction for a given PathKey
     /// @param params the given PathKey

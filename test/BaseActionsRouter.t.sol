@@ -9,8 +9,6 @@ import {Test} from "forge-std/Test.sol";
 import {IVault, Vault} from "pancake-v4-core/src/Vault.sol";
 
 contract BaseActionsRouterTest is Test {
-    using Planner for Plan;
-
     MockBaseActionsRouter router;
 
     function setUp() public {

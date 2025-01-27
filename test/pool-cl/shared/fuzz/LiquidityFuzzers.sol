@@ -14,7 +14,6 @@ import {Actions} from "../../../../src/libraries/Actions.sol";
 import {Planner, Plan} from "../../../../src/libraries/Planner.sol";
 
 contract LiquidityFuzzers is Fuzzers {
-    using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
 
     function addFuzzyLiquidity(

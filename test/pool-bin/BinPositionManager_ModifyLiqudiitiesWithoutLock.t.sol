@@ -37,7 +37,6 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
 
 contract BinPositionManager_ModifyLiquidityWithoutLockTest is BinLiquidityHelper, TokenFixture, DeployPermit2 {
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;
