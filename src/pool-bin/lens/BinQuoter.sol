@@ -9,7 +9,7 @@ import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 import {IBinQuoter} from "../interfaces/IBinQuoter.sol";
 import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
 import {BaseV4Quoter} from "../../base/BaseV4Quoter.sol";
@@ -18,8 +18,6 @@ import {QuoterRevert} from "../../libraries/QuoterRevert.sol";
 contract BinQuoter is BaseV4Quoter, IBinQuoter {
     using QuoterRevert for *;
     using SafeCast for uint128;
-    using PathKeyLibrary for PathKey;
-    using PoolIdLibrary for PoolId;
 
     IBinPoolManager public immutable poolManager;
 

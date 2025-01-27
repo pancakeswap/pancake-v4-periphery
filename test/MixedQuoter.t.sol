@@ -65,7 +65,6 @@ contract MixedQuoterTest is
     using SafeCast for *;
     using CLPoolParametersHelper for bytes32;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
 
     error ContractSizeTooLarge(uint256 diff);
 
@@ -1514,7 +1513,7 @@ contract MixedQuoterTest is
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
         assertEq(amountOut, 901152761185198407);
-        assertGt(gasEstimate, 190000);
+        assertGt(gasEstimate, 180000);
         assertLt(gasEstimate, 200000);
     }
 

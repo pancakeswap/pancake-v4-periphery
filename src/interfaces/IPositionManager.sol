@@ -3,6 +3,8 @@ pragma solidity ^0.8.24;
 
 import {IImmutableState} from "./IImmutableState.sol";
 
+/// @title IPositionManager
+/// @notice Interface for the PositionManager contract
 interface IPositionManager is IImmutableState {
     /// @notice Thrown when the block.timestamp exceeds the user-provided deadline
     error DeadlinePassed(uint256 deadline);

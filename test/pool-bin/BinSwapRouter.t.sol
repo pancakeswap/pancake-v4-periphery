@@ -31,9 +31,7 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
 
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
@@ -403,7 +401,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
             data = plan.finalizeSwap(key.currency1, key.currency0, alice);
         }
         router.executeActions(data);
-        vm.snapshotGasLastCall("testExactOutputSingle_SwapForY");
+        vm.snapshotGasLastCall(gasSnapshotName);
 
         // amountIn is 501504513540621866
         if (swapForY) {

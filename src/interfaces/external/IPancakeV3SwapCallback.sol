@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-/// @title Callback for IPancakeV3PoolActions#swap
-/// @notice Any contract that calls IPancakeV3PoolActions#swap must implement this interface
+/// @title IPancakeV3SwapCallback
+/// @notice Callback for IPancakeV3PoolActions#swap
+/// @dev Any contract that calls IPancakeV3PoolActions#swap must implement this interface.
 interface IPancakeV3SwapCallback {
     /// @notice Called to `msg.sender` after executing a swap via IPancakeV3Pool#swap.
     /// @dev In the implementation you must pay the pool tokens owed for the swap.

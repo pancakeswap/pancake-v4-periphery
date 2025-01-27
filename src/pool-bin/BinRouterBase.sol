@@ -15,7 +15,6 @@ import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
 abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
-    using PathKeyLibrary for PathKey;
     using SafeCastTemp for *;
     using SafeCast for *;
 
