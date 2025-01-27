@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
@@ -36,11 +35,9 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 contract BinPositionManager_MultiCallTest is
     Permit2SignatureHelpers,
     BinLiquidityHelper,
-    GasSnapshot,
     TokenFixture,
     DeployPermit2
 {
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
     using SafeCast for uint256;
     using BinTokenLibrary for PoolId;

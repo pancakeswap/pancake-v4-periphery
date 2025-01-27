@@ -39,8 +39,9 @@ import {CLPositionDescriptorOffChain} from "../../../src/pool-cl/CLPositionDescr
 
 contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
-    using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
+
+    error ContractSizeTooLarge(uint256 diff);
 
     IVault vault;
     ICLPoolManager manager;
@@ -95,6 +96,14 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
             lpm.tokenURI(type(uint256).max),
             "ipfs://abcd/115792089237316195423570985008687907853269984665640564039457584007913129639935"
         );
+    }
+
+    function test_bytecodeSize() public {
+        vm.snapshotValue("CLPositionManager bytecode size", address(lpm).code.length);
+
+        if (address(lpm).code.length > 24576) {
+            revert ContractSizeTooLarge(address(lpm).code.length - 24576);
+        }
     }
 
     function test_modifyLiquidities_reverts_deadlinePassed() public {

@@ -18,7 +18,6 @@ import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
 import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
 import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
 import {MockReentrantPositionManager} from "../../mocks/MockReentrantPositionManager.sol";
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
@@ -34,13 +33,7 @@ interface IPancakeV2LikePairFactory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
 }
 
-abstract contract CLMigratorFromV2 is
-    OldVersionHelper,
-    PosmTestSetup,
-    Permit2ApproveHelper,
-    Permit2SignatureHelpers,
-    GasSnapshot
-{
+abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2ApproveHelper, Permit2SignatureHelpers {
     using CLPoolParametersHelper for bytes32;
 
     WETH weth;
@@ -280,9 +273,8 @@ abstract contract CLMigratorFromV2 is
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, initSqrtPrice, bytes(""));
         data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4MintParams, 0, 0);
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV2IncludingInit")));
         migrator.multicall(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV2IncludingInit");
 
         // necessary checks
         // v2 pair should be burned already
@@ -425,9 +417,8 @@ abstract contract CLMigratorFromV2 is
         });
 
         // 4. migrate from v2 to v4
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV2WithoutInit")));
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV2WithoutInit");
 
         // necessary checks
         // v2 pair should be burned already
@@ -482,9 +473,8 @@ abstract contract CLMigratorFromV2 is
         });
 
         // 4. migrate from v2 to v4
-        snapStart(string(abi.encodePacked(_getContractName(), "#testCLMigrateFromV2WithoutNativeToken")));
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
-        snapEnd();
+        vm.snapshotGasLastCall("testCLMigrateFromV2WithoutNativeToken");
 
         // necessary checks
         // v2 pair should be burned already

@@ -6,12 +6,9 @@ import {Planner, Plan} from "../src/libraries/Planner.sol";
 import {Actions} from "../src/libraries/Actions.sol";
 import {ActionConstants} from "../src/libraries/ActionConstants.sol";
 import {Test} from "forge-std/Test.sol";
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {IVault, Vault} from "pancake-v4-core/src/Vault.sol";
 
-contract BaseActionsRouterTest is Test, GasSnapshot {
-    using Planner for Plan;
-
+contract BaseActionsRouterTest is Test {
     MockBaseActionsRouter router;
 
     function setUp() public {
@@ -31,7 +28,7 @@ contract BaseActionsRouterTest is Test, GasSnapshot {
         assertEq(router.clSwapCount(), 0);
         assertEq(router.binSwapCount(), 0);
         router.executeActions(data);
-        snapLastCall("BaseActionsRouter_mock10commands");
+        vm.snapshotGasLastCall("mock10commands");
         assertEq(router.clSwapCount(), 5);
         assertEq(router.binSwapCount(), 5);
     }

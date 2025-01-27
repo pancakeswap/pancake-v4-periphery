@@ -35,9 +35,9 @@ import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
 contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
+
+    error ContractSizeTooLarge(uint256 diff);
 
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
@@ -148,6 +148,14 @@ contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
         planner = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(addParams));
         payload = planner.finalizeModifyLiquidityWithClose(key3);
         binPm.modifyLiquidities{value: 10 ether}(payload, _deadline);
+    }
+
+    function test_bytecodeSize() public {
+        vm.snapshotValue("BinQuoterBytecode size", address(quoter).code.length);
+
+        if (address(quoter).code.length > 24576) {
+            revert ContractSizeTooLarge(address(quoter).code.length - 24576);
+        }
     }
 
     function testQuoter_quoteExactInputSingle_zeroForOne() public {

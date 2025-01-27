@@ -6,7 +6,7 @@ import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
 import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
 import {ICLQuoter} from "../interfaces/ICLQuoter.sol";
 import {PoolTicksCounter} from "../libraries/PoolTicksCounter.sol";
 import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
@@ -16,8 +16,6 @@ import {Currency} from "pancake-v4-core/src/types/Currency.sol";
 
 contract CLQuoter is ICLQuoter, BaseV4Quoter {
     using QuoterRevert for *;
-    using PathKeyLibrary for PathKey;
-    using PoolIdLibrary for PoolId;
 
     ICLPoolManager public immutable poolManager;
 

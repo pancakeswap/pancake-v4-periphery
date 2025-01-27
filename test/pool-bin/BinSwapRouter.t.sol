@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import "forge-std/Test.sol";
 
-import {GasSnapshot} from "forge-gas-snapshot/GasSnapshot.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
@@ -30,11 +29,9 @@ import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {ActionConstants} from "../../src/libraries/ActionConstants.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
 
-contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermit2 {
+contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
     using SafeCast for uint256;
-    using Planner for Plan;
     using BinPoolParametersHelper for bytes32;
-    using Planner for Plan;
 
     bytes constant ZERO_BYTES = new bytes(0);
     uint256 _deadline = block.timestamp + 1;
@@ -163,9 +160,8 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key3.currency0, key3.currency1, alice);
 
-        snapStart("BinSwapRouterTest#testExactInputSingle_EthPool_SwapEthForToken");
         router.executeActions{value: 1 ether}(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactInputSingle_EthPool_SwapEthForToken");
         uint256 aliceToken0Balance = token0.balanceOf(alice);
 
         assertEq(aliceToken0Balance, 997000000000000000);
@@ -204,9 +200,8 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key3.currency1, key3.currency0, alice);
 
-        snapStart("BinSwapRouterTest#testExactInputSingle_EthPool_SwapTokenForEth");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactInputSingle_EthPool_SwapTokenForEth");
 
         assertEq(alice.balance, 997000000000000000);
         assertEq(token0.balanceOf(alice), 0 ether);
@@ -239,9 +234,7 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
             assertEq(token1.balanceOf(alice), 1 ether);
         }
 
-        string memory gasSnapshotName = swapForY
-            ? "BinSwapRouterTest#testExactInputSingle_SwapForY_1"
-            : "BinSwapRouterTest#testExactInputSingle_SwapForY_2";
+        string memory gasSnapshotName = swapForY ? "testExactInputSingle_SwapForY_1" : "testExactInputSingle_SwapForY_2";
 
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(key, swapForY, 1 ether, 0, bytes(""));
@@ -253,9 +246,9 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         } else {
             data = plan.finalizeSwap(key.currency1, key.currency0, alice);
         }
-        snapStart(gasSnapshotName);
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall(gasSnapshotName);
+
         if (swapForY) {
             assertEq(token0.balanceOf(alice), 0 ether);
             assertEq(token1.balanceOf(alice), 997000000000000000);
@@ -290,9 +283,8 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
 
         plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key.currency0, key.currency1, bob);
-        snapStart("BinSwapRouterTest#testExactInputSingle_DifferentRecipient");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactInputSingle_DifferentRecipient");
 
         assertEq(token1.balanceOf(bob), 997000000000000000);
         assertEq(token1.balanceOf(alice), 0);
@@ -349,9 +341,9 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
 
         plan = plan.add(Actions.BIN_SWAP_EXACT_IN, abi.encode(params));
         bytes memory data = plan.finalizeSwap(Currency.wrap(address(token0)), Currency.wrap(address(token2)), bob);
-        snapStart("BinSwapRouterTest#testExactInput_MultiHopDifferentRecipient");
+
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactInput_MultiHopDifferentRecipient");
 
         // 1 ether * 0.997 * 0.997 (0.3% fee twice)
         assertEq(token2.balanceOf(alice), 0);
@@ -395,9 +387,8 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
             assertEq(token1.balanceOf(alice), 1 ether);
         }
 
-        string memory gasSnapshotName = swapForY
-            ? "BinSwapRouterTest#testExactOutputSingle_SwapForY_1"
-            : "BinSwapRouterTest#testExactOutputSingle_SwapForY_2";
+        string memory gasSnapshotName =
+            swapForY ? "testExactOutputSingle_SwapForY_1" : "testExactOutputSingle_SwapForY_2";
 
         IBinRouterBase.BinSwapExactOutputSingleParams memory params =
             IBinRouterBase.BinSwapExactOutputSingleParams(key, swapForY, 0.5 ether, 1 ether, bytes(""));
@@ -409,9 +400,8 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
         } else {
             data = plan.finalizeSwap(key.currency1, key.currency0, alice);
         }
-        snapStart(gasSnapshotName);
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall(gasSnapshotName);
 
         // amountIn is 501504513540621866
         if (swapForY) {
@@ -466,9 +456,8 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
 
         plan = plan.add(Actions.BIN_SWAP_EXACT_OUT_SINGLE, abi.encode(params));
         bytes memory data = plan.finalizeSwap(key.currency0, key.currency1, bob);
-        snapStart("BinSwapRouterTest#testExactOutputSingle_DifferentRecipient");
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactOutputSingle_DifferentRecipient");
 
         assertEq(token0.balanceOf(alice), 1 ether - 501504513540621866);
         assertEq(token1.balanceOf(alice), 0 ether);
@@ -514,9 +503,9 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
 
         plan = plan.add(Actions.BIN_SWAP_EXACT_OUT, abi.encode(params));
         bytes memory data = plan.finalizeSwap(Currency.wrap(address(token0)), Currency.wrap(address(token1)), alice);
-        snapStart("BinSwapRouterTest#testExactOutput_SingleHop");
+
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactOutput_SingleHop");
 
         // amountIs is 501504513540621866
         assertEq(token0.balanceOf(alice), 1 ether - 501504513540621866);
@@ -599,9 +588,9 @@ contract BinSwapRouterTest is Test, GasSnapshot, BinLiquidityHelper, DeployPermi
 
         plan = plan.add(Actions.BIN_SWAP_EXACT_OUT, abi.encode(params));
         bytes memory data = plan.finalizeSwap(Currency.wrap(address(token0)), Currency.wrap(address(token2)), bob);
-        snapStart("BinSwapRouterTest#testExactOutput_MultiHopDifferentRecipient");
+
         router.executeActions(data);
-        snapEnd();
+        vm.snapshotGasLastCall("testExactOutput_MultiHopDifferentRecipient");
 
         // after test validation
         // amountIn is 503013554203231561

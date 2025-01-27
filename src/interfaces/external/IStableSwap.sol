@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
+/// @title IStableSwap
+/// @notice Interface for the StableSwap contract
 interface IStableSwap {
     // solium-disable-next-line mixedcase
     function get_dy(uint256 i, uint256 j, uint256 dx) external view returns (uint256 dy);

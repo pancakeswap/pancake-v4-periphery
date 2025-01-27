@@ -37,7 +37,6 @@ import {Permit2Forwarder} from "../../../src/base/Permit2Forwarder.sol";
 
 contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTestSetup, LiquidityFuzzers {
     using FixedPointMathLib for uint256;
-    using Planner for Plan;
     using CLPoolParametersHelper for bytes32;
 
     IVault vault;

@@ -16,7 +16,6 @@ import {HookSavesDelta} from "./HookSavesDelta.sol";
 import {ICLPositionDescriptor} from "../../../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
 
 abstract contract CLLiquidityOperations is CommonBase {
-    using Planner for Plan;
     using SafeCastTemp for uint256;
 
     CLPositionManager lpm;

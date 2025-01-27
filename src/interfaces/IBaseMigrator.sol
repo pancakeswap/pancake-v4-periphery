@@ -5,6 +5,8 @@ import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
 import {IMulticall_v4} from "./IMulticall_v4.sol";
 import {ISelfPermitERC721} from "./ISelfPermitERC721.sol";
 
+/// @title IBaseMigrator
+/// @notice Interface for the BaseMigrator contract
 interface IBaseMigrator is IMulticall_v4, ISelfPermitERC721 {
     error TOKEN_NOT_MATCH();
     error INVALID_ETHER_SENDER();
