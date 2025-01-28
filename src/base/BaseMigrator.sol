@@ -39,9 +39,9 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
     /// @notice compare if tokens from v2 pair are the same as token0/token1. Revert with
     /// `TOKEN_NOT_MATCH` if tokens does not match
     /// @param v2Pair the address of v2 pair
-    /// @param token0 token0 of v4 poolKey
-    /// @param token1 token1 of v4 poolKey
-    /// @return shouldReversePair if the order of tokens from v2 pair is different from v4 pair (only when WETH is involved)
+    /// @param token0 token0 of infinity poolKey
+    /// @param token1 token1 of infinity poolKey
+    /// @return shouldReversePair if the order of tokens from v2 pair is different from infinity pair (only when WETH is involved)
     function checkTokensOrderAndMatchFromV2(address v2Pair, Currency token0, Currency token1)
         internal
         view
@@ -56,9 +56,9 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
     /// `TOKEN_NOT_MATCH` if tokens does not match
     /// @param nfp the address of v3#nfp
     /// @param tokenId the tokenId of v3 pool
-    /// @param token0 token0 of v4 poolKey
-    /// @param token1 token1 of v4 poolKey
-    /// @return shouldReversePair if the order of tokens from v3 pool is different from v4 pair (only when WETH is involved)
+    /// @param token0 token0 of infinity poolKey
+    /// @param token1 token1 of infinity poolKey
+    /// @return shouldReversePair if the order of tokens from v3 pool is different from infinity pair (only when WETH is involved)
     function checkTokensOrderAndMatchFromV3(address nfp, uint256 tokenId, Currency token0, Currency token1)
         internal
         view
@@ -71,9 +71,9 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
     /// @notice withdraw liquidity from v2 pool (fee will always be included)
     /// It may revert if amount0/amount1 received is less than expected
     /// @param v2PoolParams the parameters to withdraw liquidity from v2 pool
-    /// @param shouldReversePair if the order of tokens from v2 pair is different from v4 pair (only when WETH is involved)
-    /// @return amount0Received the actual amount of token0 received (in order of v4 pool)
-    /// @return amount1Received the actual amount of token1 received (in order of v4 pool)
+    /// @param shouldReversePair if the order of tokens from v2 pair is different from infinity pair (only when WETH is involved)
+    /// @return amount0Received the actual amount of token0 received (in order of infinity pool)
+    /// @return amount1Received the actual amount of token1 received (in order of infinity pool)
     function withdrawLiquidityFromV2(V2PoolParams calldata v2PoolParams, bool shouldReversePair)
         internal
         returns (uint256 amount0Received, uint256 amount1Received)
@@ -87,8 +87,8 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
             revert INSUFFICIENT_AMOUNTS_RECEIVED();
         }
 
-        /// @notice the order may mismatch with v4 pool when WETH is invovled
-        /// the following check makes sure that the output always match the order of v4 pool
+        /// @notice the order may mismatch with infinity pool when WETH is invovled
+        /// the following check makes sure that the output always match the order of infinity pool
         if (shouldReversePair) {
             (amount0Received, amount1Received) = (amount1Received, amount0Received);
         }
@@ -97,9 +97,9 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
     /// @notice withdraw liquidity from v3 pool and collect fee if specified in `v3PoolParams`
     /// It may revert if the caller is not the owner of the token or amount0/amount1 received is less than expected
     /// @param v3PoolParams the parameters to withdraw liquidity from v3 pool
-    /// @param shouldReversePair if the order of tokens from v3 pool is different from v4 pair (only when WETH is involved)
-    /// @return amount0Received the actual amount of token0 received (in order of v4 pool)
-    /// @return amount1Received the actual amount of token1 received (in order of v4 pool)
+    /// @param shouldReversePair if the order of tokens from v3 pool is different from infinity pair (only when WETH is involved)
+    /// @return amount0Received the actual amount of token0 received (in order of infinity pool)
+    /// @return amount1Received the actual amount of token1 received (in order of infinity pool)
     function withdrawLiquidityFromV3(V3PoolParams calldata v3PoolParams, bool shouldReversePair)
         internal
         returns (uint256 amount0Received, uint256 amount1Received)
@@ -132,8 +132,8 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
         });
         (amount0Received, amount1Received) = nfp.collect(collectParams);
 
-        /// @notice the order may mismatch with v4 pool when WETH is invovled
-        /// the following check makes sure that the output always match the order of v4 pool
+        /// @notice the order may mismatch with infinity pool when WETH is invovled
+        /// the following check makes sure that the output always match the order of infinity pool
         if (shouldReversePair) {
             (amount0Received, amount1Received) = (amount1Received, amount0Received);
         }
@@ -182,13 +182,13 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall_v4, SelfPerm
         positionManagerPermit2.approve(Currency.unwrap(currency), to, type(uint160).max, type(uint48).max);
     }
 
-    /// @notice Check and revert if tokens from both v2/v3 and v4 pair does not match
-    ///         Return true if match but v2v3Token1 is WETH which should be ETH in v4 pair
+    /// @notice Check and revert if tokens from both v2/v3 and infinity pair does not match
+    ///         Return true if match but v2v3Token1 is WETH which should be ETH in infinity pair
     /// @param v2v3Token0 token0 from v2/v3 pair
     /// @param v2v3Token1 token1 from v2/v3 pair
-    /// @param v4Token0 token0 from v4 pair
-    /// @param v4Token1 token1 from v4 pair
-    /// @return shouldReversePair if the order of tokens from v2/v3 pair is different from v4 pair (only when WETH is involved)
+    /// @param v4Token0 token0 from infinity pair
+    /// @param v4Token1 token1 from infinity pair
+    /// @return shouldReversePair if the order of tokens from v2/v3 pair is different from infinity pair (only when WETH is involved)
     function _checkIfTokenPairMatchAndOrder(
         address v2v3Token0,
         address v2v3Token1,

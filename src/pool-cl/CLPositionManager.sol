@@ -34,7 +34,7 @@ import {LiquidityAmounts} from "../pool-cl/libraries/LiquidityAmounts.sol";
 import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 
 /// @title CLPositionManager
-/// @notice Contract for modifying liquidity for PCS v4 CL pools
+/// @notice Contract for modifying liquidity for PCS Infinity CL pools
 contract CLPositionManager is
     ICLPositionManager,
     ERC721Permit_v4,
@@ -73,7 +73,7 @@ contract CLPositionManager is
     )
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
-        ERC721Permit_v4("Pancakeswap V4 Positions NFT", "PCS-V4-POSM")
+        ERC721Permit_v4("Pancakeswap Infinity Positions NFT", "PCS-V4-POSM")
         CLNotifier(_unsubscribeGasLimit)
         NativeWrapper(_weth9)
     {

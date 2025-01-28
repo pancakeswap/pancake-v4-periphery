@@ -23,9 +23,9 @@ interface IBinMigrator is IBaseMigrator {
         bytes hookData;
     }
 
-    /// @notice Migrate liquidity from v2 to v4
+    /// @notice Migrate liquidity from v2 to infinity
     /// @param v2PoolParams ncessary info for removing liqudity the source v2 pool
-    /// @param v4PoolParams necessary info for adding liquidity the target v4 bin-pool
+    /// @param v4PoolParams necessary info for adding liquidity the target infinity bin-pool
     /// @param extraAmount0 the extra amount of token0 that user wants to add (optional, usually 0)
     /// if pool token0 is ETH and msg.value == 0, WETH will be taken from sender.
     /// Otherwise if pool token0 is ETH and msg.value !=0, method will assume user have sent extraAmount0 in msg.value
@@ -38,9 +38,9 @@ interface IBinMigrator is IBaseMigrator {
         uint256 extraAmount1
     ) external payable;
 
-    /// @notice Migrate liquidity from v3 to v4
+    /// @notice Migrate liquidity from v3 to infinity
     /// @param v3PoolParams ncessary info for removing liqudity the source v3 pool
-    /// @param v4PoolParams necessary info for adding liquidity the target v4 bin-pool
+    /// @param v4PoolParams necessary info for adding liquidity the target infinity bin-pool
     /// @param extraAmount0 the extra amount of token0 that user wants to add (optional, usually 0)
     /// if pool token0 is ETH and msg.value == 0, WETH will be taken from sender.
     /// Otherwise if pool token0 is ETH and msg.value !=0, method will assume user have sent extraAmount0 in msg.value

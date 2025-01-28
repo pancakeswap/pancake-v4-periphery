@@ -14,7 +14,7 @@ struct Plan {
 
 using Planner for Plan global;
 
-/// @notice Constructs a plan of actions to be executed on Pancakeswap v4.
+/// @notice Constructs a plan of actions to be executed on Pancakeswap infinity.
 library Planner {
     function init() internal pure returns (Plan memory plan) {
         return Plan({actions: bytes(""), params: new bytes[](0)});

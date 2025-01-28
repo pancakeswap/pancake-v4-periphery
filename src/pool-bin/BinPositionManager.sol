@@ -33,7 +33,7 @@ import {NativeWrapper} from "../base/NativeWrapper.sol";
 import {IWETH9} from "../interfaces/external/IWETH9.sol";
 
 /// @title BinPositionManager
-/// @notice Contract for modifying liquidity for PCS v4 Bin pools
+/// @notice Contract for modifying liquidity for PCS infinity Bin pools
 contract BinPositionManager is
     IBinPositionManager,
     BinFungibleToken,
@@ -278,7 +278,7 @@ contract BinPositionManager is
             hookData
         );
 
-        /// Slippage checks, similar to CL type. However, this is different from TJ, in PCS v4,
+        /// Slippage checks, similar to CL type. However, this is different from TJ. In PCS infinity,
         /// as hooks can impact delta (take extra token), user need to be protected with amountMax instead
         delta.validateMaxIn(amount0Max, amount1Max);
 

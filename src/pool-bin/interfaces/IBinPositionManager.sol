@@ -81,7 +81,7 @@ interface IBinPositionManager is IPositionManager {
 
     function binPoolManager() external view returns (IBinPoolManager);
 
-    /// @notice Initialize a v4 PCS bin pool
+    /// @notice Initialize a infinity PCS bin pool
     /// @dev If the pool is already initialized, this function will not revert
     /// @param key the PoolKey of the pool to initialize
     /// @param activeId the active bin id of the pool

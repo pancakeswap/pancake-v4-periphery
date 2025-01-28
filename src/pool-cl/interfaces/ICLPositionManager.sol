@@ -24,7 +24,7 @@ interface ICLPositionManager is IPositionManager {
     /// @notice Get the clPoolManager
     function clPoolManager() external view returns (ICLPoolManager);
 
-    /// @notice Initialize a v4 PCS cl pool
+    /// @notice Initialize an infinity cl pool
     /// @dev If the pool is already initialized, this function will not revert and just return type(int24).max
     /// @param key the PoolKey of the pool to initialize
     /// @param sqrtPriceX96 the initial sqrtPriceX96 of the pool

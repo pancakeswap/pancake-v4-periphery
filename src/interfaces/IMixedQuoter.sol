@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 /// @title MixedQuoter Interface
-/// @notice Supports quoting the calculated amounts for exact input swaps. Is specialized for routes containing a mix of Stable, V2, V3 liquidity, v4 liquidity.
+/// @notice Supports quoting the calculated amounts for exact input swaps. Is specialized for routes containing a mix of Stable, V2, V3 liquidity, infinity liquidity.
 /// @notice For each pool also tells you the number of initialized ticks crossed and the sqrt price of the pool after the swap.
 /// @dev These functions are not marked view because they rely on calling non-view functions and reverting
 /// to compute the result. They are also not gas efficient and should not be called on-chain.
