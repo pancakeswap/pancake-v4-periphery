@@ -263,7 +263,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
 
         token0.mint(alice, 1 ether);
 
-        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.V4TooLittleReceived.selector, 1 ether, 0.997 ether));
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooLittleReceived.selector, 1 ether, 0.997 ether));
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(key, true, 1 ether, 1 ether, bytes(""));
 
@@ -364,7 +364,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
             parameters: key.parameters
         });
 
-        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.V4TooLittleReceived.selector, 1 ether, 0.997 ether));
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooLittleReceived.selector, 1 ether, 0.997 ether));
         IBinRouterBase.BinSwapExactInputParams memory params =
             IBinRouterBase.BinSwapExactInputParams(Currency.wrap(address(token0)), path, 1 ether, 1 ether);
 
@@ -470,9 +470,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
         // Give alice > amountInMax so TooMuchRequestedError instead of TransferFromFailed
         token0.mint(alice, 2 ether);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IInfinityRouter.V4TooMuchRequested.selector, 1 ether, 1003009027081243732)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooMuchRequested.selector, 1 ether, 1003009027081243732));
         IBinRouterBase.BinSwapExactOutputSingleParams memory params =
             IBinRouterBase.BinSwapExactOutputSingleParams(key, true, 1 ether, 1 ether, bytes(""));
 
@@ -614,9 +612,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
             parameters: key.parameters
         });
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IInfinityRouter.V4TooMuchRequested.selector, 1 ether, 1003009027081243732)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooMuchRequested.selector, 1 ether, 1003009027081243732));
         IBinRouterBase.BinSwapExactOutputParams memory params =
             IBinRouterBase.BinSwapExactOutputParams(Currency.wrap(address(token1)), path, 1 ether, 1 ether);
 

@@ -73,7 +73,7 @@ contract CLPositionManager is
     )
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
-        ERC721Permit_v4("Pancakeswap Infinity Positions NFT", "PCS-V4-POSM")
+        ERC721Permit_v4("Pancakeswap Infinity Positions NFT", "PCS-INFINITY-POSM")
         CLNotifier(_unsubscribeGasLimit)
         NativeWrapper(_weth9)
     {

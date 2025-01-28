@@ -65,7 +65,8 @@ contract CLPositionDescriptorOffChainTest is Test {
     function testTokenURIFuzz(uint256 tokenId) public view {
         string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), tokenId);
         assertEq(
-            tokenURI, string.concat("https://pancakeswap.finance/infinity/pool-cl/positions/", Strings.toString(tokenId))
+            tokenURI,
+            string.concat("https://pancakeswap.finance/infinity/pool-cl/positions/", Strings.toString(tokenId))
         );
     }
 

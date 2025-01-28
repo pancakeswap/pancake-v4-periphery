@@ -302,7 +302,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
                     amountIn = swapAmountOut - accAmountOut;
                 }
-            } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
+            } else if (action == MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE) {
                 QuoteMixedV4ExactInputSingleParams memory clParams =
                     abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(clParams.poolKey, tokenIn, tokenOut);
@@ -339,7 +339,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                 } else {
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(swapParams);
                 }
-            } else if (action == MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE) {
+            } else if (action == MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE) {
                 QuoteMixedV4ExactInputSingleParams memory binParams =
                     abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
                 (tokenIn, tokenOut) = convertWETHToV4NativeCurency(binParams.poolKey, tokenIn, tokenOut);
@@ -449,7 +449,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
         }
     }
 
-    /// @notice Convert WETH to native currency for V4 pools
+    /// @notice Convert WETH to native currency for infinity pools
     /// @dev for example, quote route are v3 WETH pool[token0, WETH] and infinity native pool[NATIVE,token1]
     /// paths is [token0, WETH, token1], we need to convert WETH to NATIVE when quote infinity pool
     function convertWETHToV4NativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)

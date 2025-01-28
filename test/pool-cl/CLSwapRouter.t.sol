@@ -218,9 +218,7 @@ contract CLSwapRouterTest is TokenFixture, Test {
     }
 
     function testExactInputSingle_amountOutLessThanExpected() external {
-        vm.expectRevert(
-            abi.encodeWithSelector(IInfinityRouter.V4TooLittleReceived.selector, 2 ether, 996990060009101709)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooLittleReceived.selector, 2 ether, 996990060009101709));
         address recipient = makeAddr("recipient");
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, true, 0.01 ether, 2 ether, bytes(""));
@@ -277,9 +275,7 @@ contract CLSwapRouterTest is TokenFixture, Test {
     }
 
     function testExactInput_amountOutLessThanExpected() external {
-        vm.expectRevert(
-            abi.encodeWithSelector(IInfinityRouter.V4TooLittleReceived.selector, 2 ether, 993989209585378125)
-        );
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooLittleReceived.selector, 2 ether, 993989209585378125));
         PathKey[] memory path = new PathKey[](2);
         path[0] = PathKey({
             intermediateCurrency: currency1,
@@ -409,7 +405,7 @@ contract CLSwapRouterTest is TokenFixture, Test {
 
     function testExactOutputSingle_amountOutLessThanExpected() external {
         vm.expectRevert(
-            abi.encodeWithSelector(IInfinityRouter.V4TooMuchRequested.selector, 0.01 ether, 10030190572718166)
+            abi.encodeWithSelector(IInfinityRouter.TooMuchRequested.selector, 0.01 ether, 10030190572718166)
         );
 
         address recipient = makeAddr("recipient");
@@ -514,7 +510,7 @@ contract CLSwapRouterTest is TokenFixture, Test {
 
     function testExactOutput_amountInMoreThanExpected() external {
         vm.expectRevert(
-            abi.encodeWithSelector(IInfinityRouter.V4TooMuchRequested.selector, 0.01 ether, 10060472596238902)
+            abi.encodeWithSelector(IInfinityRouter.TooMuchRequested.selector, 0.01 ether, 10060472596238902)
         );
 
         PathKey[] memory path = new PathKey[](2);

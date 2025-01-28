@@ -33,7 +33,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
             params.poolKey, params.zeroForOne, -int256(uint256(amountIn)), params.hookData
         ).toUint128();
         if (amountOut < params.amountOutMinimum) {
-            revert IInfinityRouter.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+            revert IInfinityRouter.TooLittleReceived(params.amountOutMinimum, amountOut);
         }
     }
 
@@ -59,7 +59,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
             }
 
             if (amountOut < params.amountOutMinimum) {
-                revert IInfinityRouter.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+                revert IInfinityRouter.TooLittleReceived(params.amountOutMinimum, amountOut);
             }
         }
     }
@@ -74,7 +74,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
             -_swapExactPrivate(params.poolKey, params.zeroForOne, int256(uint256(amountOut)), params.hookData)
         ).toUint128();
         if (amountIn > params.amountInMaximum) {
-            revert IInfinityRouter.V4TooMuchRequested(params.amountInMaximum, amountIn);
+            revert IInfinityRouter.TooMuchRequested(params.amountInMaximum, amountIn);
         }
     }
 
@@ -105,7 +105,7 @@ abstract contract CLRouterBase is ICLRouterBase, DeltaResolver {
                 currencyOut = pathKey.intermediateCurrency;
             }
             if (amountIn > params.amountInMaximum) {
-                revert IInfinityRouter.V4TooMuchRequested(params.amountInMaximum, amountIn);
+                revert IInfinityRouter.TooMuchRequested(params.amountInMaximum, amountIn);
             }
         }
     }

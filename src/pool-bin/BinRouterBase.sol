@@ -34,7 +34,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             _swapExactPrivate(params.poolKey, params.swapForY, -(amountIn.safeInt128()), params.hookData).toUint128();
 
         if (amountOut < params.amountOutMinimum) {
-            revert IInfinityRouter.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+            revert IInfinityRouter.TooLittleReceived(params.amountOutMinimum, amountOut);
         }
     }
 
@@ -60,7 +60,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             }
 
             if (amountOut < params.amountOutMinimum) {
-                revert IInfinityRouter.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+                revert IInfinityRouter.TooLittleReceived(params.amountOutMinimum, amountOut);
             }
         }
     }
@@ -75,7 +75,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             (-_swapExactPrivate(params.poolKey, params.swapForY, amountOut.safeInt128(), params.hookData)).toUint128();
 
         if (amountIn > params.amountInMaximum) {
-            revert IInfinityRouter.V4TooMuchRequested(params.amountInMaximum, amountIn);
+            revert IInfinityRouter.TooMuchRequested(params.amountInMaximum, amountIn);
         }
     }
 
@@ -107,7 +107,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             }
 
             if (amountIn > params.amountInMaximum) {
-                revert IInfinityRouter.V4TooMuchRequested(params.amountInMaximum, amountIn);
+                revert IInfinityRouter.TooMuchRequested(params.amountInMaximum, amountIn);
             }
         }
     }

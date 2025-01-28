@@ -834,7 +834,7 @@ contract MixedQuoterTest is
         paths[1] = address(Currency.unwrap(poolKey.currency1));
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -864,7 +864,7 @@ contract MixedQuoterTest is
         paths[1] = address(token1);
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -943,7 +943,7 @@ contract MixedQuoterTest is
         }
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -1024,7 +1024,7 @@ contract MixedQuoterTest is
         paths[1] = address(Currency.unwrap(poolKey.currency0));
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -1059,7 +1059,7 @@ contract MixedQuoterTest is
         }
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] = abi.encode(
@@ -1090,7 +1090,7 @@ contract MixedQuoterTest is
         paths[1] = address(token4);
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -1120,7 +1120,7 @@ contract MixedQuoterTest is
         paths[1] = address(token4);
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -1192,7 +1192,7 @@ contract MixedQuoterTest is
         }
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -1273,7 +1273,7 @@ contract MixedQuoterTest is
         paths[1] = address(token3);
 
         bytes memory actions = new bytes(1);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](1);
         params[0] =
@@ -1309,7 +1309,7 @@ contract MixedQuoterTest is
         paths1[3] = address(weth);
         // cl pool -> ss pool -> v3 pool
         bytes memory actions1 = new bytes(3);
-        actions1[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions1[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
         actions1[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
         actions1[2] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
         bytes[] memory params1 = new bytes[](3);
@@ -1327,7 +1327,7 @@ contract MixedQuoterTest is
         paths2[3] = address(weth);
         // cl pool -> ss pool -> v2 pool
         bytes memory actions2 = new bytes(3);
-        actions2[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions2[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
         actions2[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
         actions2[2] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
 
@@ -1443,7 +1443,7 @@ contract MixedQuoterTest is
         paths[2] = address(token2);
 
         bytes memory actions = new bytes(2);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
         actions[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](2);
@@ -1468,7 +1468,7 @@ contract MixedQuoterTest is
         paths[3] = address(weth);
 
         bytes memory actions = new bytes(3);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
         actions[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
         actions[2] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
 
@@ -1497,10 +1497,10 @@ contract MixedQuoterTest is
         paths[4] = address(token4);
 
         bytes memory actions = new bytes(4);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
         actions[1] = bytes1(uint8(MixedQuoterActions.SS_2_EXACT_INPUT_SINGLE));
         actions[2] = bytes1(uint8(MixedQuoterActions.V2_EXACT_INPUT_SINGLE));
-        actions[3] = bytes1(uint8(MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE));
+        actions[3] = bytes1(uint8(MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](4);
         params[0] =
@@ -1527,7 +1527,7 @@ contract MixedQuoterTest is
 
         bytes memory actions = new bytes(2);
         actions[0] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
-        actions[1] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[1] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](2);
         uint24 fee = 500;
@@ -1552,7 +1552,7 @@ contract MixedQuoterTest is
         paths[2] = address(token2);
 
         bytes memory actions = new bytes(2);
-        actions[0] = bytes1(uint8(MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE));
+        actions[0] = bytes1(uint8(MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE));
         actions[1] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
 
         bytes[] memory params = new bytes[](2);

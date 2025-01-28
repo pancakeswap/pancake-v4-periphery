@@ -50,7 +50,7 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// INFI_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
@@ -71,7 +71,7 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// V4_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// INFI_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received

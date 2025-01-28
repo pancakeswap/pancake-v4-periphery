@@ -79,13 +79,13 @@ abstract contract InfinityRouter is IInfinityRouter, CLRouterBase, BinRouterBase
             if (action == Actions.SETTLE_ALL) {
                 (Currency currency, uint256 maxAmount) = params.decodeCurrencyAndUint256();
                 uint256 amount = _getFullDebt(currency);
-                if (amount > maxAmount) revert V4TooMuchRequested(maxAmount, amount);
+                if (amount > maxAmount) revert TooMuchRequested(maxAmount, amount);
                 _settle(currency, msgSender(), amount);
                 return;
             } else if (action == Actions.TAKE_ALL) {
                 (Currency currency, uint256 minAmount) = params.decodeCurrencyAndUint256();
                 uint256 amount = _getFullCredit(currency);
-                if (amount < minAmount) revert V4TooLittleReceived(minAmount, amount);
+                if (amount < minAmount) revert TooLittleReceived(minAmount, amount);
                 _take(currency, msgSender(), amount);
                 return;
             } else if (action == Actions.SETTLE) {
