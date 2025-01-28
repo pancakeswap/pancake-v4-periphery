@@ -4,9 +4,9 @@ pragma solidity ^0.8.24;
 
 import {SafeCallback} from "./SafeCallback.sol";
 import {QuoterRevert} from "../libraries/QuoterRevert.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 import {IQuoter} from "../interfaces/IQuoter.sol";
-import {ILockCallback} from "pancake-v4-core/src/interfaces/ILockCallback.sol";
+import {ILockCallback} from "infinity-core/src/interfaces/ILockCallback.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
 
 abstract contract BaseV4Quoter is SafeCallback, IQuoter {

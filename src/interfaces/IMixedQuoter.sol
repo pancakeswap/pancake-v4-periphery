@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 /// @title MixedQuoter Interface
 /// @notice Supports quoting the calculated amounts for exact input swaps. Is specialized for routes containing a mix of Stable, V2, V3 liquidity, v4 liquidity.

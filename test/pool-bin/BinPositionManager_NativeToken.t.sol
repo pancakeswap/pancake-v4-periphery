@@ -7,16 +7,16 @@ import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {SafeCast} from "infinity-core/src/pool-bin/libraries/math/SafeCast.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
 
 import {IPositionManager} from "../../src/interfaces/IPositionManager.sol";
 import {BinPositionManager} from "../../src/pool-bin/BinPositionManager.sol";
@@ -28,7 +28,7 @@ import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionMan
 import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
-import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
+import {BinPool} from "infinity-core/src/pool-bin/libraries/BinPool.sol";
 
 // test on the native token pair etc..
 contract BinPositionManager_NativeTokenTest is BinLiquidityHelper, DeployPermit2 {

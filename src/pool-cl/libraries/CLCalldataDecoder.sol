@@ -2,9 +2,9 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.0;
 
-import {IV4Router} from "../../interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../../interfaces/IInfinityRouter.sol";
 import {CalldataDecoder} from "../../libraries/CalldataDecoder.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 /// @title Library for abi decoding in cl pool calldata
 library CLCalldataDecoder {
@@ -13,11 +13,11 @@ library CLCalldataDecoder {
     /// @notice equivalent to SliceOutOfBounds.selector, stored in least-significant bits
     uint256 constant SLICE_ERROR_SELECTOR = 0x3b99b53d;
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.CLExactInputParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.CLExactInputParams))
     function decodeCLSwapExactInParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.CLSwapExactInputParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactInputParams calldata swapParams)
     {
         // CLExactInputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
@@ -31,11 +31,11 @@ library CLCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.CLExactInputSingleParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.CLExactInputSingleParams))
     function decodeCLSwapExactInSingleParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.CLSwapExactInputSingleParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactInputSingleParams calldata swapParams)
     {
         // CLExactInputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
@@ -49,11 +49,11 @@ library CLCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.CLExactOutputParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.CLExactOutputParams))
     function decodeCLSwapExactOutParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.CLSwapExactOutputParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactOutputParams calldata swapParams)
     {
         // CLExactOutputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
@@ -67,11 +67,11 @@ library CLCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.CLExactOutputSingleParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.CLExactOutputSingleParams))
     function decodeCLSwapExactOutSingleParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.CLSwapExactOutputSingleParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactOutputSingleParams calldata swapParams)
     {
         // CLExactOutputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {

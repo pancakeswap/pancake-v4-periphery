@@ -6,7 +6,7 @@ import {Planner, Plan} from "../src/libraries/Planner.sol";
 import {Actions} from "../src/libraries/Actions.sol";
 import {ActionConstants} from "../src/libraries/ActionConstants.sol";
 import {Test} from "forge-std/Test.sol";
-import {IVault, Vault} from "pancake-v4-core/src/Vault.sol";
+import {IVault, Vault} from "infinity-core/src/Vault.sol";
 
 contract BaseActionsRouterTest is Test {
     MockBaseActionsRouter router;

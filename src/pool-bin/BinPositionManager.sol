@@ -2,16 +2,16 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
-import {LiquidityConfigurations} from "pancake-v4-core/src/pool-bin/libraries/math/LiquidityConfigurations.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {PackedUint128Math} from "pancake-v4-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {BinPool} from "infinity-core/src/pool-bin/libraries/BinPool.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
+import {LiquidityConfigurations} from "infinity-core/src/pool-bin/libraries/math/LiquidityConfigurations.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {PackedUint128Math} from "infinity-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 

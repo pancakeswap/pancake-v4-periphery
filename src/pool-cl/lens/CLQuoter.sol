@@ -2,17 +2,17 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
 import {ICLQuoter} from "../interfaces/ICLQuoter.sol";
 import {PoolTicksCounter} from "../libraries/PoolTicksCounter.sol";
 import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
 import {BaseV4Quoter} from "../../base/BaseV4Quoter.sol";
 import {QuoterRevert} from "../../libraries/QuoterRevert.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
 
 contract CLQuoter is ICLQuoter, BaseV4Quoter {
     using QuoterRevert for *;

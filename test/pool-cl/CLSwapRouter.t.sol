@@ -4,20 +4,20 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {FixedPoint96} from "pancake-v4-core/src/pool-cl/libraries/FixedPoint96.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {CLPoolManagerRouter} from "pancake-v4-core/test/pool-cl/helpers/CLPoolManagerRouter.sol";
-import {CLPool} from "pancake-v4-core/src/pool-cl/libraries/CLPool.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {FixedPoint96} from "infinity-core/src/pool-cl/libraries/FixedPoint96.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {CLPoolManagerRouter} from "infinity-core/test/pool-cl/helpers/CLPoolManagerRouter.sol";
+import {CLPool} from "infinity-core/src/pool-cl/libraries/CLPool.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {TokenFixture} from "../helpers/TokenFixture.sol";
-import {MockV4Router} from "../mocks/MockV4Router.sol";
-import {IV4Router} from "../../src/interfaces/IV4Router.sol";
+import {MockInfinityRouter} from "../mocks/MockInfinityRouter.sol";
+import {IInfinityRouter} from "../../src/interfaces/IInfinityRouter.sol";
 import {ICLRouterBase} from "../../src/pool-cl/interfaces/ICLRouterBase.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
 import {Plan, Planner} from "../../src/libraries/Planner.sol";
@@ -28,7 +28,7 @@ contract CLSwapRouterTest is TokenFixture, Test {
     IVault public vault;
     ICLPoolManager public poolManager;
     CLPoolManagerRouter public positionManager;
-    MockV4Router public router;
+    MockInfinityRouter public router;
 
     PoolKey public poolKey0;
     PoolKey public poolKey1;
@@ -52,7 +52,7 @@ contract CLSwapRouterTest is TokenFixture, Test {
         IERC20(Currency.unwrap(currency1)).approve(address(positionManager), 1000 ether);
         IERC20(Currency.unwrap(currency2)).approve(address(positionManager), 1000 ether);
 
-        router = new MockV4Router(vault, poolManager, IBinPoolManager(address(0)));
+        router = new MockInfinityRouter(vault, poolManager, IBinPoolManager(address(0)));
         IERC20(Currency.unwrap(currency0)).approve(address(router), 1000 ether);
         IERC20(Currency.unwrap(currency1)).approve(address(router), 1000 ether);
         IERC20(Currency.unwrap(currency2)).approve(address(router), 1000 ether);
@@ -218,7 +218,9 @@ contract CLSwapRouterTest is TokenFixture, Test {
     }
 
     function testExactInputSingle_amountOutLessThanExpected() external {
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooLittleReceived.selector, 2 ether, 996990060009101709));
+        vm.expectRevert(
+            abi.encodeWithSelector(IInfinityRouter.V4TooLittleReceived.selector, 2 ether, 996990060009101709)
+        );
         address recipient = makeAddr("recipient");
         ICLRouterBase.CLSwapExactInputSingleParams memory params =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey0, true, 0.01 ether, 2 ether, bytes(""));
@@ -275,7 +277,9 @@ contract CLSwapRouterTest is TokenFixture, Test {
     }
 
     function testExactInput_amountOutLessThanExpected() external {
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooLittleReceived.selector, 2 ether, 993989209585378125));
+        vm.expectRevert(
+            abi.encodeWithSelector(IInfinityRouter.V4TooLittleReceived.selector, 2 ether, 993989209585378125)
+        );
         PathKey[] memory path = new PathKey[](2);
         path[0] = PathKey({
             intermediateCurrency: currency1,
@@ -404,7 +408,9 @@ contract CLSwapRouterTest is TokenFixture, Test {
     }
 
     function testExactOutputSingle_amountOutLessThanExpected() external {
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector, 0.01 ether, 10030190572718166));
+        vm.expectRevert(
+            abi.encodeWithSelector(IInfinityRouter.V4TooMuchRequested.selector, 0.01 ether, 10030190572718166)
+        );
 
         address recipient = makeAddr("recipient");
         ICLRouterBase.CLSwapExactOutputSingleParams memory params =
@@ -507,7 +513,9 @@ contract CLSwapRouterTest is TokenFixture, Test {
     }
 
     function testExactOutput_amountInMoreThanExpected() external {
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector, 0.01 ether, 10060472596238902));
+        vm.expectRevert(
+            abi.encodeWithSelector(IInfinityRouter.V4TooMuchRequested.selector, 0.01 ether, 10060472596238902)
+        );
 
         PathKey[] memory path = new PathKey[](2);
         path[0] = PathKey({

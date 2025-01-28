@@ -8,18 +8,18 @@ import {IPancakePair} from "../src/interfaces/external/IPancakePair.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CLPositionManager} from "../src/pool-cl/CLPositionManager.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IPoolManager} from "infinity-core/src/interfaces/IPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
 import {PosmTestSetup} from "./pool-cl/shared/PosmTestSetup.sol";
 import {Permit2ApproveHelper} from "./helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
@@ -38,7 +38,7 @@ import {CLQuoter} from "../src/pool-cl/lens/CLQuoter.sol";
 import {BinPositionManager} from "../src/pool-bin/BinPositionManager.sol";
 import {IBinPositionManager} from "../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {IBinQuoter, BinQuoter} from "../src/pool-bin/lens/BinQuoter.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
 import {BinLiquidityHelper} from "./pool-bin/helper/BinLiquidityHelper.sol";
 import {Plan, Planner} from "../src/libraries/Planner.sol";
 import {Actions} from "../src/libraries/Actions.sol";
@@ -46,7 +46,7 @@ import {DeployStableSwapHelper} from "./helpers/DeployStableSwapHelper.sol";
 import {IStableSwapFactory} from "../src/interfaces/external/IStableSwapFactory.sol";
 import {IStableSwap} from "../src/interfaces/external/IStableSwap.sol";
 import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
-import {MockV4Router} from "./mocks/MockV4Router.sol";
+import {MockInfinityRouter} from "./mocks/MockInfinityRouter.sol";
 import {ICLRouterBase} from "../src/pool-cl/interfaces/ICLRouterBase.sol";
 import {IBinRouterBase} from "../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {ActionConstants} from "../src/libraries/ActionConstants.sol";
@@ -79,7 +79,7 @@ contract MixedQuoterTest is
     MockERC20 token4;
     MockERC20 token5;
 
-    MockV4Router v4Router;
+    MockInfinityRouter infinityRouter;
 
     IVault vault;
     ICLPoolManager clPoolManager;
@@ -129,13 +129,13 @@ contract MixedQuoterTest is
         binPoolManager = new BinPoolManager(vault);
         vault.registerApp(address(binPoolManager));
 
-        v4Router = new MockV4Router(vault, clPoolManager, binPoolManager);
-        MockERC20(Currency.unwrap(poolKey.currency0)).approve(address(v4Router), type(uint256).max);
-        MockERC20(Currency.unwrap(poolKey.currency1)).approve(address(v4Router), type(uint256).max);
-        token2.approve(address(v4Router), type(uint256).max);
-        token3.approve(address(v4Router), type(uint256).max);
-        token4.approve(address(v4Router), type(uint256).max);
-        token5.approve(address(v4Router), type(uint256).max);
+        infinityRouter = new MockInfinityRouter(vault, clPoolManager, binPoolManager);
+        MockERC20(Currency.unwrap(poolKey.currency0)).approve(address(infinityRouter), type(uint256).max);
+        MockERC20(Currency.unwrap(poolKey.currency1)).approve(address(infinityRouter), type(uint256).max);
+        token2.approve(address(infinityRouter), type(uint256).max);
+        token3.approve(address(infinityRouter), type(uint256).max);
+        token4.approve(address(infinityRouter), type(uint256).max);
+        token5.approve(address(infinityRouter), type(uint256).max);
 
         currency0 = poolKey.currency0;
         currency1 = poolKey.currency1;
@@ -905,7 +905,7 @@ contract MixedQuoterTest is
         plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
         bytes memory swapData1 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
         uint256 route1Token1BalanceBefore = poolKey.currency1.balanceOf(address(this));
-        v4Router.executeActions(swapData1);
+        infinityRouter.executeActions(swapData1);
         uint256 route1Token1BalanceAfter = poolKey.currency1.balanceOf(address(this));
 
         uint256 route1Token1Received = route1Token1BalanceAfter - route1Token1BalanceBefore;
@@ -918,7 +918,7 @@ contract MixedQuoterTest is
         plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams2));
         bytes memory swapData2 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
         uint256 route2Token1BalanceBefore = poolKey.currency1.balanceOf(address(this));
-        v4Router.executeActions(swapData2);
+        infinityRouter.executeActions(swapData2);
         uint256 route2Token1BalanceAfter = poolKey.currency1.balanceOf(address(this));
 
         uint256 route2Token1Received = route2Token1BalanceAfter - route2Token1BalanceBefore;
@@ -978,7 +978,7 @@ contract MixedQuoterTest is
         } else {
             route1TokenOutBalanceBefore = poolKey.currency0.balanceOf(address(this));
         }
-        v4Router.executeActions(swapData1);
+        infinityRouter.executeActions(swapData1);
         uint256 route1TokenOutBalanceAfter;
         if (isZeroForOne) {
             route1TokenOutBalanceAfter = poolKey.currency1.balanceOf(address(this));
@@ -1006,7 +1006,7 @@ contract MixedQuoterTest is
         } else {
             route2TokenOutBalanceBefore = poolKey.currency0.balanceOf(address(this));
         }
-        v4Router.executeActions(swapData2);
+        infinityRouter.executeActions(swapData2);
         uint256 route2TokenOutBalanceAfter;
         if (isZeroForOne) {
             route2TokenOutBalanceAfter = poolKey.currency1.balanceOf(address(this));
@@ -1154,7 +1154,7 @@ contract MixedQuoterTest is
         bytes memory swapData1 =
             plan.finalizeSwap(binPoolKey.currency0, binPoolKey.currency1, ActionConstants.MSG_SENDER);
         uint256 route1TokenOutBalanceBefore = binPoolKey.currency1.balanceOf(address(this));
-        v4Router.executeActions(swapData1);
+        infinityRouter.executeActions(swapData1);
         uint256 route1TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
 
         uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
@@ -1168,7 +1168,7 @@ contract MixedQuoterTest is
         bytes memory swapData2 =
             plan.finalizeSwap(binPoolKey.currency0, binPoolKey.currency1, ActionConstants.MSG_SENDER);
         uint256 route2TokenOutBalanceBefore = binPoolKey.currency1.balanceOf(address(this));
-        v4Router.executeActions(swapData2);
+        infinityRouter.executeActions(swapData2);
         uint256 route2TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
 
         uint256 route2TokenOutReceived = route2TokenOutBalanceAfter - route2TokenOutBalanceBefore;
@@ -1227,7 +1227,7 @@ contract MixedQuoterTest is
         } else {
             route1TokenOutBalanceBefore = binPoolKey.currency0.balanceOf(address(this));
         }
-        v4Router.executeActions(swapData1);
+        infinityRouter.executeActions(swapData1);
         uint256 route1TokenOutBalanceAfter;
         if (isZeroForOne) {
             route1TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
@@ -1255,7 +1255,7 @@ contract MixedQuoterTest is
         } else {
             route2TokenOutBalanceBefore = binPoolKey.currency0.balanceOf(address(this));
         }
-        v4Router.executeActions(swapData2);
+        infinityRouter.executeActions(swapData2);
         uint256 route2TokenOutBalanceAfter;
         if (isZeroForOne) {
             route2TokenOutBalanceAfter = binPoolKey.currency1.balanceOf(address(this));
@@ -1370,7 +1370,7 @@ contract MixedQuoterTest is
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 1 ether, 0, ZERO_BYTES);
         plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
         bytes memory swapData1 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
-        v4Router.executeActions(swapData1);
+        infinityRouter.executeActions(swapData1);
         uint256 route1Token1BalanceAfter = token1.balanceOf(address(this));
         uint256 route1Token1Received = route1Token1BalanceAfter - route1Token1BalanceBefore;
 
@@ -1406,7 +1406,7 @@ contract MixedQuoterTest is
         plan = Planner.init();
         plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams3));
         bytes memory swapData3 = plan.finalizeSwap(poolKey.currency0, poolKey.currency1, ActionConstants.MSG_SENDER);
-        v4Router.executeActions(swapData3);
+        infinityRouter.executeActions(swapData3);
         uint256 route2Token1BalanceAfter = token1.balanceOf(address(this));
         uint256 route2Token1Received = route2Token1BalanceAfter - route2Token1BalanceBefore;
 

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.0;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 import {IImmutableState} from "../interfaces/IImmutableState.sol";
 
 /// @title Immutable State

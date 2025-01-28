@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 
 interface IBinPositionManager is IPositionManager {

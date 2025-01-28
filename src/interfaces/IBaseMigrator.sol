@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 import {IMulticall_v4} from "./IMulticall_v4.sol";
 import {ISelfPermitERC721} from "./ISelfPermitERC721.sol";
 

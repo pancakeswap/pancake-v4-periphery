@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {IPoolManager} from "infinity-core/src/interfaces/IPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IBinMigrator, IBaseMigrator} from "../../src/pool-bin/interfaces/IBinMigrator.sol";
 import {ICLMigrator} from "../../src/pool-cl/interfaces/ICLMigrator.sol";

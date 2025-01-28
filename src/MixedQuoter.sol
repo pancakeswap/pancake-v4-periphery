@@ -2,10 +2,10 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {CurrencyLibrary, Currency, equals} from "pancake-v4-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {CurrencyLibrary, Currency, equals} from "infinity-core/src/types/Currency.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {IQuoter} from "./interfaces/IQuoter.sol";
 import {ICLQuoter} from "./pool-cl/interfaces/ICLQuoter.sol";
 import {IBinQuoter} from "./pool-bin/interfaces/IBinQuoter.sol";

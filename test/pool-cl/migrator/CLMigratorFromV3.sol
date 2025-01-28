@@ -11,14 +11,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CLMigrator} from "../../../src/pool-cl/CLMigrator.sol";
 import {ICLMigrator, IBaseMigrator} from "../../../src/pool-cl/interfaces/ICLMigrator.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IPoolManager} from "infinity-core/src/interfaces/IPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
 import {IV3NonfungiblePositionManager} from "../../../src/interfaces/external/IV3NonfungiblePositionManager.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
@@ -26,11 +26,11 @@ import {MockReentrantPositionManager} from "../../mocks/MockReentrantPositionMan
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
 import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath.sol";
+import {SqrtPriceMath} from "infinity-core/src/pool-cl/libraries/SqrtPriceMath.sol";
 import {LiquidityAmounts} from "../../../src/pool-cl/libraries/LiquidityAmounts.sol";
-import {BalanceDelta, BalanceDeltaLibrary, toBalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
+import {BalanceDelta, BalanceDeltaLibrary, toBalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
+import {Pausable} from "infinity-core/src/base/Pausable.sol";
 import {MockCLMigratorHook} from "./mocks/MockCLMigratorHook.sol";
 
 interface IPancakeV3LikePairFactory {

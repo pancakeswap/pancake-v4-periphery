@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IBinPositionManager} from "../interfaces/IBinPositionManager.sol";
-import {IV4Router} from "../../interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../../interfaces/IInfinityRouter.sol";
 
 /// @title Library for abi decoding in bin pool calldata
 library BinCalldataDecoder {
@@ -45,11 +45,11 @@ library BinCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.BinExactInputParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.BinExactInputParams))
     function decodeBinSwapExactInParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.BinSwapExactInputParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactInputParams calldata swapParams)
     {
         // BinExactInputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
@@ -63,11 +63,11 @@ library BinCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.BinExactInputSingleParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.BinExactInputSingleParams))
     function decodeBinSwapExactInSingleParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.BinSwapExactInputSingleParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactInputSingleParams calldata swapParams)
     {
         // BinExactInputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
@@ -81,11 +81,11 @@ library BinCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.BinExactOutputParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.BinExactOutputParams))
     function decodeBinSwapExactOutParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.BinSwapExactOutputParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactOutputParams calldata swapParams)
     {
         // BinExactOutputParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {
@@ -99,11 +99,11 @@ library BinCalldataDecoder {
         }
     }
 
-    /// @dev equivalent to: abi.decode(params, (IV4Router.BinExactOutputSingleParams))
+    /// @dev equivalent to: abi.decode(params, (IInfinityRouter.BinExactOutputSingleParams))
     function decodeBinSwapExactOutSingleParams(bytes calldata params)
         internal
         pure
-        returns (IV4Router.BinSwapExactOutputSingleParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactOutputSingleParams calldata swapParams)
     {
         // BinExactOutputSingleParams is a variable length struct so we just have to look up its location
         assembly ("memory-safe") {

@@ -2,12 +2,12 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 import {MockBinCalldataDecoder} from "../mocks/MockBinCalldataDecoder.sol";
 import {CalldataDecoder} from "../../../src/libraries/CalldataDecoder.sol";
-import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../../../src/interfaces/IInfinityRouter.sol";
 import {IBinPositionManager} from "../../../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {IBinRouterBase} from "../../../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {PathKey} from "../../../src/libraries/PathKey.sol";
@@ -73,9 +73,12 @@ contract BinCalldataDecoderTest is Test {
         assertEq(addLiquidityParams.to, _addLiquidityParams.to);
     }
 
-    function test_fuzz_decodeBinSwapExactInParams(IV4Router.BinSwapExactInputParams memory _swapParams) public view {
+    function test_fuzz_decodeBinSwapExactInParams(IInfinityRouter.BinSwapExactInputParams memory _swapParams)
+        public
+        view
+    {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.BinSwapExactInputParams memory swapParams = decoder.decodeBinSwapExactInParams(params);
+        IInfinityRouter.BinSwapExactInputParams memory swapParams = decoder.decodeBinSwapExactInParams(params);
 
         assertEq(Currency.unwrap(swapParams.currencyIn), Currency.unwrap(_swapParams.currencyIn));
         _assertEq(swapParams.path, _swapParams.path);
@@ -85,7 +88,7 @@ contract BinCalldataDecoderTest is Test {
 
     function test_decodeBinSwapExactInParams_outOfBounds() public {
         PathKey[] memory path = new PathKey[](0);
-        IV4Router.BinSwapExactInputParams memory _swapParams = IBinRouterBase.BinSwapExactInputParams({
+        IInfinityRouter.BinSwapExactInputParams memory _swapParams = IBinRouterBase.BinSwapExactInputParams({
             currencyIn: Currency.wrap(makeAddr("currencyIn")),
             path: path,
             amountIn: 1 ether,
@@ -104,12 +107,12 @@ contract BinCalldataDecoderTest is Test {
         decoder.decodeBinSwapExactInParams(invalidParam);
     }
 
-    function test_fuzz_decodeBinSwapExactInSingleParams(IV4Router.BinSwapExactInputSingleParams memory _swapParams)
-        public
-        view
-    {
+    function test_fuzz_decodeBinSwapExactInSingleParams(
+        IInfinityRouter.BinSwapExactInputSingleParams memory _swapParams
+    ) public view {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.BinSwapExactInputSingleParams memory swapParams = decoder.decodeBinSwapExactInSingleParams(params);
+        IInfinityRouter.BinSwapExactInputSingleParams memory swapParams =
+            decoder.decodeBinSwapExactInSingleParams(params);
 
         _assertEq(swapParams.poolKey, _swapParams.poolKey);
         assertEq(swapParams.swapForY, _swapParams.swapForY);
@@ -119,7 +122,7 @@ contract BinCalldataDecoderTest is Test {
     }
 
     function test_fuzz_decodeBinSwapExactInSingleParams_outOfBounds(PoolKey memory key) public {
-        IV4Router.BinSwapExactInputSingleParams memory _swapParams = IBinRouterBase.BinSwapExactInputSingleParams({
+        IInfinityRouter.BinSwapExactInputSingleParams memory _swapParams = IBinRouterBase.BinSwapExactInputSingleParams({
             poolKey: key,
             swapForY: true,
             amountIn: 1 ether,
@@ -139,9 +142,12 @@ contract BinCalldataDecoderTest is Test {
         decoder.decodeBinSwapExactInSingleParams(invalidParam);
     }
 
-    function test_fuzz_decodeBinSwapExactOutParams(IV4Router.BinSwapExactOutputParams memory _swapParams) public view {
+    function test_fuzz_decodeBinSwapExactOutParams(IInfinityRouter.BinSwapExactOutputParams memory _swapParams)
+        public
+        view
+    {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.BinSwapExactOutputParams memory swapParams = decoder.decodeBinSwapExactOutParams(params);
+        IInfinityRouter.BinSwapExactOutputParams memory swapParams = decoder.decodeBinSwapExactOutParams(params);
 
         assertEq(Currency.unwrap(swapParams.currencyOut), Currency.unwrap(_swapParams.currencyOut));
         _assertEq(swapParams.path, _swapParams.path);
@@ -151,7 +157,7 @@ contract BinCalldataDecoderTest is Test {
 
     function test_decodeBinSwapExactOutParams_outOfBounds() public {
         PathKey[] memory path = new PathKey[](0);
-        IV4Router.BinSwapExactOutputParams memory _swapParams = IBinRouterBase.BinSwapExactOutputParams({
+        IInfinityRouter.BinSwapExactOutputParams memory _swapParams = IBinRouterBase.BinSwapExactOutputParams({
             currencyOut: Currency.wrap(makeAddr("currencyOut")),
             path: path,
             amountOut: 1 ether,
@@ -170,12 +176,12 @@ contract BinCalldataDecoderTest is Test {
         decoder.decodeBinSwapExactOutParams(invalidParam);
     }
 
-    function test_fuzz_decodeBinSwapExactOutSingleParams(IV4Router.BinSwapExactOutputSingleParams memory _swapParams)
-        public
-        view
-    {
+    function test_fuzz_decodeBinSwapExactOutSingleParams(
+        IInfinityRouter.BinSwapExactOutputSingleParams memory _swapParams
+    ) public view {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.BinSwapExactOutputSingleParams memory swapParams = decoder.decodeBinSwapExactOutSingleParams(params);
+        IInfinityRouter.BinSwapExactOutputSingleParams memory swapParams =
+            decoder.decodeBinSwapExactOutSingleParams(params);
 
         _assertEq(swapParams.poolKey, _swapParams.poolKey);
         assertEq(swapParams.swapForY, _swapParams.swapForY);
@@ -185,7 +191,8 @@ contract BinCalldataDecoderTest is Test {
     }
 
     function test_fuzz_decodeBinSwapExactOutSingleParams_outOfBounds(PoolKey memory key) public {
-        IV4Router.BinSwapExactOutputSingleParams memory _swapParams = IBinRouterBase.BinSwapExactOutputSingleParams({
+        IInfinityRouter.BinSwapExactOutputSingleParams memory _swapParams = IBinRouterBase
+            .BinSwapExactOutputSingleParams({
             poolKey: key,
             swapForY: true,
             amountOut: 1 ether,

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 /// @dev Record all token accumulation and swap direction of the transaction for non-v4 pools.
 /// @dev Record v4 swap history list for v4 pools.

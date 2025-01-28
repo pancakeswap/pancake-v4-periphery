@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.0;
 
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
 
 /// @title Library for abi decoding in calldata
 library CalldataDecoder {

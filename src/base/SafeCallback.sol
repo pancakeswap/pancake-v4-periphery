@@ -2,8 +2,8 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
-import {ILockCallback} from "pancake-v4-core/src/interfaces/ILockCallback.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {ILockCallback} from "infinity-core/src/interfaces/ILockCallback.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 import {ImmutableState} from "./ImmutableState.sol";
 
 /// @title Safe Callback

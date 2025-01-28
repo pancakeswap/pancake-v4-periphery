@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 
 /// @title IImmutableState
 /// @notice Interface for the ImmutableState contract

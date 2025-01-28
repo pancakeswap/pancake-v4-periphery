@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {V3SmartRouterHelper} from "../../src/libraries/external/V3SmartRouterHelper.sol";
 import {IPancakeV3Factory} from "../../src/interfaces/external/IPancakeV3Factory.sol";

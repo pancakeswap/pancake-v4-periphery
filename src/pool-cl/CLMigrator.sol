@@ -2,12 +2,12 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
-import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {SqrtPriceMath} from "pancake-v4-core/src/pool-cl/libraries/SqrtPriceMath.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
+import {PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {SqrtPriceMath} from "infinity-core/src/pool-cl/libraries/SqrtPriceMath.sol";
 import {BaseMigrator, IV3NonfungiblePositionManager} from "../base/BaseMigrator.sol";
 import {ICLMigrator, PoolKey} from "./interfaces/ICLMigrator.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {LiquidityAmounts} from "./libraries/LiquidityAmounts.sol";
 import {ICLPositionManager} from "./interfaces/ICLPositionManager.sol";

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 import {SafeCallback} from "./SafeCallback.sol";
 import {CalldataDecoder} from "../libraries/CalldataDecoder.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {BaseBinTestHook} from "pancake-v4-core/test/pool-bin/helpers/BaseBinTestHook.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {BaseBinTestHook} from "infinity-core/test/pool-bin/helpers/BaseBinTestHook.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 
 /// @notice store hookData
 contract MockBinMigratorHook is BaseBinTestHook {

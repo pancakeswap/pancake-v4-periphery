@@ -2,8 +2,8 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
 
 /**
  * @dev PositionInfo is a packed version of solidity structure.

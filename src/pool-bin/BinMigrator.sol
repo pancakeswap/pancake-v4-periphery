@@ -6,7 +6,7 @@ import {BaseMigrator, IV3NonfungiblePositionManager} from "../base/BaseMigrator.
 import {IBinMigrator, PoolKey} from "./interfaces/IBinMigrator.sol";
 import {IBinPositionManager} from "./interfaces/IBinPositionManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Plan, Planner} from "../libraries/Planner.sol";
 import {Actions} from "../libraries/Actions.sol";

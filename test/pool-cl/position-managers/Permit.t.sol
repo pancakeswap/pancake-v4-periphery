@@ -3,15 +3,15 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 import {FixedPointMathLib} from "solmate/src/utils/FixedPointMathLib.sol";
 import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IERC721Permit_v4} from "../../../src/pool-cl/interfaces/IERC721Permit_v4.sol";
