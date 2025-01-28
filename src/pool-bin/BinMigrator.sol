@@ -27,47 +27,47 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
     /// @inheritdoc IBinMigrator
     function migrateFromV2(
         V2PoolParams calldata v2PoolParams,
-        V4BinPoolParams calldata v4PoolParams,
+        InfiBinPoolParams calldata infiPoolParams,
         uint256 extraAmount0,
         uint256 extraAmount1
     ) external payable override isNotLocked whenNotPaused {
         bool shouldReversePair = checkTokensOrderAndMatchFromV2(
-            v2PoolParams.pair, v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1
+            v2PoolParams.pair, infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1
         );
         (uint256 amount0Received, uint256 amount1Received) = withdrawLiquidityFromV2(v2PoolParams, shouldReversePair);
 
         /// @notice if user mannually specify the price range, they might need to send extra token
         batchAndNormalizeTokens(
-            v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1, extraAmount0, extraAmount1
+            infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1, extraAmount0, extraAmount1
         );
 
         uint256 amount0Input = amount0Received + extraAmount0;
         uint256 amount1Input = amount1Received + extraAmount1;
         IBinPositionManager.BinAddLiquidityParams memory addLiquidityParams = IBinPositionManager.BinAddLiquidityParams({
-            poolKey: v4PoolParams.poolKey,
+            poolKey: infiPoolParams.poolKey,
             amount0: amount0Input.toUint128(),
             amount1: amount1Input.toUint128(),
-            amount0Max: v4PoolParams.amount0Max,
-            amount1Max: v4PoolParams.amount1Max,
-            activeIdDesired: v4PoolParams.activeIdDesired,
-            idSlippage: v4PoolParams.idSlippage,
-            deltaIds: v4PoolParams.deltaIds,
-            distributionX: v4PoolParams.distributionX,
-            distributionY: v4PoolParams.distributionY,
-            to: v4PoolParams.to,
-            hookData: v4PoolParams.hookData
+            amount0Max: infiPoolParams.amount0Max,
+            amount1Max: infiPoolParams.amount1Max,
+            activeIdDesired: infiPoolParams.activeIdDesired,
+            idSlippage: infiPoolParams.idSlippage,
+            deltaIds: infiPoolParams.deltaIds,
+            distributionX: infiPoolParams.distributionX,
+            distributionY: infiPoolParams.distributionY,
+            to: infiPoolParams.to,
+            hookData: infiPoolParams.hookData
         });
 
         (uint256 amount0Consumed, uint256 amount1Consumed) =
-            _addLiquidityToTargetPool(addLiquidityParams, v4PoolParams.deadline);
+            _addLiquidityToTargetPool(addLiquidityParams, infiPoolParams.deadline);
 
         // refund if necessary, ETH is supported by CurrencyLib
         unchecked {
             if (amount0Input > amount0Consumed) {
-                v4PoolParams.poolKey.currency0.transfer(v4PoolParams.to, amount0Input - amount0Consumed);
+                infiPoolParams.poolKey.currency0.transfer(infiPoolParams.to, amount0Input - amount0Consumed);
             }
             if (amount1Input > amount1Consumed) {
-                v4PoolParams.poolKey.currency1.transfer(v4PoolParams.to, amount1Input - amount1Consumed);
+                infiPoolParams.poolKey.currency1.transfer(infiPoolParams.to, amount1Input - amount1Consumed);
             }
         }
     }
@@ -75,46 +75,46 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
     /// @inheritdoc IBinMigrator
     function migrateFromV3(
         V3PoolParams calldata v3PoolParams,
-        V4BinPoolParams calldata v4PoolParams,
+        InfiBinPoolParams calldata infiPoolParams,
         uint256 extraAmount0,
         uint256 extraAmount1
     ) external payable override isNotLocked whenNotPaused {
         bool shouldReversePair = checkTokensOrderAndMatchFromV3(
-            v3PoolParams.nfp, v3PoolParams.tokenId, v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1
+            v3PoolParams.nfp, v3PoolParams.tokenId, infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1
         );
         (uint256 amount0Received, uint256 amount1Received) = withdrawLiquidityFromV3(v3PoolParams, shouldReversePair);
 
         /// @notice if user mannually specify the price range, they need to send extra token
         batchAndNormalizeTokens(
-            v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1, extraAmount0, extraAmount1
+            infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1, extraAmount0, extraAmount1
         );
 
         uint256 amount0Input = amount0Received + extraAmount0;
         uint256 amount1Input = amount1Received + extraAmount1;
         IBinPositionManager.BinAddLiquidityParams memory addLiquidityParams = IBinPositionManager.BinAddLiquidityParams({
-            poolKey: v4PoolParams.poolKey,
+            poolKey: infiPoolParams.poolKey,
             amount0: amount0Input.toUint128(),
             amount1: amount1Input.toUint128(),
-            amount0Max: v4PoolParams.amount0Max,
-            amount1Max: v4PoolParams.amount1Max,
-            activeIdDesired: v4PoolParams.activeIdDesired,
-            idSlippage: v4PoolParams.idSlippage,
-            deltaIds: v4PoolParams.deltaIds,
-            distributionX: v4PoolParams.distributionX,
-            distributionY: v4PoolParams.distributionY,
-            to: v4PoolParams.to,
-            hookData: v4PoolParams.hookData
+            amount0Max: infiPoolParams.amount0Max,
+            amount1Max: infiPoolParams.amount1Max,
+            activeIdDesired: infiPoolParams.activeIdDesired,
+            idSlippage: infiPoolParams.idSlippage,
+            deltaIds: infiPoolParams.deltaIds,
+            distributionX: infiPoolParams.distributionX,
+            distributionY: infiPoolParams.distributionY,
+            to: infiPoolParams.to,
+            hookData: infiPoolParams.hookData
         });
         (uint256 amount0Consumed, uint256 amount1Consumed) =
-            _addLiquidityToTargetPool(addLiquidityParams, v4PoolParams.deadline);
+            _addLiquidityToTargetPool(addLiquidityParams, infiPoolParams.deadline);
 
         // refund if necessary, ETH is supported by CurrencyLib
         unchecked {
             if (amount0Input > amount0Consumed) {
-                v4PoolParams.poolKey.currency0.transfer(v4PoolParams.to, amount0Input - amount0Consumed);
+                infiPoolParams.poolKey.currency0.transfer(infiPoolParams.to, amount0Input - amount0Consumed);
             }
             if (amount1Input > amount1Consumed) {
-                v4PoolParams.poolKey.currency1.transfer(v4PoolParams.to, amount1Input - amount1Consumed);
+                infiPoolParams.poolKey.currency1.transfer(infiPoolParams.to, amount1Input - amount1Consumed);
             }
         }
     }

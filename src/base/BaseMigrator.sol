@@ -186,21 +186,21 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall, SelfPermitE
     ///         Return true if match but v2v3Token1 is WETH which should be ETH in infinity pair
     /// @param v2v3Token0 token0 from v2/v3 pair
     /// @param v2v3Token1 token1 from v2/v3 pair
-    /// @param v4Token0 token0 from infinity pair
-    /// @param v4Token1 token1 from infinity pair
+    /// @param infiToken0 token0 from infinity pair
+    /// @param infiToken1 token1 from infinity pair
     /// @return shouldReversePair if the order of tokens from v2/v3 pair is different from infinity pair (only when WETH is involved)
     function _checkIfTokenPairMatchAndOrder(
         address v2v3Token0,
         address v2v3Token1,
-        Currency v4Token0,
-        Currency v4Token1
+        Currency infiToken0,
+        Currency infiToken1
     ) private view returns (bool shouldReversePair) {
-        if (v4Token0.isNative() && v2v3Token0 == WETH9) {
-            if (Currency.unwrap(v4Token1) != v2v3Token1) {
+        if (infiToken0.isNative() && v2v3Token0 == WETH9) {
+            if (Currency.unwrap(infiToken1) != v2v3Token1) {
                 revert TOKEN_NOT_MATCH();
             }
-        } else if (v4Token0.isNative() && v2v3Token1 == WETH9) {
-            if (Currency.unwrap(v4Token1) != v2v3Token0) {
+        } else if (infiToken0.isNative() && v2v3Token1 == WETH9) {
+            if (Currency.unwrap(infiToken1) != v2v3Token0) {
                 revert TOKEN_NOT_MATCH();
             }
             shouldReversePair = true;
@@ -208,7 +208,7 @@ contract BaseMigrator is IBaseMigrator, Permit2Forwarder, Multicall, SelfPermitE
             /// @dev the order of token0 and token1 is always sorted
             /// v2: https://github.com/pancakeswap/pancake-swap-core-v2/blob/38aad83854a46a82ea0e31988ff3cddb2bffb71a/contracts/PancakeFactory.sol#L27
             /// v3: https://github.com/pancakeswap/pancake-v3-contracts/blob/5cc479f0c5a98966c74d94700057b8c3ca629afd/projects/v3-core/contracts/PancakeV3Factory.sol#L66
-            if (Currency.unwrap(v4Token0) != v2v3Token0 || Currency.unwrap(v4Token1) != v2v3Token1) {
+            if (Currency.unwrap(infiToken0) != v2v3Token0 || Currency.unwrap(infiToken1) != v2v3Token1) {
                 revert TOKEN_NOT_MATCH();
             }
         }

@@ -303,11 +303,11 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
                     amountIn = swapAmountOut - accAmountOut;
                 }
             } else if (action == MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory clParams =
-                    abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
-                (tokenIn, tokenOut) = convertWETHToV4NativeCurency(clParams.poolKey, tokenIn, tokenOut);
+                QuoteMixedInfiExactInputSingleParams memory clParams =
+                    abi.decode(params[actionIndex], (QuoteMixedInfiExactInputSingleParams));
+                (tokenIn, tokenOut) = convertWETHToInfiNativeCurency(clParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
-                checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
+                checkInfiPoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
                 IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
                     poolKey: clParams.poolKey,
@@ -317,8 +317,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
                 });
                 // will execute all swap history of same infinity pool in one transaction if withContext is true
                 if (withContext) {
-                    bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
-                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    bytes32 poolHash = MixedQuoterRecorder.getInfiCLPoolHash(clParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getInfiPoolSwapList(poolHash);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
                     uint256 swapHistoryListLength;
                     if (swapListBytes.length > 0) {
@@ -335,16 +335,16 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
 
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingleList(swapList);
                     swapListBytes = abi.encode(swapList);
-                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                    MixedQuoterRecorder.setInfiPoolSwapList(poolHash, swapListBytes);
                 } else {
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(swapParams);
                 }
             } else if (action == MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory binParams =
-                    abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
-                (tokenIn, tokenOut) = convertWETHToV4NativeCurency(binParams.poolKey, tokenIn, tokenOut);
+                QuoteMixedInfiExactInputSingleParams memory binParams =
+                    abi.decode(params[actionIndex], (QuoteMixedInfiExactInputSingleParams));
+                (tokenIn, tokenOut) = convertWETHToInfiNativeCurency(binParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
-                checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
+                checkInfiPoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
                 IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
                     poolKey: binParams.poolKey,
@@ -354,8 +354,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
                 });
                 // will execute all swap history of same infinity pool in one transaction if withContext is true
                 if (withContext) {
-                    bytes32 poolHash = MixedQuoterRecorder.getV4BinPoolHash(binParams.poolKey);
-                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    bytes32 poolHash = MixedQuoterRecorder.getInfiBinPoolHash(binParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getInfiPoolSwapList(poolHash);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
                     uint256 swapHistoryListLength;
                     if (swapListBytes.length > 0) {
@@ -372,7 +372,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
 
                     (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingleList(swapList);
                     swapListBytes = abi.encode(swapList);
-                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                    MixedQuoterRecorder.setInfiPoolSwapList(poolHash, swapListBytes);
                 } else {
                     (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingle(swapParams);
                 }
@@ -431,7 +431,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
     }
 
     /// @dev Check if the poolKey currency matches the tokenIn and tokenOut
-    function checkV4PoolKeyCurrency(PoolKey memory poolKey, bool isZeroForOne, address tokenIn, address tokenOut)
+    function checkInfiPoolKeyCurrency(PoolKey memory poolKey, bool isZeroForOne, address tokenIn, address tokenOut)
         private
         pure
     {
@@ -452,7 +452,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
     /// @notice Convert WETH to native currency for infinity pools
     /// @dev for example, quote route are v3 WETH pool[token0, WETH] and infinity native pool[NATIVE,token1]
     /// paths is [token0, WETH, token1], we need to convert WETH to NATIVE when quote infinity pool
-    function convertWETHToV4NativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)
+    function convertWETHToInfiNativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)
         private
         view
         returns (address, address)

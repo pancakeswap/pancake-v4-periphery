@@ -125,7 +125,7 @@ library MixedQuoterRecorder {
     /// @dev Record the swap history list of infinity pool.
     /// @param poolHash The hash of the pool.
     /// @param swapListBytes The swap history list bytes.
-    function setV4PoolSwapList(bytes32 poolHash, bytes memory swapListBytes) internal {
+    function setInfiPoolSwapList(bytes32 poolHash, bytes memory swapListBytes) internal {
         uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
         assembly ("memory-safe") {
             // save the length of the bytes
@@ -142,7 +142,7 @@ library MixedQuoterRecorder {
     /// @dev Get the swap history list of infinity pool.
     /// @param poolHash The hash of the pool.
     /// @return swapListBytes The swap history list bytes.
-    function getV4PoolSwapList(bytes32 poolHash) internal view returns (bytes memory swapListBytes) {
+    function getInfiPoolSwapList(bytes32 poolHash) internal view returns (bytes memory swapListBytes) {
         uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
         assembly ("memory-safe") {
             // get the length of the bytes
@@ -190,14 +190,14 @@ library MixedQuoterRecorder {
     /// @dev Get the infinity cl pool hash.
     /// @param key The pool key.
     /// @return poolHash The hash of the pool.
-    function getV4CLPoolHash(PoolKey memory key) internal pure returns (bytes32) {
+    function getInfiCLPoolHash(PoolKey memory key) internal pure returns (bytes32) {
         return keccak256(abi.encode(key, SWAP_V4_CL));
     }
 
     /// @dev Get the infinity bin pool hash.
     /// @param key The pool key.
     /// @return poolHash The hash of the pool.
-    function getV4BinPoolHash(PoolKey memory key) internal pure returns (bytes32) {
+    function getInfiBinPoolHash(PoolKey memory key) internal pure returns (bytes32) {
         return keccak256(abi.encode(key, SWAP_V4_BIN));
     }
 }

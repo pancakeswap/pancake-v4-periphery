@@ -10,7 +10,7 @@ interface ICLMigrator is IBaseMigrator {
 
     /// @notice same fields as INonfungiblePositionManager.MintParams
     /// except amount0Desired/amount1Desired which will be calculated by migrator
-    struct V4CLPoolParams {
+    struct InfiCLPoolParams {
         PoolKey poolKey;
         int24 tickLower;
         int24 tickUpper;
@@ -34,14 +34,14 @@ interface ICLMigrator is IBaseMigrator {
 
     /// @notice Migrate liquidity from v2 to infinity
     /// @param v2PoolParams ncessary info for removing liqudity the source v2 pool
-    /// @param v4PoolParams necessary info for adding liquidity the target infinity cl-pool
+    /// @param infiPoolParams necessary info for adding liquidity the target infinity cl-pool
     /// @param extraAmount0 the extra amount of token0 that user wants to add (optional, usually 0)
     /// if pool token0 is ETH and msg.value == 0, WETH will be taken from sender.
     /// Otherwise if pool token0 is ETH and msg.value !=0, method will assume user have sent extraAmount0 in msg.value
     /// @param extraAmount1 the extra amount of token1 that user wants to add (optional, usually 0)
     function migrateFromV2(
         V2PoolParams calldata v2PoolParams,
-        V4CLPoolParams calldata v4PoolParams,
+        InfiCLPoolParams calldata infiPoolParams,
         // extra funds to be added
         uint256 extraAmount0,
         uint256 extraAmount1
@@ -49,14 +49,14 @@ interface ICLMigrator is IBaseMigrator {
 
     /// @notice Migrate liquidity from v3 to infinity
     /// @param v3PoolParams ncessary info for removing liqudity the source v3 pool
-    /// @param v4PoolParams necessary info for adding liquidity the target infinity cl-pool
+    /// @param infiPoolParams necessary info for adding liquidity the target infinity cl-pool
     /// @param extraAmount0 the extra amount of token0 that user wants to add (optional, usually 0)
     /// if pool token0 is ETH and msg.value == 0, WETH will be taken from sender.
     /// Otherwise if pool token0 is ETH and msg.value !=0, method will assume user have sent extraAmount0 in msg.value
     /// @param extraAmount1 the extra amount of token1 that user wants to add (optional, usually 0)
     function migrateFromV3(
         V3PoolParams calldata v3PoolParams,
-        V4CLPoolParams calldata v4PoolParams,
+        InfiCLPoolParams calldata infiPoolParams,
         // extra funds to be added
         uint256 extraAmount0,
         uint256 extraAmount1

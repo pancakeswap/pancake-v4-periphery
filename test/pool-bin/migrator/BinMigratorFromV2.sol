@@ -164,7 +164,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -184,7 +184,7 @@ abstract contract BinMigratorFromV2 is
 
         // 4. migrateFromV2
         vm.expectRevert(Pausable.EnforcedPause.selector);
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
     }
 
     function testMigrateFromV2_HookData() public {
@@ -212,7 +212,7 @@ abstract contract BinMigratorFromV2 is
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
         bytes memory hookData = abi.encode(32);
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -227,7 +227,7 @@ abstract contract BinMigratorFromV2 is
         });
 
         // 4. migrateFromV2
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
 
         // assert hookData flown to hook
         assertEq(binMigratorHook.hookData(), hookData);
@@ -262,7 +262,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -277,7 +277,7 @@ abstract contract BinMigratorFromV2 is
         });
 
         vm.expectRevert(ReentrancyLock.ContractLocked.selector);
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
     }
 
     function testMigrateFromV2IncludingInit() public {
@@ -302,7 +302,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -319,7 +319,7 @@ abstract contract BinMigratorFromV2 is
         // 3. multicall, combine initialize and migrateFromV2
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, ACTIVE_BIN_ID, bytes(""));
-        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4BinPoolParams, 0, 0);
+        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiBinPoolParams, 0, 0);
 
         migrator.multicall(data);
         vm.snapshotGasLastCall("testMigrateFromV2IncludingInit");
@@ -392,7 +392,7 @@ abstract contract BinMigratorFromV2 is
         // infinity ETH, token1
         PoolKey memory poolKeyMismatch = poolKey;
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: poolKeyMismatch,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -409,7 +409,7 @@ abstract contract BinMigratorFromV2 is
         // 3. multicall, combine initialize and migrateFromV2
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKeyMismatch, ACTIVE_BIN_ID, bytes(""));
-        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4BinPoolParams, 0, 0);
+        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiBinPoolParams, 0, 0);
         vm.expectRevert();
         migrator.multicall(data);
 
@@ -418,11 +418,11 @@ abstract contract BinMigratorFromV2 is
             // infinity token0, token1
             poolKeyMismatch.currency0 = Currency.wrap(address(token0));
             poolKeyMismatch.currency1 = Currency.wrap(address(token1));
-            v4BinPoolParams.poolKey = poolKeyMismatch;
+            infiBinPoolParams.poolKey = poolKeyMismatch;
             data = new bytes[](2);
             data[0] =
                 abi.encodeWithSelector(migrator.initializePool.selector, poolKeyMismatch, ACTIVE_BIN_ID, bytes(""));
-            data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4BinPoolParams, 0, 0);
+            data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiBinPoolParams, 0, 0);
             vm.expectRevert();
             migrator.multicall(data);
         }
@@ -453,7 +453,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -468,7 +468,7 @@ abstract contract BinMigratorFromV2 is
         });
 
         // 4. migrateFromV2
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
         vm.snapshotGasLastCall("testMigrateFromV2WithoutInit");
 
         // necessary checks
@@ -544,7 +544,7 @@ abstract contract BinMigratorFromV2 is
             poolKeyWithoutNativeToken, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this)
         );
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory InfiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -559,7 +559,7 @@ abstract contract BinMigratorFromV2 is
         });
 
         // 4. migrate from v2 to infinity
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, InfiBinPoolParams, 0, 0);
         vm.snapshotGasLastCall("testMigrateFromV2WithoutNativeToken");
 
         // necessary checks
@@ -629,7 +629,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -650,7 +650,7 @@ abstract contract BinMigratorFromV2 is
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
         // 4. migrate from v2 to infinity
-        migrator.migrateFromV2{value: 20 ether}(v2PoolParams, v4BinPoolParams, 20 ether, 20 ether);
+        migrator.migrateFromV2{value: 20 ether}(v2PoolParams, infiBinPoolParams, 20 ether, 20 ether);
 
         // necessary checks
         // consumed extra 20 ether from user
@@ -726,7 +726,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -750,7 +750,7 @@ abstract contract BinMigratorFromV2 is
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
         // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 20 ether, 20 ether);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 20 ether, 20 ether);
 
         // necessary checks
         // consumed extra 20 ether from user
@@ -842,7 +842,7 @@ abstract contract BinMigratorFromV2 is
         // delete the last distribution point so that the refund is triggered
         // we expect to get 50% of tokenX back
         // (0, 50%) (50%, 50%) (50%, 0) => (0, 50%) (50%, 50%)
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -860,7 +860,7 @@ abstract contract BinMigratorFromV2 is
         uint256 balance1Before = token0.balanceOf(address(this));
 
         // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
 
         // necessary checks
         // refund 5 ether in the form of native token
@@ -953,7 +953,7 @@ abstract contract BinMigratorFromV2 is
         // delete the last distribution point so that the refund is triggered
         // we expect to get 50% of tokenX back
         // (0, 50%) (50%, 50%) (50%, 0) => (0, 50%) (50%, 50%)
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -971,7 +971,7 @@ abstract contract BinMigratorFromV2 is
         uint256 balance1Before = token1.balanceOf(address(this));
 
         // 4. migrate from v2 to infinity
-        migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
 
         // necessary checks
 
@@ -1064,7 +1064,7 @@ abstract contract BinMigratorFromV2 is
         IBinPositionManager.BinAddLiquidityParams memory params =
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -1082,7 +1082,7 @@ abstract contract BinMigratorFromV2 is
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, ACTIVE_BIN_ID, bytes(""));
         data[1] = abi.encodeWithSelector(Permit2Forwarder.permit.selector, userAddr, permit, sig);
-        data[2] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4BinPoolParams, 0, 0);
+        data[2] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiBinPoolParams, 0, 0);
         vm.startPrank(userAddr);
         v2Pair.permit(userAddr, address(permit2), lpTokenBefore, ddl, v, r, s);
         migrator.multicall(data);

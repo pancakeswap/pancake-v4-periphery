@@ -828,7 +828,7 @@ contract MixedQuoterTest is
         assertLe(diff, 2);
     }
 
-    function testV4CLquoteExactInputSingle_ZeroForOne() public {
+    function testInfiCLquoteExactInputSingle_ZeroForOne() public {
         address[] memory paths = new address[](2);
         paths[0] = address(Currency.unwrap(poolKey.currency0));
         paths[1] = address(Currency.unwrap(poolKey.currency1));
@@ -838,7 +838,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
@@ -868,7 +868,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         // swap 0.5 ether
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
         assertEq(amountOut, 498417179678643398);
@@ -947,7 +947,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
@@ -1028,7 +1028,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
@@ -1063,7 +1063,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] = abi.encode(
-            IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKeyWithWETH, hookData: ZERO_BYTES})
+            IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKeyWithWETH, hookData: ZERO_BYTES})
         );
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
@@ -1094,7 +1094,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
@@ -1124,7 +1124,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
         // swap 0.5 ether
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 0.5 ether);
         uint256 swapPath1Output = amountOut;
@@ -1196,7 +1196,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
         bytes[] memory multicallBytes = new bytes[](2);
         multicallBytes[0] = abi.encodeWithSelector(
@@ -1277,7 +1277,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](1);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
@@ -1314,7 +1314,7 @@ contract MixedQuoterTest is
         actions1[2] = bytes1(uint8(MixedQuoterActions.V3_EXACT_INPUT_SINGLE));
         bytes[] memory params1 = new bytes[](3);
         params1[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         params1[1] = new bytes(0);
         uint24 fee = 500;
         params1[2] = abi.encode(fee);
@@ -1333,7 +1333,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params2 = new bytes[](3);
         params2[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         params2[1] = new bytes(0);
         params2[2] = new bytes(0);
 
@@ -1448,7 +1448,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](2);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         params[1] = new bytes(0);
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
@@ -1474,7 +1474,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](3);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         params[1] = new bytes(0);
         uint24 fee = 500;
         params[2] = abi.encode(fee);
@@ -1504,11 +1504,11 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](4);
         params[0] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKey, hookData: ZERO_BYTES}));
         params[1] = new bytes(0);
         params[2] = new bytes(0);
         params[3] =
-            abi.encode(IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
+            abi.encode(IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: binPoolKey, hookData: ZERO_BYTES}));
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
 
@@ -1533,7 +1533,7 @@ contract MixedQuoterTest is
         uint24 fee = 500;
         params[0] = abi.encode(fee);
         params[1] = abi.encode(
-            IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
+            IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
         );
 
         (uint256 amountOut, uint256 gasEstimate) = mixedQuoter.quoteMixedExactInput(paths, actions, params, 1 ether);
@@ -1557,7 +1557,7 @@ contract MixedQuoterTest is
 
         bytes[] memory params = new bytes[](2);
         params[0] = abi.encode(
-            IMixedQuoter.QuoteMixedV4ExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
+            IMixedQuoter.QuoteMixedInfiExactInputSingleParams({poolKey: poolKeyWithNativeToken, hookData: ZERO_BYTES})
         );
         uint24 fee = 500;
         params[1] = abi.encode(fee);

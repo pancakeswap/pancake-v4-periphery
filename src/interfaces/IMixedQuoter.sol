@@ -16,7 +16,7 @@ interface IMixedQuoter {
     error NoActions();
     error UnsupportedAction(uint256 action);
 
-    struct QuoteMixedV4ExactInputSingleParams {
+    struct QuoteMixedInfiExactInputSingleParams {
         PoolKey poolKey;
         bytes hookData;
     }
@@ -50,8 +50,8 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// INFI_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// INFI_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedInfiExactInputSingleParams`
+    /// INFI_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedInfiExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     /// @return gasEstimate The estimate of the gas that the swap consumes
@@ -71,8 +71,8 @@ interface IMixedQuoter {
     /// SS_3_EXACT_INPUT_SINGLE params are zero bytes
     /// V2_EXACT_INPUT_SINGLE params are zero bytes
     /// V3_EXACT_INPUT_SINGLE params are encoded as `uint24 fee`
-    /// INFI_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
-    /// V4_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedV4ExactInputSingleParams`
+    /// INFI_CL_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedInfiExactInputSingleParams`
+    /// INFI_EXACT_INPUT_SINGLE params are encoded as `QuoteMixedInfiExactInputSingleParams`
     /// @param amountIn The amount of the first token to swap
     /// @return amountOut The amount of the last token that would be received
     /// @return gasEstimate The estimate of the gas that the swap consumes

@@ -29,43 +29,43 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
     /// @inheritdoc ICLMigrator
     function migrateFromV2(
         V2PoolParams calldata v2PoolParams,
-        V4CLPoolParams calldata v4PoolParams,
+        InfiCLPoolParams calldata infiPoolParams,
         uint256 extraAmount0,
         uint256 extraAmount1
     ) external payable override isNotLocked whenNotPaused {
         bool shouldReversePair = checkTokensOrderAndMatchFromV2(
-            v2PoolParams.pair, v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1
+            v2PoolParams.pair, infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1
         );
 
         (uint256 amount0Received, uint256 amount1Received) = withdrawLiquidityFromV2(v2PoolParams, shouldReversePair);
 
         /// @notice if user mannually specify the price range, they might need to send extra token
         batchAndNormalizeTokens(
-            v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1, extraAmount0, extraAmount1
+            infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1, extraAmount0, extraAmount1
         );
 
         uint256 amount0In = amount0Received + extraAmount0;
         uint256 amount1In = amount1Received + extraAmount1;
         MintParams memory mintParams = MintParams({
-            poolKey: v4PoolParams.poolKey,
-            tickLower: v4PoolParams.tickLower,
-            tickUpper: v4PoolParams.tickUpper,
+            poolKey: infiPoolParams.poolKey,
+            tickLower: infiPoolParams.tickLower,
+            tickUpper: infiPoolParams.tickUpper,
             amount0In: uint128(amount0In),
             amount1In: uint128(amount1In),
-            liquidityMin: v4PoolParams.liquidityMin,
-            recipient: v4PoolParams.recipient,
-            hookData: v4PoolParams.hookData
+            liquidityMin: infiPoolParams.liquidityMin,
+            recipient: infiPoolParams.recipient,
+            hookData: infiPoolParams.hookData
         });
         (uint256 amount0Consumed, uint256 amount1Consumed) =
-            _addLiquidityToTargetPool(mintParams, v4PoolParams.deadline);
+            _addLiquidityToTargetPool(mintParams, infiPoolParams.deadline);
 
         // refund if necessary, ETH is supported by CurrencyLib
         unchecked {
             if (amount0In > amount0Consumed) {
-                v4PoolParams.poolKey.currency0.transfer(v4PoolParams.recipient, amount0In - amount0Consumed);
+                infiPoolParams.poolKey.currency0.transfer(infiPoolParams.recipient, amount0In - amount0Consumed);
             }
             if (amount1In > amount1Consumed) {
-                v4PoolParams.poolKey.currency1.transfer(v4PoolParams.recipient, amount1In - amount1Consumed);
+                infiPoolParams.poolKey.currency1.transfer(infiPoolParams.recipient, amount1In - amount1Consumed);
             }
         }
     }
@@ -73,42 +73,42 @@ contract CLMigrator is ICLMigrator, BaseMigrator, ReentrancyLock {
     /// @inheritdoc ICLMigrator
     function migrateFromV3(
         V3PoolParams calldata v3PoolParams,
-        V4CLPoolParams calldata v4PoolParams,
+        InfiCLPoolParams calldata infiPoolParams,
         uint256 extraAmount0,
         uint256 extraAmount1
     ) external payable override isNotLocked whenNotPaused {
         bool shouldReversePair = checkTokensOrderAndMatchFromV3(
-            v3PoolParams.nfp, v3PoolParams.tokenId, v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1
+            v3PoolParams.nfp, v3PoolParams.tokenId, infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1
         );
         (uint256 amount0Received, uint256 amount1Received) = withdrawLiquidityFromV3(v3PoolParams, shouldReversePair);
 
         /// @notice if user mannually specify the price range, they need to send extra token
         batchAndNormalizeTokens(
-            v4PoolParams.poolKey.currency0, v4PoolParams.poolKey.currency1, extraAmount0, extraAmount1
+            infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1, extraAmount0, extraAmount1
         );
 
         uint256 amount0In = amount0Received + extraAmount0;
         uint256 amount1In = amount1Received + extraAmount1;
         MintParams memory mintParams = MintParams({
-            poolKey: v4PoolParams.poolKey,
-            tickLower: v4PoolParams.tickLower,
-            tickUpper: v4PoolParams.tickUpper,
+            poolKey: infiPoolParams.poolKey,
+            tickLower: infiPoolParams.tickLower,
+            tickUpper: infiPoolParams.tickUpper,
             amount0In: uint128(amount0In),
             amount1In: uint128(amount1In),
-            liquidityMin: v4PoolParams.liquidityMin,
-            recipient: v4PoolParams.recipient,
-            hookData: v4PoolParams.hookData
+            liquidityMin: infiPoolParams.liquidityMin,
+            recipient: infiPoolParams.recipient,
+            hookData: infiPoolParams.hookData
         });
         (uint256 amount0Consumed, uint256 amount1Consumed) =
-            _addLiquidityToTargetPool(mintParams, v4PoolParams.deadline);
+            _addLiquidityToTargetPool(mintParams, infiPoolParams.deadline);
 
         // refund if necessary, ETH is supported by CurrencyLib
         unchecked {
             if (amount0In > amount0Consumed) {
-                v4PoolParams.poolKey.currency0.transfer(v4PoolParams.recipient, amount0In - amount0Consumed);
+                infiPoolParams.poolKey.currency0.transfer(infiPoolParams.recipient, amount0In - amount0Consumed);
             }
             if (amount1In > amount1Consumed) {
-                v4PoolParams.poolKey.currency1.transfer(v4PoolParams.recipient, amount1In - amount1Consumed);
+                infiPoolParams.poolKey.currency1.transfer(infiPoolParams.recipient, amount1In - amount1Consumed);
             }
         }
     }
