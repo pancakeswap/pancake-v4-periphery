@@ -19,7 +19,7 @@ import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
  */
 contract DeployBinQuoterScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/BinQuoter/0.92");
+        return keccak256("INFINITY-PERIPHERY/BinQuoter/0.92");
     }
 
     function run() public {
