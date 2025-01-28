@@ -23,7 +23,7 @@ import {CLCalldataDecoder} from "./libraries/CLCalldataDecoder.sol";
 import {Actions} from "../libraries/Actions.sol";
 import {ERC721Permit_v4} from "./base/ERC721Permit_v4.sol";
 import {SlippageCheck} from "../libraries/SlippageCheck.sol";
-import {Multicall_v4} from "../base/Multicall_v4.sol";
+import {Multicall} from "../base/Multicall.sol";
 import {CLNotifier} from "./base/CLNotifier.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "./libraries/CLPositionInfoLibrary.sol";
 import {ICLSubscriber} from "./interfaces/ICLSubscriber.sol";
@@ -38,7 +38,7 @@ import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 contract CLPositionManager is
     ICLPositionManager,
     ERC721Permit_v4,
-    Multicall_v4,
+    Multicall,
     DeltaResolver,
     ReentrancyLock,
     BaseActionsRouter,

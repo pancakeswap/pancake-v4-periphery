@@ -27,7 +27,7 @@ import {Actions} from "../libraries/Actions.sol";
 import {BinCalldataDecoder} from "./libraries/BinCalldataDecoder.sol";
 import {BinFungibleToken} from "./BinFungibleToken.sol";
 import {BinTokenLibrary} from "./libraries/BinTokenLibrary.sol";
-import {Multicall_v4} from "../base/Multicall_v4.sol";
+import {Multicall} from "../base/Multicall.sol";
 import {SlippageCheck} from "../libraries/SlippageCheck.sol";
 import {NativeWrapper} from "../base/NativeWrapper.sol";
 import {IWETH9} from "../interfaces/external/IWETH9.sol";
@@ -41,7 +41,7 @@ contract BinPositionManager is
     ReentrancyLock,
     BaseActionsRouter,
     Permit2Forwarder,
-    Multicall_v4,
+    Multicall,
     NativeWrapper
 {
     using CalldataDecoder for bytes;

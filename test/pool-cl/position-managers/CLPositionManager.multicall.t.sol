@@ -21,7 +21,7 @@ import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPool
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 import {IERC721Permit_v4} from "../../../src/pool-cl/base/ERC721Permit_v4.sol";
-import {IMulticall_v4} from "../../../src/interfaces/IMulticall_v4.sol";
+import {IMulticall} from "../../../src/interfaces/IMulticall.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
@@ -124,7 +124,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
 
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
-        IMulticall_v4(address(lpm)).multicall(calls);
+        IMulticall(address(lpm)).multicall(calls);
 
         // test swap, doesn't revert, showing the pool was initialized
         int256 amountSpecified = -1e18;
@@ -225,7 +225,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         bytes memory actions = planner.finalizeModifyLiquidityWithClose(key);
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
-        IMulticall_v4(address(lpm)).multicall(calls);
+        IMulticall(address(lpm)).multicall(calls);
 
         // test swap, doesn't revert, showing the mint succeeded even after initialize reverted
         int256 amountSpecified = -1e18;

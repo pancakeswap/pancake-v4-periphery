@@ -19,7 +19,7 @@ import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPool
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
-import {IMulticall_v4} from "../../../src/interfaces/IMulticall_v4.sol";
+import {IMulticall} from "../../../src/interfaces/IMulticall.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
@@ -421,7 +421,7 @@ contract CLPositionManagerGasTest is Test, PosmTestSetup {
 
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
-        IMulticall_v4(lpm).multicall(calls);
+        IMulticall(lpm).multicall(calls);
         vm.snapshotGasLastCall("test_gas_multicall_initialize_mint");
     }
 
