@@ -82,7 +82,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
         token1 = new MockERC20("Token1", "TKN1", 18);
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
 
-        // init v4 nfpm & migrator
+        // init infinity nfpm & migrator
         vault = new Vault();
         poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
@@ -414,7 +414,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
         // v3 weth, token0
-        // v4 ETH, token1
+        // infinity ETH, token1
         PoolKey memory poolKeyMismatch = poolKey;
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
@@ -440,7 +440,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
 
         {
             // v3 weth, token0
-            // v4 token0, token1
+            // infinity token0, token1
             poolKeyMismatch.currency0 = Currency.wrap(address(token0));
             poolKeyMismatch.currency1 = Currency.wrap(address(token1));
             v4BinPoolParams.poolKey = poolKeyMismatch;
@@ -582,7 +582,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
         vm.snapshotGasLastCall("testMigrateFromV3WithoutNativeToken");
 
@@ -675,7 +675,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3{value: 20 ether}(v3PoolParams, v4BinPoolParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -800,7 +800,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
             0x0000000000000000000000000000000000000000000000000000000000000000,
             0x0000000000000000000000000000000000000000000000000000000000000000
         );
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3{value: 20 ether}(v3PoolParams, v4BinPoolParams, 20 ether, 20 ether);
 
         uint256 nativeBlanceAfter = address(this).balance;
@@ -868,7 +868,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v3 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v3 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -980,7 +980,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
         uint256 balance0Before = address(this).balance;
         uint256 balance1Before = token0.balanceOf(address(this));
 
-        // 4. migrate from v3 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v3 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
 
         // necessary checks
@@ -1089,7 +1089,7 @@ abstract contract BinMigratorFromV3 is OldVersionHelper, BinLiquidityHelper, Dep
         uint256 balance0Before = token0.balanceOf(address(this));
         uint256 balance1Before = token1.balanceOf(address(this));
 
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
 
         // necessary checks

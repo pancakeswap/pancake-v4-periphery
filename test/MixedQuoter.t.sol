@@ -898,7 +898,7 @@ contract MixedQuoterTest is
         // -1 is due to precision round loss
         assertEq(amountOutOfRoute2, swapPath2Output - 1);
 
-        // swap 0.5 ether in v4 pool
+        // swap 0.5 ether in cl pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 0.5 ether, 0, ZERO_BYTES);
 
@@ -911,7 +911,7 @@ contract MixedQuoterTest is
         uint256 route1Token1Received = route1Token1BalanceAfter - route1Token1BalanceBefore;
         assertEq(route1Token1Received, swapPath1Output);
 
-        // swap another 0.5 ether in v4 pool
+        // swap another 0.5 ether in infinity cl pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams2 =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 0.5 ether, 0, ZERO_BYTES);
         plan = Planner.init();
@@ -961,7 +961,7 @@ contract MixedQuoterTest is
         (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
 
-        // first swap in v4 pool
+        // first swap in infinity cl pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, isZeroForOne, firstSwapAmount, 0, ZERO_BYTES);
 
@@ -989,7 +989,7 @@ contract MixedQuoterTest is
         uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
         assertEq(route1TokenOutReceived, amountOutOfRoute1);
 
-        // second swap in v4 pool
+        // second swap in infinity cl pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams2 =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, isZeroForOne, secondSwapAmount, 0, ZERO_BYTES);
         plan = Planner.init();
@@ -1147,7 +1147,7 @@ contract MixedQuoterTest is
         assertEq(amountOutOfRoute1, swapPath1Output);
         assertEq(amountOutOfRoute2, swapPath2Output);
 
-        // swap 0.5 ether in v4 bin pool
+        // swap 0.5 ether in infinity bin pool
         IBinRouterBase.BinSwapExactInputSingleParams memory swapParams1 =
             IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, true, 0.5 ether, 0, ZERO_BYTES);
         plan = plan.add(Actions.BIN_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
@@ -1160,7 +1160,7 @@ contract MixedQuoterTest is
         uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
         assertEq(route1TokenOutReceived, amountOutOfRoute1);
 
-        // swap another 0.5 ether in v4 bin pool
+        // swap another 0.5 ether in infinity bin pool
         IBinRouterBase.BinSwapExactInputSingleParams memory swapParams2 =
             IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, true, 0.5 ether, 0, ZERO_BYTES);
         plan = Planner.init();
@@ -1210,7 +1210,7 @@ contract MixedQuoterTest is
         (uint256 amountOutOfRoute1,) = abi.decode(results[0], (uint256, uint256));
         (uint256 amountOutOfRoute2,) = abi.decode(results[1], (uint256, uint256));
 
-        // first swap in v4 bin pool
+        // first swap in infinity bin pool
         IBinRouterBase.BinSwapExactInputSingleParams memory swapParams1 =
             IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, isZeroForOne, firstSwapAmount, 0, ZERO_BYTES);
 
@@ -1238,7 +1238,7 @@ contract MixedQuoterTest is
         uint256 route1TokenOutReceived = route1TokenOutBalanceAfter - route1TokenOutBalanceBefore;
         assertEq(route1TokenOutReceived, amountOutOfRoute1);
 
-        // second swap in v4 bin pool
+        // second swap in infinity bin pool
         IBinRouterBase.BinSwapExactInputSingleParams memory swapParams2 =
             IBinRouterBase.BinSwapExactInputSingleParams(binPoolKey, isZeroForOne, secondSwapAmount, 0, ZERO_BYTES);
         plan = Planner.init();
@@ -1365,7 +1365,7 @@ contract MixedQuoterTest is
 
         // route 1: path 1: token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v3 pool
         uint256 route1Token1BalanceBefore = token1.balanceOf(address(this));
-        // swap 1 ether in v4 cl pool
+        // swap 1 ether in infinity cl pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams1 =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 1 ether, 0, ZERO_BYTES);
         plan = plan.add(Actions.CL_SWAP_EXACT_IN_SINGLE, abi.encode(swapParams1));
@@ -1400,7 +1400,7 @@ contract MixedQuoterTest is
 
         // route 2: path 2: token0 -> token1 -> token2 -> weth, cl pool -> ss pool -> v2 pool
         uint256 route2Token1BalanceBefore = token1.balanceOf(address(this));
-        // swap 1 ether in v4 cl pool
+        // swap 1 ether in infinity cl pool
         ICLRouterBase.CLSwapExactInputSingleParams memory swapParams3 =
             ICLRouterBase.CLSwapExactInputSingleParams(poolKey, true, 1 ether, 0, ZERO_BYTES);
         plan = Planner.init();

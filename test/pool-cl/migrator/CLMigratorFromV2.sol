@@ -150,7 +150,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         CLMigrator _migrator = CLMigrator(payable(address(migrator)));
         _migrator.pause();
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         vm.expectRevert(Pausable.EnforcedPause.selector);
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
     }
@@ -308,7 +308,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // v2 weth, token0
-        // v4 ETH, token1
+        // infinity ETH, token1
         PoolKey memory poolKeyMismatch = poolKey;
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
         ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
@@ -331,7 +331,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         {
             // v2 weth, token0
-            // v4 token0, token1
+            // infinity token0, token1
             poolKeyMismatch.currency0 = Currency.wrap(address(token0));
             poolKeyMismatch.currency1 = Currency.wrap(address(token1));
             v4MintParams.poolKey = poolKeyMismatch;
@@ -416,7 +416,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
         vm.snapshotGasLastCall("testCLMigrateFromV2WithoutInit");
 
@@ -472,7 +472,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
         vm.snapshotGasLastCall("testCLMigrateFromV2WithoutNativeToken");
 
@@ -530,7 +530,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2{value: 20 ether}(v2PoolParams, v4MintParams, 20 ether, uint160(20 ether));
 
         // necessary checks
@@ -597,7 +597,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -667,7 +667,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), extraAmount, uint160(extraAmount)
         );
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV2(v2PoolParams, v4MintParams, extraAmount, extraAmount);
 
         // clPositionManager native balance should be 0
@@ -723,7 +723,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             pair: address(v2Pair),
             migrateAmount: lpTokenBefore,
             // the order of token0 and token1 respect to the pair
-            // but may mismatch the order of v4 pool key when WETH is invovled
+            // but may mismatch the order of infinity pool key when WETH is invovled
             amount0Min: isWETHFirst ? 9.999 ether : 4.999 ether,
             amount1Min: isWETHFirst ? 4.999 ether : 9.999 ether
         });
@@ -741,7 +741,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 balance0Before = address(this).balance;
         uint256 balance1Before = token0.balanceOf(address(this));
 
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
 
         // necessary checks
@@ -790,7 +790,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             pair: address(v2PairWithoutNativeToken),
             migrateAmount: lpTokenBefore,
             // the order of token0 and token1 respect to the pair
-            // but may mismatch the order of v4 pool key when WETH is invovled
+            // but may mismatch the order of infinity pool key when WETH is invovled
             amount0Min: 9.999 ether,
             amount1Min: 4.999 ether
         });
@@ -808,7 +808,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 balance0Before = token0.balanceOf(address(this));
         uint256 balance1Before = token1.balanceOf(address(this));
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
 
         // necessary checks

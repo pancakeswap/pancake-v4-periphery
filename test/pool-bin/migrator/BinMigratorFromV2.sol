@@ -83,7 +83,7 @@ abstract contract BinMigratorFromV2 is
         token1 = new MockERC20("Token1", "TKN1", 18);
         (token0, token1) = token0 < token1 ? (token0, token1) : (token1, token0);
 
-        // init v4 nfpm & migrator
+        // init infinity nfpm & migrator
         vault = new Vault();
         poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
@@ -389,7 +389,7 @@ abstract contract BinMigratorFromV2 is
             _getAddParams(poolKey, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this));
 
         // v2 weth, token0
-        // v4 ETH, token1
+        // infinity ETH, token1
         PoolKey memory poolKeyMismatch = poolKey;
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
         IBinMigrator.V4BinPoolParams memory v4BinPoolParams = IBinMigrator.V4BinPoolParams({
@@ -415,7 +415,7 @@ abstract contract BinMigratorFromV2 is
 
         {
             // v2 weth, token0
-            // v4 token0, token1
+            // infinity token0, token1
             poolKeyMismatch.currency0 = Currency.wrap(address(token0));
             poolKeyMismatch.currency1 = Currency.wrap(address(token1));
             v4BinPoolParams.poolKey = poolKeyMismatch;
@@ -558,7 +558,7 @@ abstract contract BinMigratorFromV2 is
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
         vm.snapshotGasLastCall("testMigrateFromV2WithoutNativeToken");
 
@@ -649,7 +649,7 @@ abstract contract BinMigratorFromV2 is
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2{value: 20 ether}(v2PoolParams, v4BinPoolParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -749,7 +749,7 @@ abstract contract BinMigratorFromV2 is
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -819,7 +819,7 @@ abstract contract BinMigratorFromV2 is
             pair: address(v2Pair),
             migrateAmount: lpTokenBefore,
             // the order of token0 and token1 respect to the pair
-            // but may mismatch the order of v4 pool key when WETH is invovled
+            // but may mismatch the order of infinity pool key when WETH is invovled
             amount0Min: 9.99 ether,
             amount1Min: 9.99 ether
         });
@@ -859,7 +859,7 @@ abstract contract BinMigratorFromV2 is
         uint256 balance0Before = address(this).balance;
         uint256 balance1Before = token0.balanceOf(address(this));
 
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
 
         // necessary checks
@@ -929,7 +929,7 @@ abstract contract BinMigratorFromV2 is
             pair: address(v2PairWithoutNativeToken),
             migrateAmount: lpTokenBefore,
             // the order of token0 and token1 respect to the pair
-            // but may mismatch the order of v4 pool key when WETH is invovled
+            // but may mismatch the order of infinity pool key when WETH is invovled
             amount0Min: 9.999 ether,
             amount1Min: 9.999 ether
         });
@@ -970,7 +970,7 @@ abstract contract BinMigratorFromV2 is
         uint256 balance0Before = token0.balanceOf(address(this));
         uint256 balance1Before = token1.balanceOf(address(this));
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         migrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
 
         // necessary checks

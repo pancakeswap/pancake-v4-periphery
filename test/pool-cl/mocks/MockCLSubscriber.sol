@@ -6,7 +6,7 @@ import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
 import {CLPositionInfo} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
 
-/// @notice A subscriber contract that ingests updates from the v4 position manager
+/// @notice A subscriber contract that ingests updates from the infinity position manager
 contract MockCLSubscriber is ICLSubscriber {
     CLPositionManager posm;
 

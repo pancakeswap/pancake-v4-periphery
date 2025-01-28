@@ -23,7 +23,7 @@ import {CLPositionDescriptorOffChain} from "../../../src/pool-cl/CLPositionDescr
 import {IWETH9} from "../../../src/interfaces/external/IWETH9.sol";
 import {WETH} from "solmate/src/tokens/WETH.sol";
 
-/// @notice A shared test contract that wraps the v4-core deployers contract and exposes basic liquidity operations on posm.
+/// @notice A shared test contract that wraps the infinity-core deployers contract and exposes basic liquidity operations on posm.
 contract PosmTestSetup is Test, Deployers, DeployPermit2, CLLiquidityOperations {
     CLPoolManagerRouter router;
     Currency currency0;
@@ -65,7 +65,7 @@ contract PosmTestSetup is Test, Deployers, DeployPermit2, CLLiquidityOperations 
     function deployPosm(IVault vault, ICLPoolManager poolManager) internal {
         // We use deployPermit2() to prevent having to use via-ir in this repository.
         permit2 = IAllowanceTransfer(deployPermit2());
-        positionDescriptor = new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+        positionDescriptor = new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
         lpm = new CLPositionManager(vault, poolManager, permit2, 100_000, positionDescriptor, IWETH9(_WETH9));
     }
 

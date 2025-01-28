@@ -69,13 +69,13 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     }
 
     function test_tokenURI() public {
-        assertEq(lpm.tokenURI(1), "https://pancakeswap.finance/v4/pool-cl/positions/1");
-        assertEq(lpm.tokenURI(10), "https://pancakeswap.finance/v4/pool-cl/positions/10");
-        assertEq(lpm.tokenURI(2), "https://pancakeswap.finance/v4/pool-cl/positions/2");
-        assertEq(lpm.tokenURI(20), "https://pancakeswap.finance/v4/pool-cl/positions/20");
+        assertEq(lpm.tokenURI(1), "https://pancakeswap.finance/infinity/pool-cl/positions/1");
+        assertEq(lpm.tokenURI(10), "https://pancakeswap.finance/infinity/pool-cl/positions/10");
+        assertEq(lpm.tokenURI(2), "https://pancakeswap.finance/infinity/pool-cl/positions/2");
+        assertEq(lpm.tokenURI(20), "https://pancakeswap.finance/infinity/pool-cl/positions/20");
         assertEq(
             lpm.tokenURI(type(uint256).max),
-            "https://pancakeswap.finance/v4/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            "https://pancakeswap.finance/infinity/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
         );
 
         // update the base token URI to be empty

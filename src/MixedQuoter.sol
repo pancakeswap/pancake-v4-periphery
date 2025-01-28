@@ -19,7 +19,7 @@ import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
 import {MixedQuoterRecorder} from "./libraries/MixedQuoterRecorder.sol";
 import {Multicall_v4} from "./base/Multicall_v4.sol";
 
-/// @title Provides on chain quotes for v4, V3, V2, Stable and MixedRoute exact input swaps
+/// @title Provides on chain quotes for infinity, V3, V2, Stable and MixedRoute exact input swaps
 /// @notice Allows getting the expected amount out for a given swap without executing the swap
 /// @notice Does not support exact output swaps since using the contract balance between exactOut swaps is not supported
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute

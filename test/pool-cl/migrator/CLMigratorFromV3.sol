@@ -343,7 +343,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // v3 weth, token0
-        // v4 ETH, token1
+        // infinity ETH, token1
         PoolKey memory poolKeyMismatch = poolKey;
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
         ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
@@ -365,7 +365,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         {
             // v3 weth, token0
-            // v4 token0, token1
+            // infinity token0, token1
             poolKeyMismatch.currency0 = Currency.wrap(address(token0));
             poolKeyMismatch.currency1 = Currency.wrap(address(token1));
             v4MintParams.poolKey = poolKeyMismatch;
@@ -500,7 +500,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
         vm.snapshotGasLastCall("testCLMigrateFromV3WithoutNativeToken");
 
@@ -558,7 +558,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3{value: 20 ether}(v3PoolParams, v4MintParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -625,7 +625,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v3 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v3 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 20 ether, 20 ether);
 
         // necessary checks
@@ -694,7 +694,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), extraAmount, uint160(extraAmount)
         );
-        // 4. migrate from v3 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v3 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV3(v3PoolParams, v4MintParams, extraAmount, extraAmount);
 
         // clPositionManager native balance should be 0
@@ -775,7 +775,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 vaultCurrency0BalanceBefore = poolKey.currency0.balanceOf(address(vault));
         uint256 vaultCurrency1BalanceBefore = poolKey.currency1.balanceOf(address(vault));
         vm.recordLogs();
-        // 4. migrate from v3 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v3 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV3(v3PoolParams, v4MintParams, extraAmount0, extraAmount1);
 
         uint256 vaultCurrency0BalanceAfter = poolKey.currency0.balanceOf(address(vault));
@@ -799,13 +799,13 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
             }
         }
 
-        // v4 position liquidity delta
+        // infinity position liquidity delta
         (,, int256 liquidityDeltaOfModifyLiquidity,) =
             abi.decode(modifyLiquidityEventData, (int24, int24, int256, bytes32));
         // v3 liquidity collect amounts
         (, uint256 v3LiquidityAmount0, uint256 v3LiquidityAmount1) =
             abi.decode(collectEventData, (address, uint256, uint256));
-        // calculate v4 position consumed amount
+        // calculate infinity position consumed amount
         uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(tickLower);
         uint160 sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(tickUpper);
         uint128 liquidity = LiquidityAmounts.getLiquidityForAmounts(
@@ -875,7 +875,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 balance0Before = address(this).balance;
         uint256 balance1Before = token0.balanceOf(address(this));
 
-        // 4. migrate from v3 to v4, not sending ETH denotes pay by WETH
+        // 4. migrate from v3 to infinity, not sending ETH denotes pay by WETH
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
 
         // necessary checks
@@ -937,7 +937,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 balance0Before = token0.balanceOf(address(this));
         uint256 balance1Before = token1.balanceOf(address(this));
 
-        // 4. migrate from v3 to v4
+        // 4. migrate from v3 to infinity
         migrator.migrateFromV3(v3PoolParams, v4MintParams, 0, 0);
 
         // necessary checks
