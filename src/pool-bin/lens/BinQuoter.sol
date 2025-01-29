@@ -12,16 +12,16 @@ import {SafeCast} from "infinity-core/src/pool-bin/libraries/math/SafeCast.sol";
 import {PoolId} from "infinity-core/src/types/PoolId.sol";
 import {IBinQuoter} from "../interfaces/IBinQuoter.sol";
 import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
-import {BaseV4Quoter} from "../../base/BaseV4Quoter.sol";
+import {BaseInfinityQuoter} from "../../base/BaseInfinityQuoter.sol";
 import {QuoterRevert} from "../../libraries/QuoterRevert.sol";
 
-contract BinQuoter is BaseV4Quoter, IBinQuoter {
+contract BinQuoter is BaseInfinityQuoter, IBinQuoter {
     using QuoterRevert for *;
     using SafeCast for uint128;
 
     IBinPoolManager public immutable poolManager;
 
-    constructor(address _poolManager) BaseV4Quoter(_poolManager) {
+    constructor(address _poolManager) BaseInfinityQuoter(_poolManager) {
         poolManager = IBinPoolManager(_poolManager);
     }
 

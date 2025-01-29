@@ -10,16 +10,16 @@ import {PoolId} from "infinity-core/src/types/PoolId.sol";
 import {ICLQuoter} from "../interfaces/ICLQuoter.sol";
 import {PoolTicksCounter} from "../libraries/PoolTicksCounter.sol";
 import {PathKey, PathKeyLibrary} from "../../libraries/PathKey.sol";
-import {BaseV4Quoter} from "../../base/BaseV4Quoter.sol";
+import {BaseInfinityQuoter} from "../../base/BaseInfinityQuoter.sol";
 import {QuoterRevert} from "../../libraries/QuoterRevert.sol";
 import {Currency} from "infinity-core/src/types/Currency.sol";
 
-contract CLQuoter is ICLQuoter, BaseV4Quoter {
+contract CLQuoter is ICLQuoter, BaseInfinityQuoter {
     using QuoterRevert for *;
 
     ICLPoolManager public immutable poolManager;
 
-    constructor(address _poolManager) BaseV4Quoter(_poolManager) {
+    constructor(address _poolManager) BaseInfinityQuoter(_poolManager) {
         poolManager = ICLPoolManager(_poolManager);
     }
 

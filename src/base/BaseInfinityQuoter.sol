@@ -9,7 +9,7 @@ import {IQuoter} from "../interfaces/IQuoter.sol";
 import {ILockCallback} from "infinity-core/src/interfaces/ILockCallback.sol";
 import {IPoolManager} from "../interfaces/IPoolManager.sol";
 
-abstract contract BaseV4Quoter is SafeCallback, IQuoter {
+abstract contract BaseInfinityQuoter is SafeCallback, IQuoter {
     using QuoterRevert for bytes;
 
     constructor(address _poolManager) SafeCallback(IPoolManager(_poolManager).vault()) {}
