@@ -6,7 +6,7 @@ import {SignatureVerification} from "permit2/src/libraries/SignatureVerification
 
 import {ERC721PermitHash} from "../../../src/pool-cl/libraries/ERC721PermitHash.sol";
 import {MockERC721Permit} from "../mocks/MockERC721Permit.sol";
-import {IERC721Permit_v4} from "../../../src/pool-cl/interfaces/IERC721Permit_v4.sol";
+import {IERC721Permit_infi} from "../../../src/pool-cl/interfaces/IERC721Permit_infi.sol";
 import {IERC721} from "forge-std/interfaces/IERC721.sol";
 import {UnorderedNonce} from "../../../src/pool-cl/base/UnorderedNonce.sol";
 
@@ -17,7 +17,7 @@ contract ERC721PermitTest is Test {
     address bob;
     uint256 bobPK;
 
-    string constant name = "Mock ERC721Permit_v4";
+    string constant name = "Mock ERC721Permit_infi";
     string constant symbol = "MOCK721";
 
     function setUp() public {
@@ -54,7 +54,7 @@ contract ERC721PermitTest is Test {
     function test_fuzz_approve_unauthorizedRevert(address caller) public {
         uint256 tokenId = erc721Permit.mint();
         vm.prank(caller);
-        if (caller != address(this)) vm.expectRevert(IERC721Permit_v4.Unauthorized.selector);
+        if (caller != address(this)) vm.expectRevert(IERC721Permit_infi.Unauthorized.selector);
         erc721Permit.approve(address(this), tokenId);
     }
 
@@ -254,7 +254,7 @@ contract ERC721PermitTest is Test {
 
         // -- Permit but deadline expired -- //
         vm.startPrank(spender);
-        vm.expectRevert(IERC721Permit_v4.SignatureDeadlineExpired.selector);
+        vm.expectRevert(IERC721Permit_infi.SignatureDeadlineExpired.selector);
         erc721Permit.permit(spender, tokenId, deadline, nonce, signature);
         vm.stopPrank();
 

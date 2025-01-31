@@ -3,10 +3,10 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
-import {EIP712_v4} from "../../src/pool-cl/base/EIP712_v4.sol";
+import {EIP712_infi} from "../../src/pool-cl/base/EIP712_infi.sol";
 
-contract EIP712Test is EIP712_v4, Test {
-    constructor() EIP712_v4("EIP712Test") {}
+contract EIP712Test is EIP712_infi, Test {
+    constructor() EIP712_infi("EIP712Test") {}
 
     function setUp() public {}
 

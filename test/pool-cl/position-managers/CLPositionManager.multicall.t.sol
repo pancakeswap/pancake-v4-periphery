@@ -20,7 +20,7 @@ import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPool
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
-import {IERC721Permit_v4} from "../../../src/pool-cl/base/ERC721Permit_v4.sol";
+import {IERC721Permit_infi} from "../../../src/pool-cl/interfaces/IERC721Permit_infi.sol";
 import {IMulticall} from "../../../src/interfaces/IMulticall.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
@@ -250,7 +250,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         // bob gives himself permission and decreases liquidity
         bytes[] memory calls = new bytes[](2);
         calls[0] = abi.encodeWithSelector(
-            IERC721Permit_v4(lpm).permit.selector, bob, tokenId, block.timestamp + 1, nonce, signature
+            IERC721Permit_infi(lpm).permit.selector, bob, tokenId, block.timestamp + 1, nonce, signature
         );
         uint256 liquidityToRemove = 0.4444e18;
         bytes memory actions = getDecreaseEncoded(tokenId, liquidityToRemove, ZERO_BYTES);
