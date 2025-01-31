@@ -1,4 +1,4 @@
-# Pancake v4 periphery
+# Infinity periphery
 
 ## Running test
 

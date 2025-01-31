@@ -544,7 +544,7 @@ abstract contract BinMigratorFromV2 is
             poolKeyWithoutNativeToken, getBinIds(ACTIVE_BIN_ID, 3), 10 ether, 10 ether, ACTIVE_BIN_ID, address(this)
         );
 
-        IBinMigrator.InfiBinPoolParams memory InfiBinPoolParams = IBinMigrator.InfiBinPoolParams({
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = IBinMigrator.InfiBinPoolParams({
             poolKey: params.poolKey,
             amount0Max: params.amount0Max,
             amount1Max: params.amount1Max,
@@ -559,7 +559,7 @@ abstract contract BinMigratorFromV2 is
         });
 
         // 4. migrate from v2 to infinity
-        migrator.migrateFromV2(v2PoolParams, InfiBinPoolParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
         vm.snapshotGasLastCall("testMigrateFromV2WithoutNativeToken");
 
         // necessary checks
