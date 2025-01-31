@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 
-import {IVault, Vault} from "pancake-v4-core/src/Vault.sol";
+import {IVault, Vault} from "infinity-core/src/Vault.sol";
 
 import {SafeCallback} from "../src/base/SafeCallback.sol";
 import {MockSafeCallback} from "./mocks/MockSafeCallback.sol";

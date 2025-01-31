@@ -2,10 +2,10 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {CurrencyLibrary, Currency, equals} from "pancake-v4-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {CurrencyLibrary, Currency, equals} from "infinity-core/src/types/Currency.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {IQuoter} from "./interfaces/IQuoter.sol";
 import {ICLQuoter} from "./pool-cl/interfaces/ICLQuoter.sol";
 import {IBinQuoter} from "./pool-bin/interfaces/IBinQuoter.sol";
@@ -17,14 +17,14 @@ import {V3SmartRouterHelper} from "./libraries/external/V3SmartRouterHelper.sol"
 import {IMixedQuoter} from "./interfaces/IMixedQuoter.sol";
 import {MixedQuoterActions} from "./libraries/MixedQuoterActions.sol";
 import {MixedQuoterRecorder} from "./libraries/MixedQuoterRecorder.sol";
-import {Multicall_v4} from "./base/Multicall_v4.sol";
+import {Multicall} from "./base/Multicall.sol";
 
-/// @title Provides on chain quotes for v4, V3, V2, Stable and MixedRoute exact input swaps
+/// @title Provides on chain quotes for infinity, V3, V2, Stable and MixedRoute exact input swaps
 /// @notice Allows getting the expected amount out for a given swap without executing the swap
 /// @notice Does not support exact output swaps since using the contract balance between exactOut swaps is not supported
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
-contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
+contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
     using SafeCast for *;
     using V3PoolTicksCounter for IPancakeV3Pool;
 
@@ -221,7 +221,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
 
     /// @dev if withContext is false, each swap is isolated and does not influence the outcome of subsequent swaps within the same pool
     /// @dev if withContext is true, all swap results will influence the outcome of subsequent swaps within the same pool
-    /// @dev if withContext is true, non-v4 pools only support one swap direction for same pool
+    /// @dev if withContext is true, non-infinity pools (v3, v2, ss) only support one swap direction for same pool
     function quoteMixedExactInputWithContext(
         address[] calldata paths,
         bytes calldata actions,
@@ -302,12 +302,12 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     MixedQuoterRecorder.setPoolSwapTokenAccumulation(poolHash, amountIn, swapAmountOut, zeroForOne);
                     amountIn = swapAmountOut - accAmountOut;
                 }
-            } else if (action == MixedQuoterActions.V4_CL_EXACT_INPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory clParams =
-                    abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
-                (tokenIn, tokenOut) = convertWETHToV4NativeCurency(clParams.poolKey, tokenIn, tokenOut);
+            } else if (action == MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE) {
+                QuoteMixedInfiExactInputSingleParams memory clParams =
+                    abi.decode(params[actionIndex], (QuoteMixedInfiExactInputSingleParams));
+                (tokenIn, tokenOut) = convertWETHToInfiNativeCurency(clParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
-                checkV4PoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
+                checkInfiPoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
                 IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
                     poolKey: clParams.poolKey,
@@ -315,10 +315,10 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     exactAmount: amountIn.toUint128(),
                     hookData: clParams.hookData
                 });
-                // will execute all swap history of same v4 pool in one transaction if withContext is true
+                // will execute all swap history of same infinity pool in one transaction if withContext is true
                 if (withContext) {
-                    bytes32 poolHash = MixedQuoterRecorder.getV4CLPoolHash(clParams.poolKey);
-                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    bytes32 poolHash = MixedQuoterRecorder.getInfiCLPoolHash(clParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getInfiPoolSwapList(poolHash);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
                     uint256 swapHistoryListLength;
                     if (swapListBytes.length > 0) {
@@ -335,16 +335,16 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
 
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingleList(swapList);
                     swapListBytes = abi.encode(swapList);
-                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                    MixedQuoterRecorder.setInfiPoolSwapList(poolHash, swapListBytes);
                 } else {
                     (amountIn, gasEstimateForCurAction) = clQuoter.quoteExactInputSingle(swapParams);
                 }
-            } else if (action == MixedQuoterActions.V4_BIN_EXACT_INPUT_SINGLE) {
-                QuoteMixedV4ExactInputSingleParams memory binParams =
-                    abi.decode(params[actionIndex], (QuoteMixedV4ExactInputSingleParams));
-                (tokenIn, tokenOut) = convertWETHToV4NativeCurency(binParams.poolKey, tokenIn, tokenOut);
+            } else if (action == MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE) {
+                QuoteMixedInfiExactInputSingleParams memory binParams =
+                    abi.decode(params[actionIndex], (QuoteMixedInfiExactInputSingleParams));
+                (tokenIn, tokenOut) = convertWETHToInfiNativeCurency(binParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
-                checkV4PoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
+                checkInfiPoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
                 IQuoter.QuoteExactSingleParams memory swapParams = IQuoter.QuoteExactSingleParams({
                     poolKey: binParams.poolKey,
@@ -352,10 +352,10 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
                     exactAmount: amountIn.toUint128(),
                     hookData: binParams.hookData
                 });
-                // will execute all swap history of same v4 pool in one transaction if withContext is true
+                // will execute all swap history of same infinity pool in one transaction if withContext is true
                 if (withContext) {
-                    bytes32 poolHash = MixedQuoterRecorder.getV4BinPoolHash(binParams.poolKey);
-                    bytes memory swapListBytes = MixedQuoterRecorder.getV4PoolSwapList(poolHash);
+                    bytes32 poolHash = MixedQuoterRecorder.getInfiBinPoolHash(binParams.poolKey);
+                    bytes memory swapListBytes = MixedQuoterRecorder.getInfiPoolSwapList(poolHash);
                     IQuoter.QuoteExactSingleParams[] memory swapHistoryList;
                     uint256 swapHistoryListLength;
                     if (swapListBytes.length > 0) {
@@ -372,7 +372,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
 
                     (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingleList(swapList);
                     swapListBytes = abi.encode(swapList);
-                    MixedQuoterRecorder.setV4PoolSwapList(poolHash, swapListBytes);
+                    MixedQuoterRecorder.setInfiPoolSwapList(poolHash, swapListBytes);
                 } else {
                     (amountIn, gasEstimateForCurAction) = binQuoter.quoteExactInputSingle(swapParams);
                 }
@@ -431,7 +431,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
     }
 
     /// @dev Check if the poolKey currency matches the tokenIn and tokenOut
-    function checkV4PoolKeyCurrency(PoolKey memory poolKey, bool isZeroForOne, address tokenIn, address tokenOut)
+    function checkInfiPoolKeyCurrency(PoolKey memory poolKey, bool isZeroForOne, address tokenIn, address tokenOut)
         private
         pure
     {
@@ -449,10 +449,10 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
         }
     }
 
-    /// @notice Convert WETH to native currency for V4 pools
-    /// @dev for example, quote route are v3 WETH pool[token0, WETH] and v4 native pool[NATIVE,token1]
-    /// paths is [token0, WETH, token1], we need to convert WETH to NATIVE when quote v4 pool
-    function convertWETHToV4NativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)
+    /// @notice Convert WETH to native currency for infinity pools
+    /// @dev for example, quote route are v3 WETH pool[token0, WETH] and infinity native pool[NATIVE,token1]
+    /// paths is [token0, WETH, token1], we need to convert WETH to NATIVE when quote infinity pool
+    function convertWETHToInfiNativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)
         private
         view
         returns (address, address)
@@ -468,8 +468,8 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall_v4 {
         return (tokenIn, tokenOut);
     }
 
-    /// @dev Convert native currency to WETH for Non-V4 pools.
-    /// For example, quote route are v4 native pool[NATIVE, token0] and v3 WETH pool[WETH, token1].
+    /// @dev Convert native currency to WETH for Non-Infinity pools.
+    /// For example, quote route are infinity native pool[NATIVE, token0] and v3 WETH pool[WETH, token1].
     //// paths is [token0, NATIVE, token1], we need to convert NATIVE to WETH when quote v3 pool
     function convertNativeToWETH(address tokenIn, address tokenOut) private view returns (address, address) {
         if (Currency.wrap(tokenIn).isNative()) {

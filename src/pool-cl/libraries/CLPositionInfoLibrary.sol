@@ -2,8 +2,8 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
 
 /**
  * @dev PositionInfo is a packed version of solidity structure.
@@ -44,7 +44,7 @@ library CLPositionInfoLibrary {
     uint8 internal constant TICK_LOWER_OFFSET = 8;
     uint8 internal constant TICK_UPPER_OFFSET = 32;
 
-    /// @dev This poolId is NOT compatible with the poolId used in PancakeV4 core. It is truncated to 25 bytes, and just used to lookup PoolKey in the poolKeys mapping.
+    /// @dev This poolId is NOT compatible with the poolId used in infinity core. It is truncated to 25 bytes, and just used to lookup PoolKey in the poolKeys mapping.
     function poolId(CLPositionInfo info) internal pure returns (bytes25 _poolId) {
         assembly ("memory-safe") {
             _poolId := and(MASK_UPPER_200_BITS, info)

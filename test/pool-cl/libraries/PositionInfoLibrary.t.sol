@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 import {CLPositionInfo, CLPositionInfoLibrary, PoolId} from "../../../src/pool-cl/libraries/CLPositionInfoLibrary.sol";
 
 contract PositionInfoLibraryTest is Test {

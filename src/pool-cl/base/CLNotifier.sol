@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import {ICLSubscriber} from "../interfaces/ICLSubscriber.sol";
 import {ICLNotifier} from "../interfaces/ICLNotifier.sol";
 import {CLPositionInfo} from "../libraries/CLPositionInfoLibrary.sol";
-import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
+import {CustomRevert} from "infinity-core/src/libraries/CustomRevert.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
 
 /// @notice Notifier is used to opt in to sending updates to external contracts about position modifications or transfers
 abstract contract CLNotifier is ICLNotifier {

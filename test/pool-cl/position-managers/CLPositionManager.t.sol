@@ -2,23 +2,23 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {toBalanceDelta, BalanceDelta, BalanceDeltaLibrary} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {LiquidityAmounts} from "pancake-v4-core/test/pool-cl/helpers/LiquidityAmounts.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {toBalanceDelta, BalanceDelta, BalanceDeltaLibrary} from "infinity-core/src/types/BalanceDelta.sol";
+import {LiquidityAmounts} from "infinity-core/test/pool-cl/helpers/LiquidityAmounts.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {FixedPointMathLib} from "solmate/src/utils/FixedPointMathLib.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
-import {SafeCast} from "pancake-v4-core/src/libraries/SafeCast.sol";
-import {Fuzzers} from "pancake-v4-core/test/pool-cl/helpers/Fuzzers.sol";
-import {LPFeeLibrary} from "pancake-v4-core/src/libraries/LPFeeLibrary.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {CLPosition} from "infinity-core/src/pool-cl/libraries/CLPosition.sol";
+import {SafeCast} from "infinity-core/src/libraries/SafeCast.sol";
+import {Fuzzers} from "infinity-core/test/pool-cl/helpers/Fuzzers.sol";
+import {LPFeeLibrary} from "infinity-core/src/libraries/LPFeeLibrary.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {MockCLSubscriber} from "../mocks/MockCLSubscriber.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
@@ -69,13 +69,13 @@ contract PositionManagerTest is Test, PosmTestSetup, LiquidityFuzzers {
     }
 
     function test_tokenURI() public {
-        assertEq(lpm.tokenURI(1), "https://pancakeswap.finance/v4/pool-cl/positions/1");
-        assertEq(lpm.tokenURI(10), "https://pancakeswap.finance/v4/pool-cl/positions/10");
-        assertEq(lpm.tokenURI(2), "https://pancakeswap.finance/v4/pool-cl/positions/2");
-        assertEq(lpm.tokenURI(20), "https://pancakeswap.finance/v4/pool-cl/positions/20");
+        assertEq(lpm.tokenURI(1), "https://pancakeswap.finance/infinity/pool-cl/positions/1");
+        assertEq(lpm.tokenURI(10), "https://pancakeswap.finance/infinity/pool-cl/positions/10");
+        assertEq(lpm.tokenURI(2), "https://pancakeswap.finance/infinity/pool-cl/positions/2");
+        assertEq(lpm.tokenURI(20), "https://pancakeswap.finance/infinity/pool-cl/positions/20");
         assertEq(
             lpm.tokenURI(type(uint256).max),
-            "https://pancakeswap.finance/v4/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            "https://pancakeswap.finance/infinity/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
         );
 
         // update the base token URI to be empty

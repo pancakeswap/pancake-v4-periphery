@@ -2,12 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
-import {IVault, Vault} from "pancake-v4-core/src/Vault.sol";
+import {IVault, Vault} from "infinity-core/src/Vault.sol";
 import {MockDeltaResolver} from "./mocks/MockDeltaResolver.sol";
-import {TokenFixture} from "pancake-v4-core/test/helpers/TokenFixture.sol";
+import {TokenFixture} from "infinity-core/test/helpers/TokenFixture.sol";
 
 contract DeltaResolverTest is Test, TokenFixture {
     IVault vault;

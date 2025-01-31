@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
 import {CLPositionInfo} from "../libraries/CLPositionInfoLibrary.sol";
 
-/// @notice Interface that a Subscriber contract should implement to receive updates from the v4 cl pool position manager
+/// @notice Interface that a Subscriber contract should implement to receive updates from infinity cl pool position manager
 interface ICLSubscriber {
     /// @notice Called when a position subscribes to this subscriber contract
     /// @param tokenId the token ID of the position

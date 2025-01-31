@@ -3,21 +3,21 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {Hooks} from "pancake-v4-core/src/libraries/Hooks.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {LiquidityAmounts} from "pancake-v4-core/test/pool-cl/helpers/LiquidityAmounts.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {Hooks} from "infinity-core/src/libraries/Hooks.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {LiquidityAmounts} from "infinity-core/test/pool-cl/helpers/LiquidityAmounts.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {FixedPointMathLib} from "solmate/src/utils/FixedPointMathLib.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
-import {Tick} from "pancake-v4-core/src/pool-cl/libraries/Tick.sol";
-import {SafeCast} from "pancake-v4-core/src/libraries/SafeCast.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {CLPosition} from "infinity-core/src/pool-cl/libraries/CLPosition.sol";
+import {Tick} from "infinity-core/src/pool-cl/libraries/Tick.sol";
+import {SafeCast} from "infinity-core/src/libraries/SafeCast.sol";
 import {SafeCastTemp} from "../../../src/libraries/SafeCast.sol";
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
@@ -34,10 +34,10 @@ import {Planner, Plan} from "../../../src/libraries/Planner.sol";
 import {FeeMath} from "../shared/FeeMath.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
 import {ActionConstants} from "../../../src/libraries/ActionConstants.sol";
-import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
+import {CustomRevert} from "infinity-core/src/libraries/CustomRevert.sol";
 import {LiquidityFuzzers} from "../shared/fuzz/LiquidityFuzzers.sol";
 import {MockFOT} from "../../mocks/MockFeeOnTransfer.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
 import {BipsLibrary} from "../../../src/libraries/BipsLibrary.sol";
 
 contract CLPositionManagerModifyLiquiditiesTest is Test, PosmTestSetup, LiquidityFuzzers {

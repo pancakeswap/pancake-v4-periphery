@@ -2,13 +2,13 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
 
 import {MockCLCalldataDecoder} from "../mocks/MockCLCalldataDecoder.sol";
 import {CalldataDecoder} from "../../../src/libraries/CalldataDecoder.sol";
-import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../../../src/interfaces/IInfinityRouter.sol";
 import {ICLRouterBase} from "../../../src/pool-cl/interfaces/ICLRouterBase.sol";
 import {PathKey} from "../../../src/libraries/PathKey.sol";
 
@@ -122,9 +122,12 @@ contract CLCalldataDecoderTest is Test {
         assertEq(mintParams.hookData, _hookData);
     }
 
-    function test_fuzz_decodeSwapExactInParams(IV4Router.CLSwapExactInputParams calldata _swapParams) public view {
+    function test_fuzz_decodeSwapExactInParams(IInfinityRouter.CLSwapExactInputParams calldata _swapParams)
+        public
+        view
+    {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.CLSwapExactInputParams memory swapParams = decoder.decodeCLSwapExactInParams(params);
+        IInfinityRouter.CLSwapExactInputParams memory swapParams = decoder.decodeCLSwapExactInParams(params);
 
         assertEq(Currency.unwrap(swapParams.currencyIn), Currency.unwrap(_swapParams.currencyIn));
         assertEq(swapParams.amountIn, _swapParams.amountIn);
@@ -134,7 +137,7 @@ contract CLCalldataDecoderTest is Test {
 
     function test_decodeSwapExactInParams_outOfBounds() public {
         PathKey[] memory path = new PathKey[](0);
-        IV4Router.CLSwapExactInputParams memory _swapParams = ICLRouterBase.CLSwapExactInputParams({
+        IInfinityRouter.CLSwapExactInputParams memory _swapParams = ICLRouterBase.CLSwapExactInputParams({
             currencyIn: Currency.wrap(makeAddr("currencyIn")),
             path: path,
             amountIn: 1 ether,
@@ -153,12 +156,12 @@ contract CLCalldataDecoderTest is Test {
         decoder.decodeCLSwapExactInParams(invalidParam);
     }
 
-    function test_fuzz_decodeSwapExactInSingleParams(IV4Router.CLSwapExactInputSingleParams calldata _swapParams)
+    function test_fuzz_decodeSwapExactInSingleParams(IInfinityRouter.CLSwapExactInputSingleParams calldata _swapParams)
         public
         view
     {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.CLSwapExactInputSingleParams memory swapParams = decoder.decodeCLSwapExactInSingleParams(params);
+        IInfinityRouter.CLSwapExactInputSingleParams memory swapParams = decoder.decodeCLSwapExactInSingleParams(params);
 
         assertEq(swapParams.zeroForOne, _swapParams.zeroForOne);
         assertEq(swapParams.amountIn, _swapParams.amountIn);
@@ -168,7 +171,7 @@ contract CLCalldataDecoderTest is Test {
     }
 
     function test_fuzz_decodeSwapExactInSingleParams_outOfBounds(PoolKey memory key) public {
-        IV4Router.CLSwapExactInputSingleParams memory _swapParams = ICLRouterBase.CLSwapExactInputSingleParams({
+        IInfinityRouter.CLSwapExactInputSingleParams memory _swapParams = ICLRouterBase.CLSwapExactInputSingleParams({
             poolKey: key,
             zeroForOne: true,
             amountIn: 1 ether,
@@ -188,9 +191,12 @@ contract CLCalldataDecoderTest is Test {
         decoder.decodeCLSwapExactInSingleParams(invalidParam);
     }
 
-    function test_fuzz_decodeSwapExactOutParams(IV4Router.CLSwapExactOutputParams calldata _swapParams) public view {
+    function test_fuzz_decodeSwapExactOutParams(IInfinityRouter.CLSwapExactOutputParams calldata _swapParams)
+        public
+        view
+    {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.CLSwapExactOutputParams memory swapParams = decoder.decodeCLSwapExactOutParams(params);
+        IInfinityRouter.CLSwapExactOutputParams memory swapParams = decoder.decodeCLSwapExactOutParams(params);
 
         assertEq(Currency.unwrap(swapParams.currencyOut), Currency.unwrap(_swapParams.currencyOut));
         assertEq(swapParams.amountOut, _swapParams.amountOut);
@@ -200,7 +206,7 @@ contract CLCalldataDecoderTest is Test {
 
     function test_decodeSwapExactOutParams_outOfBounds() public {
         PathKey[] memory path = new PathKey[](0);
-        IV4Router.CLSwapExactOutputParams memory _swapParams = ICLRouterBase.CLSwapExactOutputParams({
+        IInfinityRouter.CLSwapExactOutputParams memory _swapParams = ICLRouterBase.CLSwapExactOutputParams({
             currencyOut: Currency.wrap(makeAddr("currencyOut")),
             path: path,
             amountOut: 1 ether,
@@ -219,12 +225,12 @@ contract CLCalldataDecoderTest is Test {
         decoder.decodeCLSwapExactOutParams(invalidParam);
     }
 
-    function test_fuzz_decodeSwapExactOutSingleParams(IV4Router.CLSwapExactOutputSingleParams calldata _swapParams)
-        public
-        view
-    {
+    function test_fuzz_decodeSwapExactOutSingleParams(
+        IInfinityRouter.CLSwapExactOutputSingleParams calldata _swapParams
+    ) public view {
         bytes memory params = abi.encode(_swapParams);
-        IV4Router.CLSwapExactOutputSingleParams memory swapParams = decoder.decodeCLSwapExactOutSingleParams(params);
+        IInfinityRouter.CLSwapExactOutputSingleParams memory swapParams =
+            decoder.decodeCLSwapExactOutSingleParams(params);
 
         assertEq(swapParams.zeroForOne, _swapParams.zeroForOne);
         assertEq(swapParams.amountOut, _swapParams.amountOut);
@@ -250,7 +256,7 @@ contract CLCalldataDecoderTest is Test {
     }
 
     function test_fuzz_decodeSwapExactOutSingleParams_outOfBounds(PoolKey memory key) public {
-        IV4Router.CLSwapExactOutputSingleParams memory _swapParams = ICLRouterBase.CLSwapExactOutputSingleParams({
+        IInfinityRouter.CLSwapExactOutputSingleParams memory _swapParams = ICLRouterBase.CLSwapExactOutputSingleParams({
             poolKey: key,
             zeroForOne: true,
             amountOut: 1 ether,

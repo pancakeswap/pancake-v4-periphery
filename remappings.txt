@@ -1,6 +1,6 @@
-pancake-v4-core/=lib/pancake-v4-core/
-ds-test/=lib/pancake-v4-core/lib/forge-std/lib/ds-test/src/
-forge-std/=lib/pancake-v4-core/lib/forge-std/src/
-openzeppelin-contracts/=lib/pancake-v4-core/lib/openzeppelin-contracts/
-solmate/=lib/pancake-v4-core/lib/solmate/
+infinity-core/=lib/infinity-core/
+ds-test/=lib/infinity-core/lib/forge-std/lib/ds-test/src/
+forge-std/=lib/infinity-core/lib/forge-std/src/
+openzeppelin-contracts/=lib/infinity-core/lib/openzeppelin-contracts/
+solmate/=lib/infinity-core/lib/solmate/
 permit2/=lib/permit2

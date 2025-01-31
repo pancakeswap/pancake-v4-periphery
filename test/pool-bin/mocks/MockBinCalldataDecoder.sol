@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {BinCalldataDecoder} from "../../../src/pool-bin/libraries/BinCalldataDecoder.sol";
-import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../../../src/interfaces/IInfinityRouter.sol";
 import {IBinPositionManager} from "../../../src/pool-bin/interfaces/IBinPositionManager.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
 
 // we need to use a mock contract to make the calls happen in calldata not memory
 contract MockBinCalldataDecoder {
@@ -37,7 +37,7 @@ contract MockBinCalldataDecoder {
     function decodeBinSwapExactInParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.BinSwapExactInputParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactInputParams calldata swapParams)
     {
         return params.decodeBinSwapExactInParams();
     }
@@ -45,7 +45,7 @@ contract MockBinCalldataDecoder {
     function decodeBinSwapExactInSingleParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.BinSwapExactInputSingleParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactInputSingleParams calldata swapParams)
     {
         return params.decodeBinSwapExactInSingleParams();
     }
@@ -53,7 +53,7 @@ contract MockBinCalldataDecoder {
     function decodeBinSwapExactOutParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.BinSwapExactOutputParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactOutputParams calldata swapParams)
     {
         return params.decodeBinSwapExactOutParams();
     }
@@ -61,7 +61,7 @@ contract MockBinCalldataDecoder {
     function decodeBinSwapExactOutSingleParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.BinSwapExactOutputSingleParams calldata swapParams)
+        returns (IInfinityRouter.BinSwapExactOutputSingleParams calldata swapParams)
     {
         return params.decodeBinSwapExactOutSingleParams();
     }

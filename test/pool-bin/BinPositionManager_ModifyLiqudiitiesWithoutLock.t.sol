@@ -6,20 +6,20 @@ import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {Hooks} from "pancake-v4-core/src/libraries/Hooks.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PackedUint128Math} from "pancake-v4-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
-import {TokenFixture} from "pancake-v4-core/test/helpers/TokenFixture.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {Hooks} from "infinity-core/src/libraries/Hooks.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {SafeCast} from "infinity-core/src/pool-bin/libraries/math/SafeCast.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PackedUint128Math} from "infinity-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
+import {TokenFixture} from "infinity-core/test/helpers/TokenFixture.sol";
 
 import {IPositionManager} from "../../src/interfaces/IPositionManager.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";
@@ -32,9 +32,9 @@ import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {BinHookModifyLiquidities} from "./shared/BinHookModifyLiquidities.sol";
-import {MockV4Router} from "../mocks/MockV4Router.sol";
+import {MockInfinityRouter} from "../mocks/MockInfinityRouter.sol";
 import {IWETH9} from "../../src/interfaces/external/IWETH9.sol";
-import {CustomRevert} from "pancake-v4-core/src/libraries/CustomRevert.sol";
+import {CustomRevert} from "infinity-core/src/libraries/CustomRevert.sol";
 
 contract BinPositionManager_ModifyLiquidityWithoutLockTest is BinLiquidityHelper, TokenFixture, DeployPermit2 {
     using BinPoolParametersHelper for bytes32;
@@ -53,7 +53,7 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is BinLiquidityHelper
     MockERC20 token1;
     BinHookModifyLiquidities hookModifyLiquidities;
 
-    MockV4Router public router;
+    MockInfinityRouter public router;
     bytes32 poolParam;
     address alice = makeAddr("alice");
     uint24 activeId = 2 ** 23; // where token0 and token1 price is the same
@@ -90,7 +90,7 @@ contract BinPositionManager_ModifyLiquidityWithoutLockTest is BinLiquidityHelper
         approveBinPm(address(this), key1, address(binPm), permit2);
         approveBinPm(alice, key1, address(binPm), permit2);
 
-        router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
+        router = new MockInfinityRouter(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         token0.approve(address(router), 1000 ether);
         token1.approve(address(router), 1000 ether);
     }

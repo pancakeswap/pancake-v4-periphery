@@ -20,7 +20,7 @@ interface ISelfPermitERC721 {
     /// @notice Permits this contract to spend a given token from `msg.sender`
     /// @dev The `owner` is always msg.sender and the `spender` is always address(this).
     /// Please always use selfPermitERC721IfNecessary if possible prevent calls from failing due to a frontrun of a call to #selfPermitERC721.
-    /// For details check https://github.com/pancakeswap/pancake-v4-periphery/pull/62#discussion_r1675410282
+    /// For details check https://github.com/pancakeswap/infinity-periphery/pull/62#discussion_r1675410282
     /// @param token The address of the token spent
     /// @param tokenId The token ID of the token spent
     /// @param deadline A timestamp, the current blocktime must be less than or equal to this timestamp

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
-import {ParseBytes} from "pancake-v4-core/src/libraries/ParseBytes.sol";
+import {ParseBytes} from "infinity-core/src/libraries/ParseBytes.sol";
 
 library QuoterRevert {
     using QuoterRevert for bytes;

@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
 import {BaseScript} from "./BaseScript.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {TickLens} from "../src/pool-cl/lens/TickLens.sol";
 import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
 
@@ -20,7 +20,7 @@ import {Create3Factory} from "pancake-create3-factory/src/Create3Factory.sol";
  */
 contract DeployCLTickLensScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/TickLens/0.90");
+        return keccak256("INFINITY-PERIPHERY/TickLens/0.90");
     }
 
     function run() public {

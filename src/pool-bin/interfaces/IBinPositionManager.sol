@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 
 interface IBinPositionManager is IPositionManager {
@@ -81,7 +81,7 @@ interface IBinPositionManager is IPositionManager {
 
     function binPoolManager() external view returns (IBinPoolManager);
 
-    /// @notice Initialize a v4 PCS bin pool
+    /// @notice Initialize a infinity PCS bin pool
     /// @dev If the pool is already initialized, this function will not revert
     /// @param key the PoolKey of the pool to initialize
     /// @param activeId the active bin id of the pool

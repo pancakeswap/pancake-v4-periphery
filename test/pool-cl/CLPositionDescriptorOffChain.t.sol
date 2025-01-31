@@ -26,7 +26,7 @@ contract CLPositionDescriptorOffChainTest is Test {
 
     function setUp() public {
         clPositionDescriptorOffChain =
-            new CLPositionDescriptorOffChain("https://pancakeswap.finance/v4/pool-cl/positions/");
+            new CLPositionDescriptorOffChain("https://pancakeswap.finance/infinity/pool-cl/positions/");
     }
 
     function test_bytecodeSize() public {
@@ -40,18 +40,18 @@ contract CLPositionDescriptorOffChainTest is Test {
     function testTokenURI() public view {
         // tokenId=1
         string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 1);
-        assertEq(tokenURI, "https://pancakeswap.finance/v4/pool-cl/positions/1");
+        assertEq(tokenURI, "https://pancakeswap.finance/infinity/pool-cl/positions/1");
 
         // tokenId=uint.max
         tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), type(uint256).max);
         assertEq(
             tokenURI,
-            "https://pancakeswap.finance/v4/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            "https://pancakeswap.finance/infinity/pool-cl/positions/115792089237316195423570985008687907853269984665640564039457584007913129639935"
         );
 
         // positionManager is not used
         tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0x01)), 1);
-        assertEq(tokenURI, "https://pancakeswap.finance/v4/pool-cl/positions/1");
+        assertEq(tokenURI, "https://pancakeswap.finance/infinity/pool-cl/positions/1");
     }
 
     function testTokenURI_generateByTokenURIContract() public {
@@ -65,14 +65,15 @@ contract CLPositionDescriptorOffChainTest is Test {
     function testTokenURIFuzz(uint256 tokenId) public view {
         string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), tokenId);
         assertEq(
-            tokenURI, string.concat("https://pancakeswap.finance/v4/pool-cl/positions/", Strings.toString(tokenId))
+            tokenURI,
+            string.concat("https://pancakeswap.finance/infinity/pool-cl/positions/", Strings.toString(tokenId))
         );
     }
 
     function testSetBaseTokenURI() public {
-        clPositionDescriptorOffChain.setBaseTokenURI("https://pancakeswap.finance/swap/v4/pool-cl/positions/");
+        clPositionDescriptorOffChain.setBaseTokenURI("https://pancakeswap.finance/swap/infinity/pool-cl/positions/");
         string memory tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 1);
-        assertEq(tokenURI, "https://pancakeswap.finance/swap/v4/pool-cl/positions/1");
+        assertEq(tokenURI, "https://pancakeswap.finance/swap/infinity/pool-cl/positions/1");
 
         clPositionDescriptorOffChain.setBaseTokenURI("https://pancakeswap.finance/");
         tokenURI = clPositionDescriptorOffChain.tokenURI(ICLPositionManager(address(0)), 2);

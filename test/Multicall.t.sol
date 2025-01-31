@@ -2,19 +2,19 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {MockMulticall_v4, RevertContract} from "./mocks/MockMulticall_v4.sol";
+import {MockMulticall, RevertContract} from "./mocks/MockMulticall.sol";
 
-contract Multicall_v4Test is Test {
-    MockMulticall_v4 multicall;
+contract MulticallTest is Test {
+    MockMulticall multicall;
 
     function setUp() public {
-        multicall = new MockMulticall_v4();
+        multicall = new MockMulticall();
     }
 
     function test_multicall() public {
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).functionThatReturnsTuple.selector, 10, 20);
-        calls[1] = abi.encodeWithSelector(MockMulticall_v4(multicall).functionThatReturnsTuple.selector, 1, 2);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).functionThatReturnsTuple.selector, 10, 20);
+        calls[1] = abi.encodeWithSelector(MockMulticall(multicall).functionThatReturnsTuple.selector, 1, 2);
 
         bytes[] memory results = multicall.multicall(calls);
 
@@ -29,10 +29,9 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_firstRevert() public {
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(
-            MockMulticall_v4(multicall).functionThatRevertsWithString.selector, "First call failed"
-        );
-        calls[1] = abi.encodeWithSelector(MockMulticall_v4(multicall).functionThatReturnsTuple.selector, 1, 2);
+        calls[0] =
+            abi.encodeWithSelector(MockMulticall(multicall).functionThatRevertsWithString.selector, "First call failed");
+        calls[1] = abi.encodeWithSelector(MockMulticall(multicall).functionThatReturnsTuple.selector, 1, 2);
 
         vm.expectRevert("First call failed");
         multicall.multicall(calls);
@@ -40,9 +39,9 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_secondRevert() public {
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).functionThatReturnsTuple.selector, 1, 2);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).functionThatReturnsTuple.selector, 1, 2);
         calls[1] = abi.encodeWithSelector(
-            MockMulticall_v4(multicall).functionThatRevertsWithString.selector, "Second call failed"
+            MockMulticall(multicall).functionThatRevertsWithString.selector, "Second call failed"
         );
 
         vm.expectRevert("Second call failed");
@@ -52,7 +51,7 @@ contract Multicall_v4Test is Test {
     function test_multicall_payableStoresMsgValue() public {
         assertEq(address(multicall).balance, 0);
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).payableStoresMsgValue.selector);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).payableStoresMsgValue.selector);
         multicall.multicall{value: 100}(calls);
         assertEq(address(multicall).balance, 100);
         assertEq(multicall.msgValue(), 100);
@@ -60,7 +59,7 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_returnSender() public {
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).returnSender.selector);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).returnSender.selector);
         bytes[] memory results = multicall.multicall(calls);
         address sender = abi.decode(results[0], (address));
         assertEq(sender, address(this));
@@ -70,7 +69,7 @@ contract Multicall_v4Test is Test {
         address alice = makeAddr("ALICE");
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).returnSender.selector, alice);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).returnSender.selector, alice);
         vm.prank(alice);
         bytes[] memory results = multicall.multicall(calls);
         address sender = abi.decode(results[0], (address));
@@ -79,8 +78,8 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_double_send() public {
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).payableStoresMsgValue.selector);
-        calls[1] = abi.encodeWithSelector(MockMulticall_v4(multicall).payableStoresMsgValue.selector);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).payableStoresMsgValue.selector);
+        calls[1] = abi.encodeWithSelector(MockMulticall(multicall).payableStoresMsgValue.selector);
 
         multicall.multicall{value: 100}(calls);
         assertEq(address(multicall).balance, 100);
@@ -90,8 +89,8 @@ contract Multicall_v4Test is Test {
     function test_multicall_unpayableRevert() public {
         // first call is payable, second is not which causes a revert
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).payableStoresMsgValue.selector);
-        calls[1] = abi.encodeWithSelector(MockMulticall_v4(multicall).functionThatReturnsTuple.selector, 10, 20);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).payableStoresMsgValue.selector);
+        calls[1] = abi.encodeWithSelector(MockMulticall(multicall).functionThatReturnsTuple.selector, 10, 20);
 
         vm.expectRevert();
         multicall.multicall{value: 100}(calls);
@@ -100,8 +99,8 @@ contract Multicall_v4Test is Test {
     function test_multicall_bothPayable() public {
         // msg.value is provided to both calls
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).payableStoresMsgValue.selector);
-        calls[1] = abi.encodeWithSelector(MockMulticall_v4(multicall).payableStoresMsgValueDouble.selector);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).payableStoresMsgValue.selector);
+        calls[1] = abi.encodeWithSelector(MockMulticall(multicall).payableStoresMsgValueDouble.selector);
 
         multicall.multicall{value: 100}(calls);
         assertEq(address(multicall).balance, 100);
@@ -113,7 +112,7 @@ contract Multicall_v4Test is Test {
     function test_multicall_bubbleRevert_string() public {
         bytes[] memory calls = new bytes[](1);
         calls[0] =
-            abi.encodeWithSelector(MockMulticall_v4(multicall).functionThatRevertsWithString.selector, "errorString");
+            abi.encodeWithSelector(MockMulticall(multicall).functionThatRevertsWithString.selector, "errorString");
 
         vm.expectRevert("errorString");
         multicall.multicall(calls);
@@ -121,10 +120,10 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_bubbleRevert_4bytes() public {
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).revertWith4Bytes.selector);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).revertWith4Bytes.selector);
 
         // revert is caught
-        vm.expectRevert(MockMulticall_v4.Error4Bytes.selector);
+        vm.expectRevert(MockMulticall.Error4Bytes.selector);
         multicall.multicall(calls);
 
         // confirm expected length of the revert
@@ -136,10 +135,10 @@ contract Multicall_v4Test is Test {
 
     function test_fuzz_multicall_bubbleRevert_36bytes(uint8 num) public {
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).revertWith36Bytes.selector, num);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).revertWith36Bytes.selector, num);
 
         // revert is caught
-        vm.expectRevert(abi.encodeWithSelector(MockMulticall_v4.Error36Bytes.selector, num));
+        vm.expectRevert(abi.encodeWithSelector(MockMulticall.Error36Bytes.selector, num));
         multicall.multicall(calls);
 
         // confirm expected length of the revert
@@ -151,10 +150,10 @@ contract Multicall_v4Test is Test {
 
     function test_fuzz_multicall_bubbleRevert_68bytes(uint256 a, uint256 b) public {
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).revertWith68Bytes.selector, a, b);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).revertWith68Bytes.selector, a, b);
 
         // revert is caught
-        vm.expectRevert(abi.encodeWithSelector(MockMulticall_v4.Error68Bytes.selector, a, b));
+        vm.expectRevert(abi.encodeWithSelector(MockMulticall.Error68Bytes.selector, a, b));
         multicall.multicall(calls);
 
         // confirm expected length of the revert
@@ -172,10 +171,10 @@ contract Multicall_v4Test is Test {
         }
 
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).revertWithBytes.selector, data);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).revertWithBytes.selector, data);
 
         // revert is caught
-        vm.expectRevert(abi.encodeWithSelector(MockMulticall_v4.ErrorBytes.selector, data));
+        vm.expectRevert(abi.encodeWithSelector(MockMulticall.ErrorBytes.selector, data));
         multicall.multicall(calls);
 
         // confirm expected length of the revert
@@ -195,7 +194,7 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_bubbleRevert_externalRevertString() public {
         bytes[] memory calls = new bytes[](2);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).externalRevertString.selector, "errorString");
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).externalRevertString.selector, "errorString");
 
         vm.expectRevert("errorString");
         multicall.multicall(calls);
@@ -203,7 +202,7 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_bubbleRevert_externalRevertSimple() public {
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).externalRevertError1.selector);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).externalRevertError1.selector);
 
         vm.expectRevert(RevertContract.Error1.selector);
         multicall.multicall(calls);
@@ -211,7 +210,7 @@ contract Multicall_v4Test is Test {
 
     function test_multicall_bubbleRevert_externalRevertWithParams(uint256 a, uint256 b) public {
         bytes[] memory calls = new bytes[](1);
-        calls[0] = abi.encodeWithSelector(MockMulticall_v4(multicall).externalRevertError2.selector, a, b);
+        calls[0] = abi.encodeWithSelector(MockMulticall(multicall).externalRevertError2.selector, a, b);
 
         vm.expectRevert(abi.encodeWithSelector(RevertContract.Error2.selector, a, b));
         multicall.multicall(calls);

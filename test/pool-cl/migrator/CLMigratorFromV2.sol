@@ -10,14 +10,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {CLMigrator} from "../../../src/pool-cl/CLMigrator.sol";
 import {ICLMigrator, IBaseMigrator} from "../../../src/pool-cl/interfaces/ICLMigrator.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IPoolManager} from "infinity-core/src/interfaces/IPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
 import {PosmTestSetup} from "../shared/PosmTestSetup.sol";
 import {MockReentrantPositionManager} from "../../mocks/MockReentrantPositionManager.sol";
 import {ReentrancyLock} from "../../../src/base/ReentrancyLock.sol";
@@ -25,7 +25,7 @@ import {Permit2ApproveHelper} from "../../helpers/Permit2ApproveHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {Permit2SignatureHelpers} from "../../shared/Permit2SignatureHelpers.sol";
 import {Permit2Forwarder} from "../../../src/base/Permit2Forwarder.sol";
-import {Pausable} from "pancake-v4-core/src/base/Pausable.sol";
+import {Pausable} from "infinity-core/src/base/Pausable.sol";
 import {MockCLMigratorHook} from "./mocks/MockCLMigratorHook.sol";
 
 interface IPancakeV2LikePairFactory {
@@ -136,7 +136,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -150,9 +150,9 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         CLMigrator _migrator = CLMigrator(payable(address(migrator)));
         _migrator.pause();
 
-        // 4. migrate from v2 to v4
+        // 4. migrate from v2 to infinity
         vm.expectRevert(Pausable.EnforcedPause.selector);
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
     }
 
     function testCLMigrateFromV2_HookData() public {
@@ -178,7 +178,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         bytes memory hookData = abi.encode(32);
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -188,7 +188,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             hookData: hookData
         });
 
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
 
         // assert hookData flown to hook
         assertEq(clMigratorHook.hookData(), hookData);
@@ -224,7 +224,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -235,7 +235,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         vm.expectRevert(ReentrancyLock.ContractLocked.selector);
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
     }
 
     function testCLMigrateFromV2IncludingInit() public {
@@ -258,7 +258,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -272,7 +272,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint160 initSqrtPrice = 79228162514264337593543950336;
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, initSqrtPrice, bytes(""));
-        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4MintParams, 0, 0);
+        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiMintParams, 0, 0);
         migrator.multicall(data);
         vm.snapshotGasLastCall("testCLMigrateFromV2IncludingInit");
 
@@ -308,10 +308,10 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         // v2 weth, token0
-        // v4 ETH, token1
+        // infinity ETH, token1
         PoolKey memory poolKeyMismatch = poolKey;
         poolKeyMismatch.currency1 = Currency.wrap(address(token1));
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKeyMismatch,
             tickLower: -100,
             tickUpper: 100,
@@ -325,20 +325,20 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint160 initSqrtPrice = 79228162514264337593543950336;
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKeyMismatch, initSqrtPrice, bytes(""));
-        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4MintParams, 0, 0);
+        data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiMintParams, 0, 0);
         vm.expectRevert();
         migrator.multicall(data);
 
         {
             // v2 weth, token0
-            // v4 token0, token1
+            // infinity token0, token1
             poolKeyMismatch.currency0 = Currency.wrap(address(token0));
             poolKeyMismatch.currency1 = Currency.wrap(address(token1));
-            v4MintParams.poolKey = poolKeyMismatch;
+            infiMintParams.poolKey = poolKeyMismatch;
             data = new bytes[](2);
             data[0] =
                 abi.encodeWithSelector(migrator.initializePool.selector, poolKeyMismatch, initSqrtPrice, bytes(""));
-            data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4MintParams, 0, 0);
+            data[1] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiMintParams, 0, 0);
             vm.expectRevert();
             migrator.multicall(data);
         }
@@ -368,7 +368,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -379,7 +379,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         });
 
         vm.expectRevert(ICLMigrator.INSUFFICIENT_LIQUIDITY.selector);
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
     }
 
     function testCLMigrateFromV2WithoutInit() public {
@@ -406,7 +406,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -416,8 +416,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v2 to v4
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        // 4. migrate from v2 to infinity
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
         vm.snapshotGasLastCall("testCLMigrateFromV2WithoutInit");
 
         // necessary checks
@@ -462,7 +462,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKeyWithoutNativeToken,
             tickLower: -100,
             tickUpper: 100,
@@ -472,8 +472,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             hookData: new bytes(0)
         });
 
-        // 4. migrate from v2 to v4
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        // 4. migrate from v2 to infinity
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
         vm.snapshotGasLastCall("testCLMigrateFromV2WithoutNativeToken");
 
         // necessary checks
@@ -514,7 +514,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -530,8 +530,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v2 to v4
-        migrator.migrateFromV2{value: 20 ether}(v2PoolParams, v4MintParams, 20 ether, uint160(20 ether));
+        // 4. migrate from v2 to infinity
+        migrator.migrateFromV2{value: 20 ether}(v2PoolParams, infiMintParams, 20 ether, uint160(20 ether));
 
         // necessary checks
         // consumed extra 20 ether from user
@@ -578,7 +578,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -597,8 +597,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), 20 ether, 20 ether
         );
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 20 ether, 20 ether);
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 20 ether, 20 ether);
 
         // necessary checks
         // consumed extra 20 ether from user
@@ -648,7 +648,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -667,8 +667,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         permit2ApproveWithSpecificAllowance(
             address(this), permit2, address(token0), address(migrator), extraAmount, uint160(extraAmount)
         );
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, extraAmount, extraAmount);
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, extraAmount, extraAmount);
 
         // clPositionManager native balance should be 0
         uint256 lPositionManagerNativeBalance = address(lpm).balance;
@@ -723,12 +723,12 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             pair: address(v2Pair),
             migrateAmount: lpTokenBefore,
             // the order of token0 and token1 respect to the pair
-            // but may mismatch the order of v4 pool key when WETH is invovled
+            // but may mismatch the order of infinity pool key when WETH is invovled
             amount0Min: isWETHFirst ? 9.999 ether : 4.999 ether,
             amount1Min: isWETHFirst ? 4.999 ether : 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -741,8 +741,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 balance0Before = address(this).balance;
         uint256 balance1Before = token0.balanceOf(address(this));
 
-        // 4. migrate from v2 to v4, not sending ETH denotes pay by WETH
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        // 4. migrate from v2 to infinity, not sending ETH denotes pay by WETH
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
 
         // necessary checks
         // refund 5 ether in the form of native token
@@ -790,12 +790,12 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             pair: address(v2PairWithoutNativeToken),
             migrateAmount: lpTokenBefore,
             // the order of token0 and token1 respect to the pair
-            // but may mismatch the order of v4 pool key when WETH is invovled
+            // but may mismatch the order of infinity pool key when WETH is invovled
             amount0Min: 9.999 ether,
             amount1Min: 4.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKeyWithoutNativeToken,
             tickLower: -100,
             tickUpper: 100,
@@ -808,8 +808,8 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         uint256 balance0Before = token0.balanceOf(address(this));
         uint256 balance1Before = token1.balanceOf(address(this));
 
-        // 4. migrate from v2 to v4
-        migrator.migrateFromV2(v2PoolParams, v4MintParams, 0, 0);
+        // 4. migrate from v2 to infinity
+        migrator.migrateFromV2(v2PoolParams, infiMintParams, 0, 0);
 
         // necessary checks
 
@@ -877,7 +877,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
             amount1Min: 9.999 ether
         });
 
-        ICLMigrator.V4CLPoolParams memory v4MintParams = ICLMigrator.V4CLPoolParams({
+        ICLMigrator.InfiCLPoolParams memory infiMintParams = ICLMigrator.InfiCLPoolParams({
             poolKey: poolKey,
             tickLower: -100,
             tickUpper: 100,
@@ -892,7 +892,7 @@ abstract contract CLMigratorFromV2 is OldVersionHelper, PosmTestSetup, Permit2Ap
         bytes[] memory data = new bytes[](3);
         data[0] = abi.encodeWithSelector(migrator.initializePool.selector, poolKey, initSqrtPrice, bytes(""));
         data[1] = abi.encodeWithSelector(Permit2Forwarder.permit.selector, userAddr, permit, sig);
-        data[2] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, v4MintParams, 0, 0);
+        data[2] = abi.encodeWithSelector(migrator.migrateFromV2.selector, v2PoolParams, infiMintParams, 0, 0);
         vm.startPrank(userAddr);
         v2Pair.permit(userAddr, address(permit2), lpTokenBefore, ddl, v, r, s);
         migrator.multicall(data);

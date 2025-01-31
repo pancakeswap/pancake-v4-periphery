@@ -4,21 +4,21 @@ pragma solidity ^0.8.19;
 import "forge-std/Test.sol";
 
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
 import {BinPositionManager} from "../../src/pool-bin/BinPositionManager.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
-import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
-import {MockV4Router} from "../mocks/MockV4Router.sol";
-import {IV4Router} from "../../src/interfaces/IV4Router.sol";
+import {SafeCast} from "infinity-core/src/pool-bin/libraries/math/SafeCast.sol";
+import {MockInfinityRouter} from "../mocks/MockInfinityRouter.sol";
+import {IInfinityRouter} from "../../src/interfaces/IInfinityRouter.sol";
 import {IBinRouterBase} from "../../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
 import {Plan, Planner} from "../../src/libraries/Planner.sol";
@@ -46,7 +46,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
     MockERC20 token1;
     MockERC20 token2;
     bytes32 poolParam;
-    MockV4Router public router;
+    MockInfinityRouter public router;
     IAllowanceTransfer permit2;
 
     address alice = makeAddr("alice");
@@ -60,7 +60,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
         vault = new Vault();
         poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
-        router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
+        router = new MockInfinityRouter(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());
 
         binPm = new BinPositionManager(
@@ -263,7 +263,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
 
         token0.mint(alice, 1 ether);
 
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooLittleReceived.selector, 1 ether, 0.997 ether));
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooLittleReceived.selector, 1 ether, 0.997 ether));
         IBinRouterBase.BinSwapExactInputSingleParams memory params =
             IBinRouterBase.BinSwapExactInputSingleParams(key, true, 1 ether, 1 ether, bytes(""));
 
@@ -364,7 +364,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
             parameters: key.parameters
         });
 
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooLittleReceived.selector, 1 ether, 0.997 ether));
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooLittleReceived.selector, 1 ether, 0.997 ether));
         IBinRouterBase.BinSwapExactInputParams memory params =
             IBinRouterBase.BinSwapExactInputParams(Currency.wrap(address(token0)), path, 1 ether, 1 ether);
 
@@ -470,7 +470,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
         // Give alice > amountInMax so TooMuchRequestedError instead of TransferFromFailed
         token0.mint(alice, 2 ether);
 
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector, 1 ether, 1003009027081243732));
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooMuchRequested.selector, 1 ether, 1003009027081243732));
         IBinRouterBase.BinSwapExactOutputSingleParams memory params =
             IBinRouterBase.BinSwapExactOutputSingleParams(key, true, 1 ether, 1 ether, bytes(""));
 
@@ -612,7 +612,7 @@ contract BinSwapRouterTest is Test, BinLiquidityHelper, DeployPermit2 {
             parameters: key.parameters
         });
 
-        vm.expectRevert(abi.encodeWithSelector(IV4Router.V4TooMuchRequested.selector, 1 ether, 1003009027081243732));
+        vm.expectRevert(abi.encodeWithSelector(IInfinityRouter.TooMuchRequested.selector, 1 ether, 1003009027081243732));
         IBinRouterBase.BinSwapExactOutputParams memory params =
             IBinRouterBase.BinSwapExactOutputParams(Currency.wrap(address(token1)), path, 1 ether, 1 ether);
 

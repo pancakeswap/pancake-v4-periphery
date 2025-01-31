@@ -11,7 +11,7 @@ import {IQuoter} from "../../interfaces/IQuoter.sol";
 interface ICLQuoter is IQuoter {
     /// @notice Returns the delta amounts for a given exact input swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactSingleParams`
-    /// poolKey The key for identifying a V4 pool
+    /// poolKey The key for identifying a infinity pool
     /// zeroForOne If the swap is from currency0 to currency1
     /// exactAmount The desired input amount
     /// hookData arbitrary hookData to pass into the associated hooks
@@ -23,7 +23,7 @@ interface ICLQuoter is IQuoter {
 
     /// @notice Returns the last swap delta amounts for a given exact input in a list of swap
     /// @param params The params for the quote, encoded as `QuoteExactSingleParams[]`
-    /// poolKey The key for identifying a V4 pool
+    /// poolKey The key for identifying a infinity pool
     /// zeroForOne If the swap is from currency0 to currency1
     /// exactAmount The desired input amount
     /// hookData arbitrary hookData to pass into the associated hooks
@@ -46,7 +46,7 @@ interface ICLQuoter is IQuoter {
 
     /// @notice Returns the delta amounts for a given exact output swap of a single pool
     /// @param params The params for the quote, encoded as `QuoteExactSingleParams`
-    /// poolKey The key for identifying a V4 pool
+    /// poolKey The key for identifying a infinity pool
     /// zeroForOne If the swap is from currency0 to currency1
     /// exactAmount The desired output amount
     /// hookData arbitrary hookData to pass into the associated hooks
