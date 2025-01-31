@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IERC721Permit} from "../pool-cl/interfaces/IERC721Permit.sol";
+import {IERC721Permit} from "../interfaces/IERC721Permit.sol";
 import {ISelfPermitERC721} from "../interfaces/ISelfPermitERC721.sol";
 
 /// @title Self Permit For ERC721
