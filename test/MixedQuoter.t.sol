@@ -858,7 +858,7 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 90000);
     }
 
-    function test_quoteMixedExactInputSharedContext_V4CL() public {
+    function test_quoteMixedExactInputSharedContext_InfiCL() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -926,7 +926,7 @@ contract MixedQuoterTest is
         assertEq(route2Token1Received, swapPath2Output - 1);
     }
 
-    function testFuzz_quoteMixedExactInputSharedContext_V4CL(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_InfiCL(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -1018,7 +1018,7 @@ contract MixedQuoterTest is
         assertEq(route2TokenOutReceived, amountOutOfRoute2);
     }
 
-    function testV4CLquoteExactInputSingle_OneForZero() public {
+    function testInfiCLquoteExactInputSingle_OneForZero() public {
         address[] memory paths = new address[](2);
         paths[0] = address(Currency.unwrap(poolKey.currency1));
         paths[1] = address(Currency.unwrap(poolKey.currency0));
@@ -1048,7 +1048,7 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 90000);
     }
 
-    function testV4CLquoteExactInputSingle_ZeroForOne_WETHPair() public {
+    function testInfiCLquoteExactInputSingle_ZeroForOne_WETHPair() public {
         address[] memory paths = new address[](2);
         if (address(weth) < address(token2)) {
             paths[0] = address(weth);
@@ -1114,7 +1114,7 @@ contract MixedQuoterTest is
         assertLt(_gasEstimate, 50000);
     }
 
-    function test_quoteMixedExactInputSharedContext_V4Bin() public {
+    function test_quoteMixedExactInputSharedContext_InfiBin() public {
         address[] memory paths = new address[](2);
         paths[0] = address(token3);
         paths[1] = address(token4);
@@ -1175,7 +1175,7 @@ contract MixedQuoterTest is
         assertEq(route2TokenOutReceived, amountOutOfRoute2);
     }
 
-    function testFuzz_quoteMixedExactInputSharedContext_V4Bin(uint8 firstSwapPercent, bool isZeroForOne) public {
+    function testFuzz_quoteMixedExactInputSharedContext_InfiBin(uint8 firstSwapPercent, bool isZeroForOne) public {
         uint256 OneHundredPercent = type(uint8).max;
         vm.assume(firstSwapPercent > 0 && firstSwapPercent < OneHundredPercent);
         uint256 totalSwapAmount = 1 ether;
@@ -1436,7 +1436,7 @@ contract MixedQuoterTest is
 
     // token0 -> token1 -> token2
     // infinity CL Pool -> SS Pool
-    function testQuoteMixedTwoHops_V4Cl_SS() public {
+    function testQuoteMixedTwoHops_InfiCl_SS() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -1460,7 +1460,7 @@ contract MixedQuoterTest is
 
     // token0 -> token1 -> token2 -> WETH
     // infinity CL Pool -> SS Pool -> V3 Pool
-    function testQuoteMixedThreeHops_V4Cl_SS_V3() public {
+    function testQuoteMixedThreeHops_InfiCl_SS_V3() public {
         address[] memory paths = new address[](4);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -1488,7 +1488,7 @@ contract MixedQuoterTest is
 
     // token0 -> token1 -> token2 -> token3 -> token4
     // infinity CL Pool -> SS Pool -> V2 Pool -> infinity Bin Pool
-    function testQuoteMixedFourHops_V4Cl_SS_V2_V4Bin() public {
+    function testQuoteMixedFourHops_InfiCl_SS_V2_InfiBin() public {
         address[] memory paths = new address[](5);
         paths[0] = address(token0);
         paths[1] = address(token1);
@@ -1519,7 +1519,7 @@ contract MixedQuoterTest is
 
     // token2 -> WETH -> token1
     // V3 WETH Pool -> infinity Native Pool
-    function testQuoteMixed_ConvertWETHToNative_V3WETHPair_V4CLNativePair() public {
+    function testQuoteMixed_ConvertWETHToNative_V3WETHPair_InfiCLNativePair() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token2);
         paths[1] = address(weth);
@@ -1545,7 +1545,7 @@ contract MixedQuoterTest is
 
     // token1 -> address(0) -> token2
     // infinity CL Native Pool -> V3 WETH Pool
-    function testQuoteMixed_ConvertNativeToWETH_V4CLNativePair_V3WETHPair() public {
+    function testQuoteMixed_ConvertNativeToWETH_InfiCLNativePair_V3WETHPair() public {
         address[] memory paths = new address[](3);
         paths[0] = address(token1);
         paths[1] = address(0);

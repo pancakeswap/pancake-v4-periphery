@@ -724,7 +724,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         assertApproxEqAbs(token0.balanceOf(address(vault)), 10 ether + extraAmount, 0.000001 ether);
     }
 
-    function testFuzz_V4PositionAmountConsumedCalculationBySqrtPriceMath(uint256 extraAmount0, uint256 extraAmount1)
+    function testFuzz_InfiPositionAmountConsumedCalculationBySqrtPriceMath(uint256 extraAmount0, uint256 extraAmount1)
         public
     {
         extraAmount0 = bound(extraAmount0, 1 ether, 60 ether);
@@ -783,7 +783,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         // event ModifyLiquidity(PoolId indexed id, address indexed sender, int24 tickLower, int24 tickUpper, int256 liquidityDelta, bytes32 salt);
-        bytes32 v4PoolModifyLiquidityEventTopic0 =
+        bytes32 infiPoolModifyLiquidityEventTopic0 =
             keccak256("ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)");
 
         // event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
@@ -792,7 +792,7 @@ abstract contract CLMigratorFromV3 is OldVersionHelper, PosmTestSetup, Permit2Ap
         bytes memory modifyLiquidityEventData;
         bytes memory collectEventData;
         for (uint256 i; i < entries.length; i++) {
-            if (entries[i].topics[0] == v4PoolModifyLiquidityEventTopic0) {
+            if (entries[i].topics[0] == infiPoolModifyLiquidityEventTopic0) {
                 modifyLiquidityEventData = entries[i].data;
             } else if (entries[i].topics[0] == v3CollectEventTopic0) {
                 collectEventData = entries[i].data;

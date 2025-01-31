@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import {MockMulticall, RevertContract} from "./mocks/MockMulticall.sol";
 
-contract Multicall_v4Test is Test {
+contract MulticallTest is Test {
     MockMulticall multicall;
 
     function setUp() public {
