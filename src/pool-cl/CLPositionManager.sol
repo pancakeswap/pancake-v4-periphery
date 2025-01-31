@@ -21,7 +21,7 @@ import {ICLPositionManager} from "./interfaces/ICLPositionManager.sol";
 import {CalldataDecoder} from "../libraries/CalldataDecoder.sol";
 import {CLCalldataDecoder} from "./libraries/CLCalldataDecoder.sol";
 import {Actions} from "../libraries/Actions.sol";
-import {ERC721Permit_v4} from "./base/ERC721Permit_v4.sol";
+import {ERC721Permit_infi} from "./base/ERC721Permit_infi.sol";
 import {SlippageCheck} from "../libraries/SlippageCheck.sol";
 import {Multicall} from "../base/Multicall.sol";
 import {CLNotifier} from "./base/CLNotifier.sol";
@@ -37,7 +37,7 @@ import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 /// @notice Contract for modifying liquidity for PCS Infinity CL pools
 contract CLPositionManager is
     ICLPositionManager,
-    ERC721Permit_v4,
+    ERC721Permit_infi,
     Multicall,
     DeltaResolver,
     ReentrancyLock,
@@ -73,7 +73,7 @@ contract CLPositionManager is
     )
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
-        ERC721Permit_v4("Pancakeswap Infinity Positions NFT", "PCS-INFINITY-POSM")
+        ERC721Permit_infi("Pancakeswap Infinity Positions NFT", "PCS-INFINITY-POSM")
         CLNotifier(_unsubscribeGasLimit)
         NativeWrapper(_weth9)
     {
@@ -357,7 +357,7 @@ contract CLPositionManager is
         _mint(poolKey, tickLower, tickUpper, liquidity, amount0Max, amount1Max, owner, hookData);
     }
 
-    /// @dev this is overloaded with ERC721Permit_v4._burn
+    /// @dev this is overloaded with ERC721Permit_infi._burn
     function _burn(uint256 tokenId, uint128 amount0Min, uint128 amount1Min, bytes calldata hookData)
         internal
         onlyIfApproved(msgSender(), tokenId)
