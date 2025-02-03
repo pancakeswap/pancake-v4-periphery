@@ -6,17 +6,17 @@ import {ERC721} from "solmate/src/tokens/ERC721.sol";
 import {ERC721PermitHash} from "../libraries/ERC721PermitHash.sol";
 import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
 
-import {EIP712_v4} from "./EIP712_v4.sol";
-import {IERC721Permit_v4} from "../interfaces/IERC721Permit_v4.sol";
+import {EIP712} from "./EIP712.sol";
+import {IERC721Permit} from "../interfaces/IERC721Permit.sol";
 import {UnorderedNonce} from "./UnorderedNonce.sol";
 
 /// @title ERC721 with permit
 /// @notice Nonfungible tokens that support an approve via signature, i.e. permit
-abstract contract ERC721Permit_v4 is ERC721, IERC721Permit_v4, EIP712_v4, UnorderedNonce {
+abstract contract ERC721Permit is ERC721, IERC721Permit, EIP712, UnorderedNonce {
     using SignatureVerification for bytes;
 
     /// @notice Computes the nameHash and versionHash
-    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) EIP712_v4(name_) {}
+    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) EIP712(name_) {}
 
     /// @notice Checks if the block's timestamp is before a signature's deadline
     modifier checkSignatureDeadline(uint256 deadline) {
@@ -24,7 +24,7 @@ abstract contract ERC721Permit_v4 is ERC721, IERC721Permit_v4, EIP712_v4, Unorde
         _;
     }
 
-    /// @inheritdoc IERC721Permit_v4
+    /// @inheritdoc IERC721Permit
     function permit(address spender, uint256 tokenId, uint256 deadline, uint256 nonce, bytes calldata signature)
         external
         payable
@@ -40,7 +40,7 @@ abstract contract ERC721Permit_v4 is ERC721, IERC721Permit_v4, EIP712_v4, Unorde
         _approve(owner, spender, tokenId);
     }
 
-    /// @inheritdoc IERC721Permit_v4
+    /// @inheritdoc IERC721Permit
     function permitForAll(
         address owner,
         address operator,

@@ -6,7 +6,7 @@ import {SignatureVerification} from "permit2/src/libraries/SignatureVerification
 
 import {ERC721PermitHash} from "../../../src/pool-cl/libraries/ERC721PermitHash.sol";
 import {MockERC721Permit} from "../mocks/MockERC721Permit.sol";
-import {IERC721Permit_v4} from "../../../src/pool-cl/interfaces/IERC721Permit_v4.sol";
+import {IERC721Permit} from "../../../src/pool-cl/interfaces/IERC721Permit.sol";
 import {IERC721} from "forge-std/interfaces/IERC721.sol";
 import {UnorderedNonce} from "../../../src/pool-cl/base/UnorderedNonce.sol";
 
@@ -17,7 +17,7 @@ contract ERC721PermitForAllTest is Test {
     address bob;
     uint256 bobPK;
 
-    string constant name = "Mock ERC721Permit_v4";
+    string constant name = "Mock ERC721Permit";
     string constant symbol = "MOCK721";
 
     function setUp() public {
@@ -193,7 +193,7 @@ contract ERC721PermitForAllTest is Test {
 
         // -- PermitForAll but deadline expired -- //
         vm.startPrank(operator);
-        vm.expectRevert(IERC721Permit_v4.SignatureDeadlineExpired.selector);
+        vm.expectRevert(IERC721Permit.SignatureDeadlineExpired.selector);
         erc721Permit.permitForAll(alice, operator, true, deadline, nonce, signature);
         vm.stopPrank();
 
