@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {IERC721Permit} from "../../interfaces/IERC721Permit.sol";
+import {IERC721Permit} from "../IERC721Permit.sol";
 
 /// @title IV3NonfungiblePositionManager
 /// @notice Wraps PancakeSwap V3 positions in a non-fungible token interface which allows for them to be transferred
