@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {IPoolManager} from "pancake-v4-core/src/interfaces/IPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {IPoolManager} from "infinity-core/src/interfaces/IPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IBinMigrator, IBaseMigrator} from "../../src/pool-bin/interfaces/IBinMigrator.sol";
 import {ICLMigrator} from "../../src/pool-cl/interfaces/ICLMigrator.sol";
@@ -55,22 +55,22 @@ contract MockReentrantPositionManager is Test {
     }
 
     function modifyLiquidities(bytes calldata, uint256) external payable {
-        IBinMigrator.V4BinPoolParams memory v4BinPoolParams = _generateMockV4BinPoolParams();
+        IBinMigrator.InfiBinPoolParams memory infiBinPoolParams = _generateMockInfiBinPoolParams();
 
-        ICLMigrator.V4CLPoolParams memory v4CLPoolParams = _generateMockV4CLPoolParams();
+        ICLMigrator.InfiCLPoolParams memory infiCLPoolParams = _generateMockInfiCLPoolParams();
 
         IBaseMigrator.V3PoolParams memory v3PoolParams = _generateMockV3PoolParams();
 
         IBaseMigrator.V2PoolParams memory v2PoolParams = _generateMockV2PoolParams();
         // Mock data can fulfill the requirement because it will trigger ContractLocked revert before any operations are executed
         if (reentrantType == ReentrantType.BinMigrateFromV2) {
-            binMigrator.migrateFromV2(v2PoolParams, v4BinPoolParams, 0, 0);
+            binMigrator.migrateFromV2(v2PoolParams, infiBinPoolParams, 0, 0);
         } else if (reentrantType == ReentrantType.BinMigrateFromV3) {
-            binMigrator.migrateFromV3(v3PoolParams, v4BinPoolParams, 0, 0);
+            binMigrator.migrateFromV3(v3PoolParams, infiBinPoolParams, 0, 0);
         } else if (reentrantType == ReentrantType.CLMigrateFromV2) {
-            clMigrator.migrateFromV2(v2PoolParams, v4CLPoolParams, 0, 0);
+            clMigrator.migrateFromV2(v2PoolParams, infiCLPoolParams, 0, 0);
         } else if (reentrantType == ReentrantType.CLMigrateFromV3) {
-            clMigrator.migrateFromV3(v3PoolParams, v4CLPoolParams, 0, 0);
+            clMigrator.migrateFromV3(v3PoolParams, infiCLPoolParams, 0, 0);
         }
     }
 
@@ -85,8 +85,8 @@ contract MockReentrantPositionManager is Test {
         });
     }
 
-    function _generateMockV4BinPoolParams() internal returns (IBinMigrator.V4BinPoolParams memory) {
-        return IBinMigrator.V4BinPoolParams({
+    function _generateMockInfiBinPoolParams() internal returns (IBinMigrator.InfiBinPoolParams memory) {
+        return IBinMigrator.InfiBinPoolParams({
             poolKey: _generateMockPoolKey(),
             amount0Max: type(uint128).max,
             amount1Max: type(uint128).max,
@@ -101,8 +101,8 @@ contract MockReentrantPositionManager is Test {
         });
     }
 
-    function _generateMockV4CLPoolParams() internal returns (ICLMigrator.V4CLPoolParams memory) {
-        return ICLMigrator.V4CLPoolParams({
+    function _generateMockInfiCLPoolParams() internal returns (ICLMigrator.InfiCLPoolParams memory) {
+        return ICLMigrator.InfiCLPoolParams({
             poolKey: _generateMockPoolKey(),
             tickLower: 0,
             tickUpper: 0,

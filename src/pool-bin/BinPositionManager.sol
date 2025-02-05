@@ -2,16 +2,16 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
-import {LiquidityConfigurations} from "pancake-v4-core/src/pool-bin/libraries/math/LiquidityConfigurations.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {PackedUint128Math} from "pancake-v4-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {BinPool} from "infinity-core/src/pool-bin/libraries/BinPool.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
+import {LiquidityConfigurations} from "infinity-core/src/pool-bin/libraries/math/LiquidityConfigurations.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {PackedUint128Math} from "infinity-core/src/pool-bin/libraries/math/PackedUint128Math.sol";
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
@@ -27,13 +27,13 @@ import {Actions} from "../libraries/Actions.sol";
 import {BinCalldataDecoder} from "./libraries/BinCalldataDecoder.sol";
 import {BinFungibleToken} from "./BinFungibleToken.sol";
 import {BinTokenLibrary} from "./libraries/BinTokenLibrary.sol";
-import {Multicall_v4} from "../base/Multicall_v4.sol";
+import {Multicall} from "../base/Multicall.sol";
 import {SlippageCheck} from "../libraries/SlippageCheck.sol";
 import {NativeWrapper} from "../base/NativeWrapper.sol";
 import {IWETH9} from "../interfaces/external/IWETH9.sol";
 
 /// @title BinPositionManager
-/// @notice Contract for modifying liquidity for PCS v4 Bin pools
+/// @notice Contract for modifying liquidity for PCS infinity Bin pools
 contract BinPositionManager is
     IBinPositionManager,
     BinFungibleToken,
@@ -41,7 +41,7 @@ contract BinPositionManager is
     ReentrancyLock,
     BaseActionsRouter,
     Permit2Forwarder,
-    Multicall_v4,
+    Multicall,
     NativeWrapper
 {
     using CalldataDecoder for bytes;
@@ -278,7 +278,7 @@ contract BinPositionManager is
             hookData
         );
 
-        /// Slippage checks, similar to CL type. However, this is different from TJ, in PCS v4,
+        /// Slippage checks, similar to CL type. However, this is different from TJ. In PCS infinity,
         /// as hooks can impact delta (take extra token), user need to be protected with amountMax instead
         delta.validateMaxIn(amount0Max, amount1Max);
 

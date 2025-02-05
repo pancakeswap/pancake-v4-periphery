@@ -3,8 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
 import {BaseScript} from "./BaseScript.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {BinPositionManager} from "../src/pool-bin/BinPositionManager.sol";
 import {IWETH9} from "../src/interfaces/external/IWETH9.sol";
@@ -24,7 +24,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract DeployBinPositionManagerScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/BinPositionManager/0.90");
+        return keccak256("INFINITY-PERIPHERY/BinPositionManager/0.90");
     }
 
     function run() public {

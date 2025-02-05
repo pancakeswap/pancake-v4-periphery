@@ -3,8 +3,8 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
 import {BaseScript} from "./BaseScript.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {CLPositionManager} from "../src/pool-cl/CLPositionManager.sol";
 import {ICLPositionDescriptor} from "../src/pool-cl/interfaces/ICLPositionDescriptor.sol";
@@ -25,7 +25,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract DeployCLPositionManagerScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("PANCAKE-V4-PERIPHERY/CLPositionManager/0.90");
+        return keccak256("INFINITY-PERIPHERY/CLPositionManager/0.90");
     }
 
     function run() public {

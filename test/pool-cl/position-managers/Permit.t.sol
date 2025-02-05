@@ -3,19 +3,19 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 import {FixedPointMathLib} from "solmate/src/utils/FixedPointMathLib.sol";
 import {SignatureVerification} from "permit2/src/libraries/SignatureVerification.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {IERC721Permit_v4} from "../../../src/pool-cl/interfaces/IERC721Permit_v4.sol";
-import {ERC721Permit_v4} from "../../../src/pool-cl/base/ERC721Permit_v4.sol";
+import {IERC721Permit} from "../../../src/pool-cl/interfaces/IERC721Permit.sol";
+import {ERC721Permit} from "../../../src/pool-cl/base/ERC721Permit.sol";
 import {UnorderedNonce} from "../../../src/pool-cl/base/UnorderedNonce.sol";
 
 import {ICLPositionManager} from "../../../src/pool-cl/interfaces/ICLPositionManager.sol";
@@ -60,11 +60,11 @@ contract PermitTest is Test, PosmTestSetup {
 
     function test_domainSeparator() public view {
         assertEq(
-            ERC721Permit_v4(address(lpm)).DOMAIN_SEPARATOR(),
+            ERC721Permit(address(lpm)).DOMAIN_SEPARATOR(),
             keccak256(
                 abi.encode(
                     keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)"),
-                    keccak256("Pancakeswap V4 Positions NFT"), // storage is private on EIP712.sol so we need to hardcode these
+                    keccak256("Pancakeswap Infinity Positions NFT"), // storage is private on EIP712.sol so we need to hardcode these
                     block.chainid,
                     address(lpm)
                 )

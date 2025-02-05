@@ -2,10 +2,10 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
-/// @dev Record all token accumulation and swap direction of the transaction for non-v4 pools.
-/// @dev Record v4 swap history list for v4 pools.
+/// @dev Record all token accumulation and swap direction of the transaction for non-infinity pools.
+/// @dev Record infinity swap history list for infinity pools.
 library MixedQuoterRecorder {
     /// @dev uint256 internal constant SWAP_DIRECTION = uint256(keccak256("MIXED_QUOTER_SWAP_DIRECTION")) - 1;
     uint256 internal constant SWAP_DIRECTION = 0x420071594cddc2905acbd674683749db4c139d373cc290ba8d49c75296a9f1f9;
@@ -27,14 +27,14 @@ library MixedQuoterRecorder {
     /// @dev uint256 internal constant SWAP_V3 = uint256(keccak256("MIXED_QUOTER_SWAP_V3")) - 1;
     uint256 internal constant SWAP_V3 = 0xd9d373c35d602baa7832c86d4af60fe46a2e18634c87bebc20d0050afb7633b3;
 
-    /// @dev uint256 internal constant SWAP_V4_CL = uint256(keccak256("MIXED_QUOTER_SWAP_V4_CL")) - 1;
-    uint256 internal constant SWAP_V4_CL = 0x1a7c9a13842b613486d9207eda875c24e33425305b8b8df2e040c19ef2ae3088;
+    /// @dev uint256 internal constant SWAP_INFI_CL = uint256(keccak256("MIXED_QUOTER_SWAP_INFI_CL")) - 1;
+    uint256 internal constant SWAP_INFI_CL = 0x4feb57dd10cb5162909904ca541d6f7c45508b5d9792044648a6eba88f79d97;
 
-    /// @dev uint256 internal constant SWAP_V4_BIN = uint256(keccak256("MIXED_QUOTER_SWAP_V4_BIN")) - 1;
-    uint256 internal constant SWAP_V4_BIN = 0xea33987d3dc3e2595aa727354eec3d9b92d4061c1331c4a19f9862248f2e1040;
+    /// @dev uint256 internal constant SWAP_INFI_BIN = uint256(keccak256("MIXED_QUOTER_SWAP_INFI_BIN")) - 1;
+    uint256 internal constant SWAP_INFI_BIN = 0x5f3e6018e8b2ccef782c927f292822290a80de8ee586b625fcd9a2e443bf80b1;
 
-    /// @dev uint256 internal constant SWAP_V4_LIST = uint256(keccak256("MIXED_QUOTER_SWAP_V4_LIST")) - 1;
-    uint256 internal constant SWAP_V4_LIST = 0xecc1e5328541d701c0936cbe59876b89db17cc11dfd146412e855a9a2e1ecbd3;
+    /// @dev uint256 internal constant SWAP_INFI_LIST = uint256(keccak256("MIXED_QUOTER_SWAP_INFI_LIST")) - 1;
+    uint256 internal constant SWAP_INFI_LIST = 0x32f6ae18dd733261edd4a84eefa6e2b1fe927f73449d02df9df6ca8eaba3b6df;
 
     enum SwapDirection {
         NONE,
@@ -45,7 +45,7 @@ library MixedQuoterRecorder {
     error INVALID_SWAP_DIRECTION();
 
     /// @dev Record and check the swap direction of the transaction.
-    /// @dev Only support one direction for same non-v4 pool in one transaction.
+    /// @dev Only support one direction for same non-infinity pool in one transaction.
     /// @param poolHash The hash of the pool.
     /// @param isZeroForOne The direction of the swap.
     function setAndCheckSwapDirection(bytes32 poolHash, bool isZeroForOne) internal {
@@ -122,11 +122,11 @@ library MixedQuoterRecorder {
         }
     }
 
-    /// @dev Record the swap history list of the v4 pool.
+    /// @dev Record the swap history list of infinity pool.
     /// @param poolHash The hash of the pool.
     /// @param swapListBytes The swap history list bytes.
-    function setV4PoolSwapList(bytes32 poolHash, bytes memory swapListBytes) internal {
-        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
+    function setInfiPoolSwapList(bytes32 poolHash, bytes memory swapListBytes) internal {
+        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_INFI_LIST)));
         assembly ("memory-safe") {
             // save the length of the bytes
             tstore(swapListSlot, mload(swapListBytes))
@@ -139,11 +139,11 @@ library MixedQuoterRecorder {
         }
     }
 
-    /// @dev Get the swap history list of the v4 pool.
+    /// @dev Get the swap history list of infinity pool.
     /// @param poolHash The hash of the pool.
     /// @return swapListBytes The swap history list bytes.
-    function getV4PoolSwapList(bytes32 poolHash) internal view returns (bytes memory swapListBytes) {
-        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_V4_LIST)));
+    function getInfiPoolSwapList(bytes32 poolHash) internal view returns (bytes memory swapListBytes) {
+        uint256 swapListSlot = uint256(keccak256(abi.encode(poolHash, SWAP_INFI_LIST)));
         assembly ("memory-safe") {
             // get the length of the bytes
             let length := tload(swapListSlot)
@@ -187,17 +187,17 @@ library MixedQuoterRecorder {
         return keccak256(abi.encode(token0, token1, fee, SWAP_V3));
     }
 
-    /// @dev Get the v4 cl pool hash.
+    /// @dev Get the infinity cl pool hash.
     /// @param key The pool key.
     /// @return poolHash The hash of the pool.
-    function getV4CLPoolHash(PoolKey memory key) internal pure returns (bytes32) {
-        return keccak256(abi.encode(key, SWAP_V4_CL));
+    function getInfiCLPoolHash(PoolKey memory key) internal pure returns (bytes32) {
+        return keccak256(abi.encode(key, SWAP_INFI_CL));
     }
 
-    /// @dev Get the v4 bin pool hash.
+    /// @dev Get the infinity bin pool hash.
     /// @param key The pool key.
     /// @return poolHash The hash of the pool.
-    function getV4BinPoolHash(PoolKey memory key) internal pure returns (bytes32) {
-        return keccak256(abi.encode(key, SWAP_V4_BIN));
+    function getInfiBinPoolHash(PoolKey memory key) internal pure returns (bytes32) {
+        return keccak256(abi.encode(key, SWAP_INFI_BIN));
     }
 }

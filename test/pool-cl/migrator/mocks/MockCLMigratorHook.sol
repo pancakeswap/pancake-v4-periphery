@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {BaseCLTestHook} from "pancake-v4-core/test/pool-cl/helpers/BaseCLTestHook.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {BaseCLTestHook} from "infinity-core/test/pool-cl/helpers/BaseCLTestHook.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 
 /// @notice store hookData to verify hookData is passed to the hook
 contract MockCLMigratorHook is BaseCLTestHook {

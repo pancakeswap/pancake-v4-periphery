@@ -2,16 +2,16 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity 0.8.26;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
-import {SafeCast} from "pancake-v4-core/src/libraries/SafeCast.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {CLPosition} from "infinity-core/src/pool-cl/libraries/CLPosition.sol";
+import {SafeCast} from "infinity-core/src/libraries/SafeCast.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId} from "pancake-v4-core/src/types/PoolId.sol";
+import {PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId} from "infinity-core/src/types/PoolId.sol";
 import {IPositionManager} from "../interfaces/IPositionManager.sol";
 import {BaseActionsRouter} from "../base/BaseActionsRouter.sol";
 import {ReentrancyLock} from "../base/ReentrancyLock.sol";
@@ -21,9 +21,9 @@ import {ICLPositionManager} from "./interfaces/ICLPositionManager.sol";
 import {CalldataDecoder} from "../libraries/CalldataDecoder.sol";
 import {CLCalldataDecoder} from "./libraries/CLCalldataDecoder.sol";
 import {Actions} from "../libraries/Actions.sol";
-import {ERC721Permit_v4} from "./base/ERC721Permit_v4.sol";
+import {ERC721Permit} from "./base/ERC721Permit.sol";
 import {SlippageCheck} from "../libraries/SlippageCheck.sol";
-import {Multicall_v4} from "../base/Multicall_v4.sol";
+import {Multicall} from "../base/Multicall.sol";
 import {CLNotifier} from "./base/CLNotifier.sol";
 import {CLPositionInfo, CLPositionInfoLibrary} from "./libraries/CLPositionInfoLibrary.sol";
 import {ICLSubscriber} from "./interfaces/ICLSubscriber.sol";
@@ -31,14 +31,14 @@ import {ICLPositionDescriptor} from "./interfaces/ICLPositionDescriptor.sol";
 import {NativeWrapper} from "../base/NativeWrapper.sol";
 import {IWETH9} from "../interfaces/external/IWETH9.sol";
 import {LiquidityAmounts} from "../pool-cl/libraries/LiquidityAmounts.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 
 /// @title CLPositionManager
-/// @notice Contract for modifying liquidity for PCS v4 CL pools
+/// @notice Contract for modifying liquidity for PCS Infinity CL pools
 contract CLPositionManager is
     ICLPositionManager,
-    ERC721Permit_v4,
-    Multicall_v4,
+    ERC721Permit,
+    Multicall,
     DeltaResolver,
     ReentrancyLock,
     BaseActionsRouter,
@@ -73,7 +73,7 @@ contract CLPositionManager is
     )
         BaseActionsRouter(_vault)
         Permit2Forwarder(_permit2)
-        ERC721Permit_v4("Pancakeswap V4 Positions NFT", "PCS-V4-POSM")
+        ERC721Permit("Pancakeswap Infinity Positions NFT", "PCS-INFINITY-POSM")
         CLNotifier(_unsubscribeGasLimit)
         NativeWrapper(_weth9)
     {
@@ -357,7 +357,7 @@ contract CLPositionManager is
         _mint(poolKey, tickLower, tickUpper, liquidity, amount0Max, amount1Max, owner, hookData);
     }
 
-    /// @dev this is overloaded with ERC721Permit_v4._burn
+    /// @dev this is overloaded with ERC721Permit._burn
     function _burn(uint256 tokenId, uint128 amount0Min, uint128 amount1Min, bytes calldata hookData)
         internal
         onlyIfApproved(msgSender(), tokenId)

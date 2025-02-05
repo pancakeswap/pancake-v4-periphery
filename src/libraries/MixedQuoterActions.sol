@@ -10,6 +10,8 @@ library MixedQuoterActions {
     uint256 constant SS_3_EXACT_INPUT_SINGLE = 0x01;
     uint256 constant V2_EXACT_INPUT_SINGLE = 0x02;
     uint256 constant V3_EXACT_INPUT_SINGLE = 0x03;
-    uint256 constant V4_CL_EXACT_INPUT_SINGLE = 0x04;
-    uint256 constant V4_BIN_EXACT_INPUT_SINGLE = 0x05;
+
+    // INFI means infinity
+    uint256 constant INFI_CL_EXACT_INPUT_SINGLE = 0x04;
+    uint256 constant INFI_BIN_EXACT_INPUT_SINGLE = 0x05;
 }

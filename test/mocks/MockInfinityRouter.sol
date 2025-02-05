@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {V4Router} from "../../src/V4Router.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {InfinityRouter} from "../../src/InfinityRouter.sol";
 import {ReentrancyLock} from "../../src/base/ReentrancyLock.sol";
 import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
 import {ERC20} from "solmate/src/tokens/ERC20.sol";
 
-contract MockV4Router is V4Router, ReentrancyLock {
+contract MockInfinityRouter is InfinityRouter, ReentrancyLock {
     using SafeTransferLib for *;
 
     constructor(IVault _vault, ICLPoolManager _poolManager, IBinPoolManager _binPoolManager)
-        V4Router(_vault, _poolManager, _binPoolManager)
+        InfinityRouter(_vault, _poolManager, _binPoolManager)
     {}
 
     function executeActions(bytes calldata params) external payable isNotLocked {

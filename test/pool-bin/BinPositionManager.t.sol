@@ -6,11 +6,11 @@ import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
-import {Vault} from "pancake-v4-core/src/Vault.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
 import {IPositionManager} from "../../src/interfaces/IPositionManager.sol";
 import {BinPositionManager} from "../../src/pool-bin/BinPositionManager.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";

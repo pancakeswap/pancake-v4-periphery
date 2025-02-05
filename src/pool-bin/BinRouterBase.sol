@@ -2,15 +2,15 @@
 // Copyright (C) 2024 PancakeSwap
 pragma solidity ^0.8.24;
 
-import {CurrencyLibrary, Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {CurrencyLibrary, Currency} from "infinity-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {IBinRouterBase} from "./interfaces/IBinRouterBase.sol";
-import {IV4Router} from "../interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../interfaces/IInfinityRouter.sol";
 import {PathKeyLibrary, PathKey} from "../libraries/PathKey.sol";
 import {SafeCastTemp} from "../libraries/SafeCast.sol";
-import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
+import {SafeCast} from "infinity-core/src/pool-bin/libraries/math/SafeCast.sol";
 import {DeltaResolver} from "../base/DeltaResolver.sol";
 import {ActionConstants} from "../libraries/ActionConstants.sol";
 
@@ -34,7 +34,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             _swapExactPrivate(params.poolKey, params.swapForY, -(amountIn.safeInt128()), params.hookData).toUint128();
 
         if (amountOut < params.amountOutMinimum) {
-            revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+            revert IInfinityRouter.TooLittleReceived(params.amountOutMinimum, amountOut);
         }
     }
 
@@ -60,7 +60,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             }
 
             if (amountOut < params.amountOutMinimum) {
-                revert IV4Router.V4TooLittleReceived(params.amountOutMinimum, amountOut);
+                revert IInfinityRouter.TooLittleReceived(params.amountOutMinimum, amountOut);
             }
         }
     }
@@ -75,7 +75,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             (-_swapExactPrivate(params.poolKey, params.swapForY, amountOut.safeInt128(), params.hookData)).toUint128();
 
         if (amountIn > params.amountInMaximum) {
-            revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
+            revert IInfinityRouter.TooMuchRequested(params.amountInMaximum, amountIn);
         }
     }
 
@@ -107,7 +107,7 @@ abstract contract BinRouterBase is IBinRouterBase, DeltaResolver {
             }
 
             if (amountIn > params.amountInMaximum) {
-                revert IV4Router.V4TooMuchRequested(params.amountInMaximum, amountIn);
+                revert IInfinityRouter.TooMuchRequested(params.amountInMaximum, amountIn);
             }
         }
     }

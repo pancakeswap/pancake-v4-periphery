@@ -4,23 +4,22 @@ pragma solidity ^0.8.19;
 import "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IBinPoolManager} from "pancake-v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
-import {BinPool} from "pancake-v4-core/src/pool-bin/libraries/BinPool.sol";
-import {BinPoolManager} from "pancake-v4-core/src/pool-bin/BinPoolManager.sol";
-import {BinPoolParametersHelper} from "pancake-v4-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
-import {Vault} from "pancake-v4-core/src/Vault.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IBinPoolManager} from "infinity-core/src/pool-bin/interfaces/IBinPoolManager.sol";
+import {BinPool} from "infinity-core/src/pool-bin/libraries/BinPool.sol";
+import {BinPoolManager} from "infinity-core/src/pool-bin/BinPoolManager.sol";
+import {BinPoolParametersHelper} from "infinity-core/src/pool-bin/libraries/BinPoolParametersHelper.sol";
+import {Vault} from "infinity-core/src/Vault.sol";
 import {BinPositionManager} from "../../src/pool-bin/BinPositionManager.sol";
 import {IBinPositionManager} from "../../src/pool-bin/interfaces/IBinPositionManager.sol";
 import {BinLiquidityHelper} from "./helper/BinLiquidityHelper.sol";
-import {SafeCast} from "pancake-v4-core/src/pool-bin/libraries/math/SafeCast.sol";
-import {MockV4Router} from "../mocks/MockV4Router.sol";
-import {IV4Router} from "../../src/interfaces/IV4Router.sol";
+import {SafeCast} from "infinity-core/src/pool-bin/libraries/math/SafeCast.sol";
+import {MockInfinityRouter} from "../mocks/MockInfinityRouter.sol";
 import {IBinRouterBase} from "../../src/pool-bin/interfaces/IBinRouterBase.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
 import {Plan, Planner} from "../../src/libraries/Planner.sol";
@@ -54,7 +53,7 @@ contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
     MockERC20 token1;
     MockERC20 token2;
     bytes32 poolParam;
-    MockV4Router public router;
+    MockInfinityRouter public router;
     IAllowanceTransfer permit2;
 
     address alice = makeAddr("alice");
@@ -68,7 +67,7 @@ contract BinQuoterTest is Test, BinLiquidityHelper, DeployPermit2 {
         vault = new Vault();
         poolManager = new BinPoolManager(IVault(address(vault)));
         vault.registerApp(address(poolManager));
-        router = new MockV4Router(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
+        router = new MockInfinityRouter(vault, ICLPoolManager(address(0)), IBinPoolManager(address(poolManager)));
         permit2 = IAllowanceTransfer(deployPermit2());
         binPm = new BinPositionManager(
             IVault(address(vault)), IBinPoolManager(address(poolManager)), permit2, IWETH9(address(0))

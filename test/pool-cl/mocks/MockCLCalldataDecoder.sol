@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {CLCalldataDecoder} from "../../../src/pool-cl/libraries/CLCalldataDecoder.sol";
-import {IV4Router} from "../../../src/interfaces/IV4Router.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {IInfinityRouter} from "../../../src/interfaces/IInfinityRouter.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 // we need to use a mock contract to make the calls happen in calldata not memory
 contract MockCLCalldataDecoder {
@@ -39,7 +39,7 @@ contract MockCLCalldataDecoder {
     function decodeCLSwapExactInParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.CLSwapExactInputParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactInputParams calldata swapParams)
     {
         return params.decodeCLSwapExactInParams();
     }
@@ -47,7 +47,7 @@ contract MockCLCalldataDecoder {
     function decodeCLSwapExactInSingleParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.CLSwapExactInputSingleParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactInputSingleParams calldata swapParams)
     {
         return params.decodeCLSwapExactInSingleParams();
     }
@@ -55,7 +55,7 @@ contract MockCLCalldataDecoder {
     function decodeCLSwapExactOutParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.CLSwapExactOutputParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactOutputParams calldata swapParams)
     {
         return params.decodeCLSwapExactOutParams();
     }
@@ -63,7 +63,7 @@ contract MockCLCalldataDecoder {
     function decodeCLSwapExactOutSingleParams(bytes calldata params)
         external
         pure
-        returns (IV4Router.CLSwapExactOutputSingleParams calldata swapParams)
+        returns (IInfinityRouter.CLSwapExactOutputSingleParams calldata swapParams)
     {
         return params.decodeCLSwapExactOutSingleParams();
     }

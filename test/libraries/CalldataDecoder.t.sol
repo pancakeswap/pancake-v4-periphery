@@ -2,11 +2,11 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
 
 import {MockCalldataDecoder} from "../mocks/MockCalldataDecoder.sol";
-import {IV4Router} from "../../src/interfaces/IV4Router.sol";
+import {IInfinityRouter} from "../../src/interfaces/IInfinityRouter.sol";
 import {PathKey} from "../../src/libraries/PathKey.sol";
 import {CalldataDecoder} from "../../src/libraries/CalldataDecoder.sol";
 

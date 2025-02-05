@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
 
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {BaseCLTestHook} from "pancake-v4-core/test/pool-cl/helpers/BaseCLTestHook.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {BaseCLTestHook} from "infinity-core/test/pool-cl/helpers/BaseCLTestHook.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 
 contract MockCLReenterHook is BaseCLTestHook {

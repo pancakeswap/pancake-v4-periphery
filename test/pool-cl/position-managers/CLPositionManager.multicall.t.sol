@@ -2,26 +2,26 @@
 pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
-import {CLPoolManager} from "pancake-v4-core/src/pool-cl/CLPoolManager.sol";
-import {ICLPoolManager} from "pancake-v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
-import {IHooks} from "pancake-v4-core/src/interfaces/IHooks.sol";
-import {Currency, CurrencyLibrary} from "pancake-v4-core/src/types/Currency.sol";
-import {PoolId, PoolIdLibrary} from "pancake-v4-core/src/types/PoolId.sol";
-import {PoolKey} from "pancake-v4-core/src/types/PoolKey.sol";
-import {BalanceDelta} from "pancake-v4-core/src/types/BalanceDelta.sol";
-import {LiquidityAmounts} from "pancake-v4-core/test/pool-cl/helpers/LiquidityAmounts.sol";
-import {TickMath} from "pancake-v4-core/src/pool-cl/libraries/TickMath.sol";
+import {CLPoolManager} from "infinity-core/src/pool-cl/CLPoolManager.sol";
+import {ICLPoolManager} from "infinity-core/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {IHooks} from "infinity-core/src/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "infinity-core/src/types/Currency.sol";
+import {PoolId, PoolIdLibrary} from "infinity-core/src/types/PoolId.sol";
+import {PoolKey} from "infinity-core/src/types/PoolKey.sol";
+import {BalanceDelta} from "infinity-core/src/types/BalanceDelta.sol";
+import {LiquidityAmounts} from "infinity-core/test/pool-cl/helpers/LiquidityAmounts.sol";
+import {TickMath} from "infinity-core/src/pool-cl/libraries/TickMath.sol";
 import {FixedPointMathLib} from "solmate/src/utils/FixedPointMathLib.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
-import {CLPosition} from "pancake-v4-core/src/pool-cl/libraries/CLPosition.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
+import {CLPosition} from "infinity-core/src/pool-cl/libraries/CLPosition.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {CLPoolParametersHelper} from "pancake-v4-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
+import {CLPoolParametersHelper} from "infinity-core/src/pool-cl/libraries/CLPoolParametersHelper.sol";
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
-import {IERC721Permit_v4} from "../../../src/pool-cl/base/ERC721Permit_v4.sol";
-import {IMulticall_v4} from "../../../src/interfaces/IMulticall_v4.sol";
+import {IERC721Permit} from "../../../src/pool-cl/base/ERC721Permit.sol";
+import {IMulticall} from "../../../src/interfaces/IMulticall.sol";
 import {CLPositionManager} from "../../../src/pool-cl/CLPositionManager.sol";
 import {IPositionManager} from "../../../src/interfaces/IPositionManager.sol";
 import {DeltaResolver} from "../../../src/base/DeltaResolver.sol";
@@ -124,7 +124,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
 
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
-        IMulticall_v4(address(lpm)).multicall(calls);
+        IMulticall(address(lpm)).multicall(calls);
 
         // test swap, doesn't revert, showing the pool was initialized
         int256 amountSpecified = -1e18;
@@ -225,7 +225,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         bytes memory actions = planner.finalizeModifyLiquidityWithClose(key);
         calls[1] = abi.encodeWithSelector(IPositionManager.modifyLiquidities.selector, actions, _deadline);
 
-        IMulticall_v4(address(lpm)).multicall(calls);
+        IMulticall(address(lpm)).multicall(calls);
 
         // test swap, doesn't revert, showing the mint succeeded even after initialize reverted
         int256 amountSpecified = -1e18;
@@ -250,7 +250,7 @@ contract CLPositionManagerMulticallTest is Test, Permit2SignatureHelpers, PosmTe
         // bob gives himself permission and decreases liquidity
         bytes[] memory calls = new bytes[](2);
         calls[0] = abi.encodeWithSelector(
-            IERC721Permit_v4(lpm).permit.selector, bob, tokenId, block.timestamp + 1, nonce, signature
+            IERC721Permit(lpm).permit.selector, bob, tokenId, block.timestamp + 1, nonce, signature
         );
         uint256 liquidityToRemove = 0.4444e18;
         bytes memory actions = getDecreaseEncoded(tokenId, liquidityToRemove, ZERO_BYTES);

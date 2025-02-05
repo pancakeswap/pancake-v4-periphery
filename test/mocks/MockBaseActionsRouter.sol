@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.20;
 
-import {Currency} from "pancake-v4-core/src/types/Currency.sol";
-import {IVault} from "pancake-v4-core/src/interfaces/IVault.sol";
+import {Currency} from "infinity-core/src/types/Currency.sol";
+import {IVault} from "infinity-core/src/interfaces/IVault.sol";
 import {BaseActionsRouter} from "../../src/base/BaseActionsRouter.sol";
 import {Actions} from "../../src/libraries/Actions.sol";
 
