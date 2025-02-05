@@ -17,12 +17,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  *     --slow
  *
  * Step 2: Verify
- * forge verify-contract <address> CLMigrator --watch \
+ * forge verify-contract <address> src/pool-cl/CLMigrator.sol:CLMigrator --watch \
  *      --chain <chainId> --constructor-args $(cast abi-encode "constructor(address,address,address)" <weth> <clPositionManager> <permit2>)
  */
 contract DeployCLMigratorScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("INFINITY-PERIPHERY/CLMigrator/0.90");
+        return keccak256("INFINITY-PERIPHERY/CLMigrator/0.97");
     }
 
     function run() public {
