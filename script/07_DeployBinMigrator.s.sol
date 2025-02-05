@@ -22,7 +22,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract DeployBinMigratorScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("INFINITY-PERIPHERY/BinMigrator/0.90");
+        return keccak256("INFINITY-PERIPHERY/BinMigrator/0.97");
     }
 
     function run() public {

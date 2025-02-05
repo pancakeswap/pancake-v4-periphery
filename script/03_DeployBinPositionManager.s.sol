@@ -24,7 +24,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract DeployBinPositionManagerScript is BaseScript {
     function getDeploymentSalt() public pure override returns (bytes32) {
-        return keccak256("INFINITY-PERIPHERY/BinPositionManager/0.90");
+        return keccak256("INFINITY-PERIPHERY/BinPositionManager/0.97");
     }
 
     function run() public {
