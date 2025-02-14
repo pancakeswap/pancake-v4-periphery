@@ -34,7 +34,7 @@ library QuoterRevert {
     /// @notice validates whether a revert reason is a valid swap quote or not
     /// if valid, it decodes the quote to return. Otherwise it reverts.
     function parseQuoteAmount(bytes memory reason) internal pure returns (uint256 quoteAmount) {
-        // If the error doesnt start with QuoteSwap, we know this isnt a valid quote to parse
+        // If the error doesnt start with QuoteSwap, we know this isn't a valid quote to parse
         // Instead it is another revert that was triggered somewhere in the simulation
         if (reason.parseSelector() != QuoteSwap.selector) {
             revert UnexpectedRevertBytes(reason);

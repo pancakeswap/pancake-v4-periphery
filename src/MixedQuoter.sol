@@ -305,7 +305,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
             } else if (action == MixedQuoterActions.INFI_CL_EXACT_INPUT_SINGLE) {
                 QuoteMixedInfiExactInputSingleParams memory clParams =
                     abi.decode(params[actionIndex], (QuoteMixedInfiExactInputSingleParams));
-                (tokenIn, tokenOut) = convertWETHToInfiNativeCurency(clParams.poolKey, tokenIn, tokenOut);
+                (tokenIn, tokenOut) = convertWETHToInfiNativeCurrency(clParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkInfiPoolKeyCurrency(clParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
@@ -342,7 +342,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
             } else if (action == MixedQuoterActions.INFI_BIN_EXACT_INPUT_SINGLE) {
                 QuoteMixedInfiExactInputSingleParams memory binParams =
                     abi.decode(params[actionIndex], (QuoteMixedInfiExactInputSingleParams));
-                (tokenIn, tokenOut) = convertWETHToInfiNativeCurency(binParams.poolKey, tokenIn, tokenOut);
+                (tokenIn, tokenOut) = convertWETHToInfiNativeCurrency(binParams.poolKey, tokenIn, tokenOut);
                 bool zeroForOne = tokenIn < tokenOut;
                 checkInfiPoolKeyCurrency(binParams.poolKey, zeroForOne, tokenIn, tokenOut);
 
@@ -452,7 +452,7 @@ contract MixedQuoter is IMixedQuoter, IPancakeV3SwapCallback, Multicall {
     /// @notice Convert WETH to native currency for infinity pools
     /// @dev for example, quote route are v3 WETH pool[token0, WETH] and infinity native pool[NATIVE,token1]
     /// paths is [token0, WETH, token1], we need to convert WETH to NATIVE when quote infinity pool
-    function convertWETHToInfiNativeCurency(PoolKey memory poolKey, address tokenIn, address tokenOut)
+    function convertWETHToInfiNativeCurrency(PoolKey memory poolKey, address tokenIn, address tokenOut)
         private
         view
         returns (address, address)

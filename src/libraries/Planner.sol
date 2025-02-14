@@ -86,7 +86,7 @@ library Planner {
         returns (bytes memory)
     {
         if (takeRecipient == ActionConstants.MSG_SENDER) {
-            // blindly settling and taking all, without slippage checks, isnt recommended in prod
+            // blindly settling and taking all, without slippage checks, isn't recommended in prod
             plan = plan.add(Actions.SETTLE_ALL, abi.encode(inputCurrency, type(uint256).max));
             plan = plan.add(Actions.TAKE_ALL, abi.encode(outputCurrency, 0));
         } else {

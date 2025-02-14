@@ -248,7 +248,7 @@ contract BinPositionManager is
         }
 
         if (activeIdDesired > type(uint24).max || idSlippage > type(uint24).max) {
-            revert AddLiquidityInputActiveIdMismath();
+            revert AddLiquidityInputActiveIdMismatch();
         }
 
         /// @dev Checks if the activeId is within slippage before calling mint. If user mint to activeId and there

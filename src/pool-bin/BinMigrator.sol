@@ -36,7 +36,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
         );
         (uint256 amount0Received, uint256 amount1Received) = withdrawLiquidityFromV2(v2PoolParams, shouldReversePair);
 
-        /// @notice if user mannually specify the price range, they might need to send extra token
+        /// @notice if user manually specify the price range, they might need to send extra token
         batchAndNormalizeTokens(
             infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1, extraAmount0, extraAmount1
         );
@@ -84,7 +84,7 @@ contract BinMigrator is IBinMigrator, BaseMigrator, ReentrancyLock {
         );
         (uint256 amount0Received, uint256 amount1Received) = withdrawLiquidityFromV3(v3PoolParams, shouldReversePair);
 
-        /// @notice if user mannually specify the price range, they need to send extra token
+        /// @notice if user manually specify the price range, they need to send extra token
         batchAndNormalizeTokens(
             infiPoolParams.poolKey.currency0, infiPoolParams.poolKey.currency1, extraAmount0, extraAmount1
         );

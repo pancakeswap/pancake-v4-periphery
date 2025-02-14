@@ -189,14 +189,14 @@ contract BinPositionManager_ModifyLiquidityTest is BinLiquidityHelper, TokenFixt
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
         param.activeIdDesired = input;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.AddLiquidityInputActiveIdMismath.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.AddLiquidityInputActiveIdMismatch.selector));
         binPm.modifyLiquidities(payload, _deadline);
 
         // active id normal, but slippage above type(uint24).max
         param = _getAddParams(key1, binIds, 1 ether, 1 ether, activeId, alice);
         param.idSlippage = input;
         payload = Planner.init().add(Actions.BIN_ADD_LIQUIDITY, abi.encode(param)).encode();
-        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.AddLiquidityInputActiveIdMismath.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBinPositionManager.AddLiquidityInputActiveIdMismatch.selector));
         binPm.modifyLiquidities(payload, _deadline);
     }
 

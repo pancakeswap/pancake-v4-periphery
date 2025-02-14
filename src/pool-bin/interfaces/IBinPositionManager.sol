@@ -10,7 +10,7 @@ import {IPositionManager} from "../../interfaces/IPositionManager.sol";
 interface IBinPositionManager is IPositionManager {
     error IdOverflows(int256);
     error IdSlippageCaught(uint256 activeIdDesired, uint256 idSlippage, uint24 activeId);
-    error AddLiquidityInputActiveIdMismath();
+    error AddLiquidityInputActiveIdMismatch();
 
     /// @notice BinAddLiquidityParams
     /// - amount0: Amount to send for token0
@@ -40,8 +40,8 @@ interface IBinPositionManager is IPositionManager {
     }
 
     /// @notice BinRemoveLiquidityParams
-    /// - amount0Min: Min amount to recieve for token0
-    /// - amount1Min: Min amount to recieve for token1
+    /// - amount0Min: Min amount to receive for token0
+    /// - amount1Min: Min amount to receive for token1
     /// - ids: List of bin ids to remove liquidity
     /// - amounts: List of share amount to remove for each bin
     /// - from: Address of NFT holder to burn the NFT
