@@ -61,7 +61,7 @@ library CalldataDecoder {
                 expectedOffset := add(expectedOffset, length)
             }
 
-            // if the data encoding was invalid, or the provided bytes string isnt as long as the encoding says, revert
+            // if the data encoding was invalid, or the provided bytes string isn't as long as the encoding says, revert
             if or(invalidData, lt(add(_bytes.length, _bytes.offset), add(params.offset, expectedOffset))) {
                 mstore(0, SLICE_ERROR_SELECTOR)
                 revert(0x1c, 4)
@@ -204,7 +204,7 @@ library CalldataDecoder {
             res.length := length
             res.offset := offset
 
-            // if the provided bytes string isnt as long as the encoding says, revert
+            // if the provided bytes string isn't as long as the encoding says, revert
             if lt(add(_bytes.length, _bytes.offset), add(length, offset)) {
                 mstore(0, SLICE_ERROR_SELECTOR)
                 revert(0x1c, 4)
